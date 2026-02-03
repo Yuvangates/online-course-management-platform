@@ -1,0 +1,39 @@
+# ------------------------------------------------
+# Node.js & Dependencies (Global)
+# ------------------------------------------------
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# ------------------------------------------------
+# Security & Environment Variables (CRITICAL)
+# ------------------------------------------------
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# ------------------------------------------------
+# Backend Specific
+# ------------------------------------------------
+backend/logs/
+*.log
+
+# ------------------------------------------------
+# Frontend Build Outputs
+# ------------------------------------------------
+dist/
+build/
+dist-ssr/
+*.local
+
+# ------------------------------------------------
+# Editor & OS Files (Junk)
+# ------------------------------------------------
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
