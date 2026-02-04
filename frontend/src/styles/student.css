@@ -1,0 +1,222 @@
+/* Student pages styling - bluish theme consistent with landing */
+
+.student-container {
+  max-width: 1100px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+.dashboard-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 2rem 1rem;
+  background: linear-gradient(180deg, #ffffff, #f7fbff);
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(3,50,100,0.04);
+  margin-bottom: 1.5rem;
+}
+
+.hero-text h1 {
+  margin: 0;
+  font-size: 1.9rem;
+  color: #072a61;
+}
+
+.hero-text .muted {
+  margin-top: 0.25rem;
+}
+
+.hero-search {
+  display: flex;
+  gap: 0.5rem;
+  width: 100%;
+  max-width: 760px;
+  justify-content: center;
+  align-items: center;
+}
+
+.search-header,
+.enrolled-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.search-input {
+  width: 320px;
+  padding: 0.6rem 0.9rem;
+  border-radius: 8px;
+  border: 1px solid rgba(0,0,0,0.08);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+}
+
+/* Make lists full-width and remove heavy card look */
+.courses-grid, .enrolled-grid {
+  display: block;
+  width: 100%;
+}
+
+.course-row, .enrolled-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-bottom: 0.8rem;
+}
+
+.course-card,
+.enrolled-card,
+.profile-card {
+  background: transparent;
+  padding: 1rem 0;
+  border-radius: 0;
+  box-shadow: none;
+  border: none;
+  min-height: auto;
+  border-bottom: 1px solid rgba(3,50,100,0.06);
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Stat card styling */
+.stat-card {
+  background: linear-gradient(180deg, #ffffff, #f3f8ff);
+  padding: 1.25rem;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(3,50,100,0.04);
+  border-left: 6px solid rgba(0,123,255,0.12);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.stat-card h3 {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #495b82;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.stat-card p {
+  margin-top: 0.5rem;
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #072a61;
+}
+
+.course-card h3,
+.enrolled-card h3 {
+  margin: 0 0 0.25rem 0;
+}
+
+.muted {
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+.course-actions {
+  margin-top: 1rem;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.course-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 45px rgba(3,50,100,0.08);
+}
+
+.enrolled-card h3 { margin-bottom: 6px }
+
+.course-card h3 { font-size: 1.05rem; color: #072a61 }
+
+.search-input {
+  width: 520px;
+  max-width: 100%;
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  border: 1px solid rgba(3,50,100,0.06);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.6);
+  font-size: 0.98rem;
+}
+
+.suggestions-list {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid rgba(3,50,100,0.06);
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(3,50,100,0.08);
+  z-index: 30;
+  max-height: 320px;
+  overflow: auto;
+}
+
+.suggestions-list li {
+  padding: 0.6rem 0.8rem;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(0,0,0,0.03);
+}
+
+.suggestions-list li:last-child { border-bottom: none }
+
+.suggestions-list li:hover, .suggestions-list li:focus {
+  background: linear-gradient(90deg, rgba(0,123,255,0.06), rgba(0,86,179,0.03));
+}
+
+.input-error { color: #c62828; margin-top: 6px; font-size: 0.9rem }
+
+.hero-search .btn.primary { padding: 0.7rem 1rem }
+
+.dashboard-hero { padding: 2.2rem }
+
+.empty { color: #7a879a; background: #fbfdff; border-radius: 8px; padding: 1.5rem }
+
+.btn {
+  padding: 0.5rem 0.9rem;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-weight: 600;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn.primary {
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  color: white;
+  border-color: rgba(0,123,255,0.08);
+}
+
+.btn.outline {
+  background: transparent;
+  color: #0056b3;
+  border: 1px solid rgba(0,86,179,0.12);
+}
+
+.course-detail {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.course-cta { display:flex; gap:0.6rem; align-items:center }
+
+.empty { padding: 2rem; text-align:center; color:#6c757d }
+
+@media (max-width: 768px){
+  .course-detail { flex-direction: column }
+  .search-input { width: 100% }
+}

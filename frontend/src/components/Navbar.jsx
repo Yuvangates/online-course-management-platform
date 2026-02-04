@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { NavLink, Link, useNavigate } from 'react-router-dom';
 import '../styles/navbar.css';
 
 const Navbar = ({ role }) => {
@@ -15,14 +15,12 @@ const Navbar = ({ role }) => {
             <div className="nav-brand">EduPlatform</div>
 
             <ul className="nav-links">
-                {/* Common Link */}
-                <li><Link to="/profile" className="nav-link">Profile</Link></li>
-
-                {/* Role Based Links */}
                 {role === 'Student' && (
                     <>
-                        <li><Link to="/student/dashboard" className="nav-link">My Learning</Link></li>
-                        <li><Link to="/student/search" className="nav-link">Browse Courses</Link></li>
+                        <li><NavLink to="/student/dashboard" className={({isActive})=> isActive? 'nav-link active':'nav-link'}>Dashboard</NavLink></li>
+                        <li><NavLink to="/student/enrolled" className={({isActive})=> isActive? 'nav-link active':'nav-link'}>My Courses</NavLink></li>
+                        <li><NavLink to="/student/profile" className={({isActive})=> isActive? 'nav-link active':'nav-link'}>Profile</NavLink></li>
+                        <li><NavLink to="/student/search" className={({isActive})=> isActive? 'nav-link active':'nav-link'}>Search</NavLink></li>
                     </>
                 )}
 
@@ -46,7 +44,6 @@ const Navbar = ({ role }) => {
             </ul>
 
             <div className="nav-user">
-                <span>Welcome, {role}</span>
                 <button onClick={handleLogout} className="logout-btn">Logout</button>
             </div>
         </nav>

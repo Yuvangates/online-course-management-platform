@@ -5,6 +5,10 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import StudentDashboard from './pages/student/StudentDashboard';
+import CourseSearch from './pages/student/CourseSearch';
+import CourseView from './pages/student/CourseView';
+import EnrolledCourses from './pages/student/EnrolledCourses';
+import Profile from './pages/student/Profile';
 import InstructorDashboard from './pages/instructor/InstructorDashboard';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import StatsDashboard from './pages/analyst/StatsDashboard';
@@ -35,6 +39,10 @@ function App() {
               // </ProtectedRoute>
             }
           />
+          <Route path="/student/search" element={<CourseSearch />} />
+          <Route path="/student/course/:id" element={<CourseView />} />
+          <Route path="/student/enrolled" element={<EnrolledCourses />} />
+          <Route path="/student/profile" element={<Profile />} />
 
           {/* Instructor Routes */}
           <Route
