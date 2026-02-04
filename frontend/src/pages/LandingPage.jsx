@@ -8,7 +8,7 @@ const LandingPage = () => {
       {/* Navbar */}
       <nav className="landing-navbar">
         <div className="navbar-brand">EduPlatform</div>
-        <Link to="/login" className="login-btn">Sign In</Link>
+        <Link to="/login" className="nav-login-btn">Sign In</Link>
       </nav>
 
       {/* Hero Section */}
