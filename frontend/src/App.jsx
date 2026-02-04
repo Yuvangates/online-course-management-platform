@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
 // Import Pages
+import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import StudentDashboard from './pages/student/StudentDashboard';
 import InstructorDashboard from './pages/instructor/InstructorDashboard';
@@ -21,8 +22,9 @@ function App() {
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
 
         <Routes>
-          {/* Public Route */}
-          <Route path="/" element={<LoginPage />} />
+          {/* Public Routes */}
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<LoginPage />} />
 
           {/* Student Routes */}
           <Route

@@ -25,7 +25,6 @@ const LoginPage = () => {
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            placeholder="admin@university.edu"
                             required
                         />
                     </div>
@@ -36,7 +35,6 @@ const LoginPage = () => {
                             type="password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            placeholder="••••••••"
                             required
                         />
                     </div>
