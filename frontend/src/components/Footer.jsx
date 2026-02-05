@@ -6,7 +6,7 @@ const Footer = () => {
         padding: '1.5rem',
         backgroundColor: '#333',
         color: '#fff',
-        marginTop: 'auto', // Pushes footer to bottom if page is short
+        marginTop: 'auto',
         position: 'relative',
         bottom: 0,
         width: '100%',

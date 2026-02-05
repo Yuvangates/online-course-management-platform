@@ -1,0 +1,471 @@
+/* ======================================
+   ENROLLED COURSES - PAGE SPECIFIC STYLES
+   ====================================== */
+
+@import './student-common.css';
+
+/* ======================================
+   PAGE HEADER
+   ====================================== */
+
+.enrolled-header {
+  margin-bottom: var(--space-2xl);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-lg);
+}
+
+.enrolled-header h1 {
+  margin: 0;
+  color: var(--text-dark);
+}
+
+.enrolled-header-stats {
+  display: flex;
+  gap: var(--space-lg);
+  align-items: center;
+}
+
+.stat-badge {
+  background: var(--primary-light);
+  color: var(--primary-color);
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-lg);
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-sm);
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.stat-badge.secondary {
+  background: var(--success-light);
+  color: var(--success-color);
+}
+
+.stat-badge.warning {
+  background: var(--warning-light);
+  color: var(--warning-color);
+}
+
+/* ======================================
+   FILTERS & SEARCH
+   ====================================== */
+
+.enrolled-filters {
+  display: flex;
+  gap: var(--space-md);
+  margin-bottom: var(--space-2xl);
+  flex-wrap: wrap;
+  align-items: center;
+  padding: var(--space-lg);
+  background: var(--bg-lighter);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-light);
+}
+
+.filter-group {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: center;
+}
+
+.filter-group label {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+}
+
+.filter-group select,
+.filter-group input {
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  background: white;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: border-color var(--transition-base);
+}
+
+.filter-group select:hover,
+.filter-group input:hover {
+  border-color: var(--primary-color);
+}
+
+.filter-group select:focus,
+.filter-group input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.filter-group input[type="search"] {
+  min-width: 250px;
+}
+
+/* ======================================
+   COURSES GRID
+   ====================================== */
+
+.courses-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--space-xl);
+  margin-bottom: var(--space-3xl);
+}
+
+/* ======================================
+   COURSE CARD
+   ====================================== */
+
+.course-card {
+  background: white;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-base);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.course-card:hover {
+  transform: translateY(-8px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--primary-color);
+}
+
+.course-card-header {
+  padding: var(--space-lg);
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+.course-card-header::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+  animation: shimmer 3s infinite;
+}
+
+.course-card-header > * {
+  position: relative;
+  z-index: 1;
+}
+
+.course-card-code {
+  display: inline-block;
+  background: rgba(255,255,255,0.2);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: var(--space-sm);
+}
+
+.course-card-title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  margin: 0 0 var(--space-sm) 0;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.course-card-instructor {
+  font-size: var(--font-size-sm);
+  opacity: 0.9;
+  margin: 0;
+}
+
+/* ======================================
+   COURSE CARD BODY
+   ====================================== */
+
+.course-card-body {
+  padding: var(--space-lg);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.course-card-description {
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+  margin-bottom: var(--space-lg);
+  flex: 1;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.course-progress {
+  margin-bottom: var(--space-lg);
+}
+
+.progress-label {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: var(--space-sm);
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  font-weight: var(--font-weight-medium);
+}
+
+.progress-value {
+  color: var(--primary-color);
+  font-weight: var(--font-weight-bold);
+}
+
+.progress-bar {
+  height: 6px;
+  background: var(--bg-lighter);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  border: 1px solid var(--border-light);
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary-color), var(--primary-light));
+  transition: width var(--transition-base);
+  border-radius: var(--radius-full);
+}
+
+/* ======================================
+   COURSE METADATA
+   ====================================== */
+
+.course-meta {
+  display: flex;
+  gap: var(--space-lg);
+  padding: var(--space-lg);
+  background: var(--bg-lighter);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-light);
+  margin-bottom: var(--space-lg);
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.meta-item strong {
+  color: var(--text-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
+.meta-icon {
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary-color);
+}
+
+/* ======================================
+   COURSE CARD FOOTER
+   ====================================== */
+
+.course-card-footer {
+  padding: var(--space-lg);
+  border-top: 1px solid var(--border-light);
+  display: flex;
+  gap: var(--space-md);
+}
+
+.course-card-footer .btn {
+  flex: 1;
+  justify-content: center;
+  padding: var(--space-sm) var(--space-md);
+  font-size: var(--font-size-sm);
+}
+
+.btn-outline-small {
+  background: transparent;
+  color: var(--primary-color);
+  border: 1px solid var(--border-color);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.btn-outline-small:hover {
+  background: var(--primary-light);
+  color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+/* ======================================
+   EMPTY STATE
+   ====================================== */
+
+.empty-state {
+  text-align: center;
+  padding: var(--space-3xl) var(--space-2xl);
+  background: linear-gradient(135deg, var(--bg-light) 0%, var(--bg-lighter) 100%);
+  border: 2px dashed var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  margin: var(--space-3xl) 0;
+}
+
+.empty-state h3 {
+  margin: var(--space-lg) 0 var(--space-md) 0;
+  color: var(--text-primary);
+}
+
+.empty-state p {
+  margin: 0 0 var(--space-xl) 0;
+  line-height: 1.6;
+}
+
+.empty-state .btn {
+  padding: var(--space-md) var(--space-xl);
+}
+
+/* ======================================
+   ANIMATIONS
+   ====================================== */
+
+@keyframes shimmer {
+  0% {
+    transform: translate(-100%, -100%) rotate(45deg);
+  }
+  100% {
+    transform: translate(100%, 100%) rotate(45deg);
+  }
+}
+
+/* ======================================
+   RESPONSIVE
+   ====================================== */
+
+@media (max-width: 1024px) {
+  .courses-container {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--space-lg);
+  }
+
+  .enrolled-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .enrolled-header-stats {
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .courses-container {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: var(--space-lg);
+  }
+
+  .enrolled-filters {
+    flex-direction: column;
+    align-items: stretch;
+    padding: var(--space-md);
+    gap: var(--space-md);
+  }
+
+  .filter-group {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-group input[type="search"] {
+    min-width: auto;
+    width: 100%;
+  }
+
+  .filter-group select {
+    width: 100%;
+  }
+
+  .course-card-header {
+    padding: var(--space-md);
+  }
+
+  .course-card-body {
+    padding: var(--space-md);
+  }
+
+  .course-meta {
+    flex-wrap: wrap;
+    gap: var(--space-md);
+  }
+}
+
+@media (max-width: 480px) {
+  .courses-container {
+    grid-template-columns: 1fr;
+    gap: var(--space-md);
+  }
+
+  .enrolled-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .enrolled-header h1 {
+    font-size: var(--font-size-xl);
+  }
+
+  .enrolled-header-stats {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .stat-badge {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .enrolled-filters {
+    padding: var(--space-sm);
+  }
+
+  .course-card-title {
+    font-size: var(--font-size-base);
+  }
+
+  .course-card-footer {
+    flex-direction: column;
+  }
+
+  .course-card-footer .btn {
+    width: 100%;
+  }
+
+  .course-meta {
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+}

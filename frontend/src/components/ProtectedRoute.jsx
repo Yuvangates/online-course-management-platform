@@ -1,23 +1,26 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 // This component wraps pages that need login
-// For now, we simulate "isLoggedIn" with a simple check
-const ProtectedRoute = ({ children, allowedRoles, userRole }) => {
+const ProtectedRoute = ({ children, allowedRoles }) => {
+    const { user, loading, isAuthenticated } = useAuth();
 
-    // 1. Check if user is logged in (Mock logic for now)
-    const isLoggedIn = true;
-
-    if (!isLoggedIn) {
-        return <Navigate to="/" replace />;
+    if (loading) {
+        return <div style={{ padding: '50px', textAlign: 'center' }}>Loading...</div>;
     }
 
-    // 2. Check if user has permission
-    if (allowedRoles && !allowedRoles.includes(userRole)) {
-        return <div style={{ padding: "50px", textAlign: "center" }}>
-            <h2>403 - Access Denied</h2>
-            <p>You do not have permission to view this page.</p>
-        </div>;
+    if (!isAuthenticated) {
+        return <Navigate to="/login" replace />;
+    }
+
+    if (allowedRoles && !allowedRoles.includes(user?.role)) {
+        return (
+            <div style={{ padding: '50px', textAlign: 'center' }}>
+                <h2>403 - Access Denied</h2>
+                <p>You do not have permission to view this page.</p>
+            </div>
+        );
     }
 
     return children;
