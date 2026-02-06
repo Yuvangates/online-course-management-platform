@@ -9,6 +9,7 @@ const CourseView = () => {
   const courseId = parseInt(id, 10);
   const [course, setCourse] = useState(null);
   const [modules, setModules] = useState([]);
+  const [instructors, setInstructors] = useState([]);
   const [moduleContents, setModuleContents] = useState({});
   const [expandedModules, setExpandedModules] = useState({});
   const [enrolledIds, setEnrolledIds] = useState([]);
@@ -21,13 +22,14 @@ const CourseView = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [courseRes, modulesRes, enrolledRes] = await Promise.all([
-          courseService.getCourseById(courseId),
-          courseService.getCourseModules(courseId),
+        // Refactored to use a single, more efficient endpoint for all course details
+        const [detailsRes, enrolledRes] = await Promise.all([
+          courseService.getCourseDetails(courseId), // Assumes a service method for the /:id/details route
           courseService.getEnrolledCourses()
         ]);
-        setCourse(courseRes.course);
-        setModules(modulesRes.modules || []);
+        setCourse(detailsRes.course);
+        setModules(detailsRes.modules || []);
+        setInstructors(detailsRes.instructors || []);
         setEnrolledIds((enrolledRes.enrollments || []).map(e => e.course_id));
       } catch (err) {
         console.error('Error loading course:', err);
@@ -39,14 +41,14 @@ const CourseView = () => {
     fetchData();
   }, [courseId]);
 
-  const isEnrolled = course && enrolledIds.includes(course.id);
+  const isEnrolled = course && enrolledIds.includes(course.course_id);
 
   const handleEnroll = async () => {
     if (!course) return;
     try {
       setEnrolling(true);
-      await courseService.enrollCourse(course.id);
-      setEnrolledIds([...enrolledIds, course.id]);
+      await courseService.enrollCourse(course.course_id);
+      setEnrolledIds([...enrolledIds, course.course_id]);
     } catch (err) {
       console.error('Enrollment error:', err);
       setError('Failed to enroll in course');
@@ -55,34 +57,37 @@ const CourseView = () => {
     }
   };
 
-  const toggleModule = async (moduleId) => {
+  const toggleModule = async (moduleNumber) => {
     setExpandedModules(prev => ({
       ...prev,
-      [moduleId]: !prev[moduleId]
+      [moduleNumber]: !prev[moduleNumber]
     }));
 
     // Load content if not already loaded
-    if (!moduleContents[moduleId] && !loadingContent[moduleId]) {
+    if (!moduleContents[moduleNumber] && !loadingContent[moduleNumber]) {
       try {
         setLoadingContent(prev => ({
           ...prev,
-          [moduleId]: true
+          [moduleNumber]: true
         }));
-        const contentRes = await courseService.getModuleContent(moduleId);
+        // The backend query expects both courseId and moduleNumber
+        const contentRes = await courseService.getModuleContent(courseId, moduleNumber);
+        // Robustly handle response: check if it's { content: [...] } or just the array [...]
+        const content = contentRes.content || (Array.isArray(contentRes) ? contentRes : []);
         setModuleContents(prev => ({
           ...prev,
-          [moduleId]: contentRes.content || []
+          [moduleNumber]: content
         }));
       } catch (err) {
         console.error('Error loading module content:', err);
         setModuleContents(prev => ({
           ...prev,
-          [moduleId]: []
+          [moduleNumber]: []
         }));
       } finally {
         setLoadingContent(prev => ({
           ...prev,
-          [moduleId]: false
+          [moduleNumber]: false
         }));
       }
     }
@@ -120,14 +125,12 @@ const CourseView = () => {
         {/* COURSE HEADER SECTION */}
         <div className="course-header">
           <div className="course-header-content">
-            <h1>{course.title}</h1>
-            <p className="course-code">{course.code}</p>
-            {course.instructor_name && (
-              <p className="course-instructor">👨‍🏫 Instructor: {course.instructor_name}</p>
+            <h1>{course.name}</h1>
+            {instructors.length > 0 && (
+              <p className="course-instructor" style={{ color: 'rgba(255, 255, 255, 0.9)' }}>
+                Instructor(s): {instructors.map(i => i.name).join(', ')}
+              </p>
             )}
-          </div>
-          <div className="course-header-badge">
-            <span className="level-badge">{course.level} Level</span>
           </div>
         </div>
 
@@ -135,42 +138,14 @@ const CourseView = () => {
         <div className="course-info-grid">
           <div className="info-card">
             <span className="info-label">Duration</span>
-            <span className="info-value">{course.duration_weeks} weeks</span>
+            <span className="info-value">{course.duration} weeks</span>
           </div>
-          <div className="info-card">
-            <span className="info-label">Credits</span>
-            <span className="info-value">{course.credits || 'N/A'}</span>
-          </div>
-          {course.start_date && (
-            <div className="info-card">
-              <span className="info-label">Start Date</span>
-              <span className="info-value">{new Date(course.start_date).toLocaleDateString()}</span>
-            </div>
-          )}
-          {course.end_date && (
-            <div className="info-card">
-              <span className="info-label">End Date</span>
-              <span className="info-value">{new Date(course.end_date).toLocaleDateString()}</span>
-            </div>
-          )}
         </div>
 
         {/* COURSE DESCRIPTION */}
         <div className="course-description">
           <h3>About This Course</h3>
           <p>{course.description}</p>
-          {course.prerequisites && (
-            <div className="prerequisites">
-              <h4>Prerequisites</h4>
-              <p>{course.prerequisites}</p>
-            </div>
-          )}
-          {course.learning_objectives && (
-            <div className="learning-objectives">
-              <h4>Learning Objectives</h4>
-              <p>{course.learning_objectives}</p>
-            </div>
-          )}
         </div>
 
         {/* COURSE ACTIONS */}
@@ -198,61 +173,45 @@ const CourseView = () => {
             {modules.length > 0 ? (
               <div className="modules-list">
                 {modules.map((module) => (
-                  <div key={module.id} className="module-card">
+                  <div key={module.module_number} className="module-card">
                     <div 
                       className="module-header"
-                      onClick={() => toggleModule(module.id)}
+                      onClick={() => toggleModule(module.module_number)}
                       role="button"
                       tabIndex={0}
-                      onKeyPress={(e) => e.key === 'Enter' && toggleModule(module.id)}
+                      onKeyPress={(e) => e.key === 'Enter' && toggleModule(module.module_number)}
                     >
                       <div className="module-title-section">
                         <span className="module-toggle">
-                          {expandedModules[module.id] ? '▼' : '▶'}
+                          {expandedModules[module.module_number] ? '▼' : '▶'}
                         </span>
-                        <h4>Module {module.module_number}: {module.title}</h4>
+                        <h4>Module {module.module_number}: {module.name}</h4>
                       </div>
-                      <div className="module-info-mini">
-                        <span className="module-duration">⏱️ {module.duration_hours}h</span>
-                      </div>
+                      <p className="module-description" style={{ marginTop: 0 }}>{module.description}</p>
                     </div>
-
-                    <p className="module-description">{module.description}</p>
-
+ 
                     {/* MODULE CONTENT - EXPANDABLE */}
-                    {expandedModules[module.id] && (
+                    {expandedModules[module.module_number] && (
                       <div className="module-content">
-                        {loadingContent[module.id] ? (
+                        {loadingContent[module.module_number] ? (
                           <div className="content-loading">
                             <div className="spinner-small"></div>
                             <p>Loading content...</p>
                           </div>
-                        ) : moduleContents[module.id] && moduleContents[module.id].length > 0 ? (
+                        ) : moduleContents[module.module_number] && moduleContents[module.module_number].length > 0 ? (
                           <div className="content-list">
-                            {moduleContents[module.id].map((content, idx) => (
-                              <div key={idx} className="content-item">
-                                <span className="content-icon">
-                                  {content.type === 'video' && '🎥'}
-                                  {content.type === 'pdf' && '📄'}
-                                  {content.type === 'quiz' && '📝'}
-                                  {content.type === 'assignment' && '✏️'}
-                                  {content.type === 'resource' && '📚'}
-                                  {!['video', 'pdf', 'quiz', 'assignment', 'resource'].includes(content.type) && '📌'}
-                                </span>
-                                <div className="content-details">
-                                  <p className="content-title">{content.title}</p>
-                                  {content.description && (
-                                    <p className="content-desc">{content.description}</p>
-                                  )}
-                                  {content.duration && (
-                                    <span className="content-duration">{content.duration}</span>
-                                  )}
+                            {moduleContents[module.module_number].map((content, idx) => (
+                              <div key={idx} className="content-item" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid #eee' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                  <span style={{ fontWeight: '600' }}>{content.title}</span>
+                                  <span style={{ fontSize: '0.85em', color: '#666', background: '#f5f5f5', padding: '2px 8px', borderRadius: '4px', textTransform: 'capitalize' }}>
+                                    {content.content_type || content.type}
+                                  </span>
                                 </div>
-                                {content.type === 'quiz' && (
-                                  <span className="content-status">Quiz</span>
-                                )}
-                                {content.type === 'assignment' && (
-                                  <span className="content-status">Assignment</span>
+                                {content.url && (
+                                  <a href={content.url} target="_blank" rel="noopener noreferrer" className="btn outline btn-small" style={{ padding: '4px 12px', fontSize: '0.85rem' }}>
+                                    Open Link
+                                  </a>
                                 )}
                               </div>
                             ))}
@@ -265,14 +224,6 @@ const CourseView = () => {
                       </div>
                     )}
 
-                    <div className="module-footer">
-                      <button 
-                        className="btn outline btn-small"
-                        onClick={() => toggleModule(module.id)}
-                      >
-                        {expandedModules[module.id] ? 'Hide Content' : 'View Content'}
-                      </button>
-                    </div>
                   </div>
                 ))}
               </div>

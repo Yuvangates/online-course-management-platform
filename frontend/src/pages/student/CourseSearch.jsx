@@ -53,9 +53,8 @@ const CourseSearch = () => {
     }
     setResults(
       allCourses.filter(c => 
-        c.title.toLowerCase().includes(q) || 
-        c.description.toLowerCase().includes(q) ||
-        c.code.toLowerCase().includes(q)
+        c.name.toLowerCase().includes(q) || 
+        c.description.toLowerCase().includes(q)
       )
     );
   }, [query, allCourses]);
@@ -65,9 +64,8 @@ const CourseSearch = () => {
     const q = query.trim().toLowerCase();
     if (!q) return setSuggestions([]);
     const s = allCourses.filter(c => 
-      c.title.toLowerCase().includes(q) || 
-      c.description.toLowerCase().includes(q) ||
-      c.code.toLowerCase().includes(q)
+      c.name.toLowerCase().includes(q) || 
+      c.description.toLowerCase().includes(q)
     ).slice(0, 5);
     setSuggestions(s);
   }, [query, allCourses]);
@@ -85,9 +83,9 @@ const CourseSearch = () => {
   };
 
   const onSelectSuggestion = (course) => {
-    setQuery(course.title);
+    setQuery(course.name);
     setSuggestions([]);
-    navigate(`/student/course/${course.id}`);
+    navigate(`/student/course/${course.course_id}`);
   };
 
   return (
@@ -113,9 +111,9 @@ const CourseSearch = () => {
               {suggestions.length > 0 && (
                 <ul className="suggestions-list" role="listbox">
                   {suggestions.map(s => (
-                    <li key={s.id} role="option" tabIndex={0} onClick={() => onSelectSuggestion(s)} onKeyDown={(e)=>{ if(e.key=== 'Enter') onSelectSuggestion(s)}}>
-                      <strong>{s.title}</strong>
-                      <div className="muted">{s.code} • {s.duration_weeks} weeks</div>
+                    <li key={s.course_id} role="option" tabIndex={0} onClick={() => onSelectSuggestion(s)} onKeyDown={(e)=>{ if(e.key=== 'Enter') onSelectSuggestion(s)}}>
+                      <strong>{s.name}</strong>
+                      <div className="muted">{s.duration} weeks</div>
                     </li>
                   ))}
                 </ul>
@@ -133,19 +131,18 @@ const CourseSearch = () => {
               <div className="empty">No courses found matching "{query}". Try searching with different keywords.</div>
             ) : (
               results.map(course => (
-                <div key={course.id} className="course-card">
-                  <h3>{course.title}</h3>
-                  <p className="muted">{course.code} • {course.level}</p>
+                <div key={course.course_id} className="course-card">
+                  <h3>{course.name}</h3>
                   <p>{course.description?.substring(0, 100)}...</p>
-                  <p className="muted">Duration: {course.duration_weeks} weeks • Credits: {course.credits}</p>
+                  <p className="muted">Duration: {course.duration} weeks</p>
                   <div className="course-actions">
-                    <Link to={`/student/course/${course.id}`} className="btn outline">View</Link>
+                    <Link to={`/student/course/${course.course_id}`} className="btn outline">View</Link>
                     <button 
                       className="btn primary" 
-                      onClick={() => enrollCourse(course.id)} 
-                      disabled={isEnrolled(course.id)}
+                      onClick={() => enrollCourse(course.course_id)} 
+                      disabled={isEnrolled(course.course_id)}
                     >
-                      {isEnrolled(course.id) ? 'Enrolled' : 'Enroll'}
+                      {isEnrolled(course.course_id) ? 'Enrolled' : 'Enroll'}
                     </button>
                   </div>
                 </div>

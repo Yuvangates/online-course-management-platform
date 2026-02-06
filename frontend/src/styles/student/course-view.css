@@ -47,6 +47,7 @@
 .course-instructor {
   font-size: var(--font-size-base);
   opacity: 0.95;
+  color: var(--text-secondary);
   margin: var(--space-sm) 0;
 }
 

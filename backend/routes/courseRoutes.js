@@ -58,10 +58,27 @@ router.get('/:id/details', authMiddleware.verifyToken, async (req, res) => {
         if (!course) {
             return res.status(404).json({ error: 'Course not found' });
         }
-        const modules = await queries.getModulesByCourseId(id);
-        res.status(200).json({ course, modules });
+        const instructors = await queries.getInstructorsByCourse(id);
+        const modules = await queries.getModulesByCourse(id);
+        res.status(200).json({ course, modules, instructors });
     } catch (error) {
         console.error('Error fetching course details:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Get module content
+router.get('/:id/modules/:moduleNumber/content', authMiddleware.verifyToken, async (req, res) => {
+    try {
+        const id = parseInt(req.params.id, 10);
+        const moduleNumber = parseInt(req.params.moduleNumber, 10);
+        if (isNaN(id) || isNaN(moduleNumber)) {
+            return res.status(400).json({ error: 'Invalid parameters' });
+        }
+        const content = await queries.getModuleContent(id, moduleNumber);
+        res.status(200).json({ content });
+    } catch (error) {
+        console.error('Error fetching module content:', error);
         res.status(500).json({ error: error.message });
     }
 });
@@ -73,7 +90,7 @@ router.get('/:id/modules', authMiddleware.verifyToken, async (req, res) => {
         if (isNaN(id)) {
             return res.status(400).json({ error: 'Invalid course ID' });
         }
-        const modules = await queries.getModulesByCourseId(id);
+        const modules = await queries.getModulesByCourse(id);
         res.status(200).json({ modules });
     } catch (error) {
         console.error('Error fetching modules:', error);

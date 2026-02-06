@@ -1,89 +1,72 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import Navbar from '../../components/Navbar';
-import authService from '../../api/authService';
 import '../../styles/student/student-profile.css';
 
 const Profile = () => {
-  const { user } = useAuth();
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+    const { user } = useAuth();
+    const [profile, setProfile] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        setLoading(true);
-        const response = await authService.getProfile();
-        setProfile(response.user);
-      } catch (err) {
-        setError('Failed to load profile');
-        // Fallback to user from context
-        if (user) {
-          setProfile(user);
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
+    useEffect(() => {
+        const setupProfile = () => {
+            if (!user) {
+                setError('Could not load user profile.');
+                setLoading(false);
+                return;
+            }
+            try {
+                // The user object from AuthContext is now the source of truth.
+                // For edit functionality to work, a backend endpoint and API service are needed.
+                setProfile(user);
+            } catch (err) {
+                setError('Failed to load profile.');
+                console.error(err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        setupProfile();
+    }, [user]);
 
-    if (user) {
-      fetchProfile();
-    }
-  }, [user]);
+    if (loading) return <div className="student-container"><p>Loading profile...</p></div>;    
 
-  if (loading) return (
-    <>
-      <Navbar role="Student" />
-      <div className="student-container" style={{ textAlign: 'center', padding: '2rem' }}>
-        <p>Loading profile...</p>
-      </div>
-    </>
-  );
+    return (
+        <>
+            <Navbar role="Student" />
+            <div className="student-container profile-page">
+                <h1>My Profile</h1>
+                {error && <div className="alert error">{error}</div>}
+                
+                <div className="profile-card">
+                    <div className="profile-header">
+                        <h2>{profile?.name}</h2>
+                        {/* Edit button removed as the backend service for updates is not available. */}
+                    </div>
 
-  if (!profile) return (
-    <>
-      <Navbar role="Student" />
-      <div className="student-container" style={{ textAlign: 'center', padding: '2rem' }}>
-        <p>Unable to load profile</p>
-      </div>
-    </>
-  );
-
-  const age = (() => {
-    if (!profile.date_of_birth) return '--';
-    const dob = new Date(profile.date_of_birth);
-    const diff = Date.now() - dob.getTime();
-    return Math.floor(diff / (1000 * 60 * 60 * 24 * 365.25));
-  })();
-
-  return (
-    <>
-      <Navbar role="Student" />
-      <div className="student-container">
-        <div className="dashboard-hero">
-          <div className="hero-text">
-            <h1>My Profile</h1>
-            <p className="muted">View and manage your profile information</p>
-          </div>
-        </div>
-
-        {error && <div style={{ color: '#c62828', padding: '1rem', marginBottom: '1rem' }}>{error}</div>}
-
-        <div className="profile-card course-card">
-          <h3>{profile.name}</h3>
-          <p className="muted">{profile.role} • ID: {profile.user_id}</p>
-
-          <div style={{ marginTop: 12 }}>
-            <p><strong>Email:</strong> {profile.email}</p>
-            <p><strong>Country:</strong> {profile.country || 'Not specified'}</p>
-            {profile.date_of_birth && <p><strong>Date of Birth:</strong> {profile.date_of_birth} ({age} years)</p>}
-            {profile.skill_level && <p><strong>Skill Level:</strong> {profile.skill_level}</p>}
-          </div>
-        </div>
-      </div>
-    </>
-  );
+                    <div className="profile-details">
+                        <div className="detail-item">
+                            <span className="label">Email</span>
+                            <span className="value">{profile?.email}</span>
+                        </div>
+                        <div className="detail-item">
+                            <span className="label">Country</span>
+                            <span className="value">{profile?.country || 'Not set'}</span>
+                        </div>
+                        <div className="detail-item">
+                            <span className="label">Date of Birth</span>
+                            <span className="value">{profile?.date_of_birth ? new Date(profile.date_of_birth).toLocaleDateString() : 'Not set'}</span>
+                        </div>
+                        <div className="detail-item">
+                            <span className="label">Skill Level</span>
+                            <span className="value">{profile?.skill_level || 'Not set'}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </>
+    );
 };
 
 export default Profile;
