@@ -1,13 +1,23 @@
 import React from 'react';
 import { NavLink, Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import authService from '../api/authService';
 import '../styles/navbar.css';
 
 const Navbar = ({ role }) => {
     const navigate = useNavigate();
+    const { logout, user } = useAuth();
 
-    const handleLogout = () => {
-        // Clear tokens/state here
-        navigate('/');
+    const handleLogout = async () => {
+        try {
+            await authService.logout();
+            logout();
+            navigate('/');
+        } catch (error) {
+            console.error('Logout error:', error);
+            logout();
+            navigate('/');
+        }
     };
 
     return (
