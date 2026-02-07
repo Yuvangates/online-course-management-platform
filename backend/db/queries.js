@@ -696,6 +696,293 @@ const checkInstructorAssignment = async (courseId, instructorId) => {
     return result.rows[0];
 };
 
+// ==========================================
+// ANALYST ANALYTICS QUERIES
+// ==========================================
+
+// Get dashboard KPIs (total revenue, active students, avg rating, completion rate)
+const getAnalystDashboardKPIs = async () => {
+    const result = await pool.query(`
+        SELECT
+            -- Total Revenue
+            COALESCE(SUM(c.Fees), 0) AS total_revenue,
+            
+            -- Active Students (accessed within last 7 days)
+            COUNT(DISTINCT CASE 
+                WHEN e.Last_access >= CURRENT_DATE - INTERVAL '7 days' 
+                THEN e.student_id 
+            END) AS active_students,
+            
+            -- Average Course Rating
+            ROUND(AVG(e.rating)::NUMERIC, 2) AS avg_rating,
+            
+            -- Completion Rate (students with >80% progress)
+            ROUND(
+                (COUNT(DISTINCT CASE 
+                    WHEN (
+                        SELECT COUNT(sp.content_id)::FLOAT / NULLIF(
+                            (SELECT COUNT(*) FROM module_content mc WHERE mc.course_id = e.course_id), 
+                        0) * 100
+                        FROM student_progress sp 
+                        WHERE sp.student_id = e.student_id AND sp.course_id = e.course_id
+                    ) > 80 
+                    THEN e.student_id 
+                END)::NUMERIC / NULLIF(COUNT(DISTINCT e.student_id), 0) * 100)::NUMERIC, 
+            2) AS completion_rate
+        FROM enrollment e
+        JOIN course c ON e.course_id = c.course_id
+    `);
+    return result.rows[0];
+};
+
+// Get total revenue
+const getTotalRevenue = async () => {
+    const result = await pool.query(`
+        SELECT COALESCE(SUM(c.Fees), 0) AS total_revenue
+        FROM enrollment e
+        JOIN course c ON e.course_id = c.course_id
+    `);
+    return result.rows[0];
+};
+
+// Get revenue breakdown by university
+const getRevenueByUniversity = async () => {
+    const result = await pool.query(`
+        SELECT 
+            u.name AS university_name,
+            u.country,
+            COUNT(DISTINCT c.course_id) AS course_count,
+            COUNT(e.enrollment_id) AS enrollment_count,
+            COALESCE(SUM(c.Fees), 0) AS total_revenue
+        FROM university u
+        LEFT JOIN course c ON u.university_id = c.university_id
+        LEFT JOIN enrollment e ON c.course_id = e.course_id
+        GROUP BY u.university_id, u.name, u.country
+        ORDER BY total_revenue DESC
+    `);
+    return result.rows;
+};
+
+// Get free vs paid course performance comparison
+const getFreeVsPaidCourseStats = async () => {
+    const result = await pool.query(`
+        SELECT 
+            CASE WHEN c.Fees = 0 THEN 'Free' ELSE 'Paid' END AS course_type,
+            COUNT(DISTINCT c.course_id) AS course_count,
+            COUNT(e.enrollment_id) AS total_enrollments,
+            ROUND(AVG(e.evaluation_score)::NUMERIC, 2) AS avg_evaluation_score,
+            ROUND(AVG(e.rating)::NUMERIC, 2) AS avg_rating,
+            ROUND(
+                (AVG(
+                    (SELECT COUNT(sp.content_id)::FLOAT / NULLIF(
+                        (SELECT COUNT(*) FROM module_content mc WHERE mc.course_id = c.course_id), 
+                    0) * 100
+                    FROM student_progress sp 
+                    WHERE sp.student_id = e.student_id AND sp.course_id = e.course_id)
+                ))::NUMERIC, 
+            2) AS avg_completion_percentage
+        FROM course c
+        LEFT JOIN enrollment e ON c.course_id = e.course_id
+        WHERE e.enrollment_id IS NOT NULL
+        GROUP BY course_type
+        ORDER BY course_type
+    `);
+    return result.rows;
+};
+
+// Get dormant vs active users
+const getDormantVsActiveUsers = async () => {
+    const result = await pool.query(`
+        SELECT 
+            status AS user_status,
+            COUNT(*) AS student_count
+        FROM (
+            SELECT 
+                e.student_id,
+                MAX(e.Last_access) AS last_access_date,
+                CASE 
+                    WHEN MAX(e.Last_access) IS NULL THEN 'Never Accessed'
+                    WHEN MAX(e.Last_access) >= CURRENT_DATE - INTERVAL '7 days' THEN 'Active'
+                    WHEN MAX(e.Last_access) >= CURRENT_DATE - INTERVAL '30 days' THEN 'At Risk'
+                    ELSE 'Dormant'
+                END AS status
+            FROM enrollment e
+            GROUP BY e.student_id
+        ) AS user_activity
+        GROUP BY status
+        ORDER BY 
+            CASE status
+                WHEN 'Active' THEN 1
+                WHEN 'At Risk' THEN 2
+                WHEN 'Dormant' THEN 3
+                WHEN 'Never Accessed' THEN 4
+            END
+    `);
+    return result.rows;
+};
+
+// Get content drop-off rate (identify problematic content)
+const getContentDropoffRate = async () => {
+    const result = await pool.query(`
+        SELECT 
+            c.course_id,
+            c.name AS course_name,
+            m.module_number,
+            m.name AS module_name,
+            mc.content_id,
+            mc.title AS content_title,
+            mc.content_type,
+            COUNT(DISTINCT e.student_id) AS enrolled_students,
+            COUNT(DISTINCT sp.student_id) AS completed_students,
+            ROUND(
+                (COUNT(DISTINCT sp.student_id)::NUMERIC / NULLIF(COUNT(DISTINCT e.student_id), 0) * 100)::NUMERIC, 
+            2) AS completion_rate
+        FROM course c
+        JOIN module m ON c.course_id = m.course_id
+        JOIN module_content mc ON m.course_id = mc.course_id AND m.module_number = mc.module_number
+        LEFT JOIN enrollment e ON c.course_id = e.course_id
+        LEFT JOIN student_progress sp ON mc.course_id = sp.course_id 
+            AND mc.module_number = sp.module_number 
+            AND mc.content_id = sp.content_id
+        GROUP BY c.course_id, c.name, m.module_number, m.name, mc.content_id, mc.title, mc.content_type
+        HAVING COUNT(DISTINCT e.student_id) > 0
+        ORDER BY completion_rate ASC, c.course_id, m.module_number, mc.content_id
+        LIMIT 50
+    `);
+    return result.rows;
+};
+
+// Get preferred learning mode (content type completion rates)
+const getPreferredLearningMode = async () => {
+    const result = await pool.query(`
+        SELECT 
+            mc.content_type,
+            COUNT(DISTINCT mc.course_id || '-' || mc.module_number || '-' || mc.content_id) AS total_content,
+            COUNT(DISTINCT sp.student_id || '-' || sp.course_id || '-' || sp.module_number || '-' || sp.content_id) AS total_completions,
+            COUNT(DISTINCT sp.student_id) AS unique_students,
+            ROUND(
+                COUNT(DISTINCT sp.student_id || '-' || sp.course_id || '-' || sp.module_number || '-' || sp.content_id)::NUMERIC / 
+                NULLIF(COUNT(DISTINCT mc.course_id || '-' || mc.module_number || '-' || mc.content_id), 0), 
+            2) AS avg_completion_per_content
+        FROM module_content mc
+        LEFT JOIN student_progress sp ON mc.course_id = sp.course_id 
+            AND mc.module_number = sp.module_number 
+            AND mc.content_id = sp.content_id
+        GROUP BY mc.content_type
+        ORDER BY avg_completion_per_content DESC
+    `);
+    return result.rows;
+};
+
+// Get score distribution for histogram
+const getScoreDistribution = async () => {
+    const result = await pool.query(`
+        SELECT 
+            CASE 
+                WHEN evaluation_score >= 0 AND evaluation_score < 20 THEN '0-19'
+                WHEN evaluation_score >= 20 AND evaluation_score < 40 THEN '20-39'
+                WHEN evaluation_score >= 40 AND evaluation_score < 60 THEN '40-59'
+                WHEN evaluation_score >= 60 AND evaluation_score < 80 THEN '60-79'
+                WHEN evaluation_score >= 80 AND evaluation_score <= 100 THEN '80-100'
+            END AS score_range,
+            COUNT(*) AS student_count
+        FROM enrollment
+        WHERE evaluation_score IS NOT NULL
+        GROUP BY score_range
+        ORDER BY score_range
+    `);
+    return result.rows;
+};
+
+// Get skill level vs success correlation
+const getSkillLevelVsSuccess = async () => {
+    const result = await pool.query(`
+        SELECT 
+            s.skill_level,
+            COUNT(e.enrollment_id) AS total_enrollments,
+            ROUND(AVG(e.evaluation_score)::NUMERIC, 2) AS avg_score,
+            ROUND(AVG(e.rating)::NUMERIC, 2) AS avg_rating,
+            COUNT(CASE WHEN e.evaluation_score >= 60 THEN 1 END) AS passed_count,
+            ROUND(
+                (COUNT(CASE WHEN e.evaluation_score >= 60 THEN 1 END)::NUMERIC / NULLIF(COUNT(*), 0) * 100)::NUMERIC,
+            2) AS pass_rate
+        FROM student s
+        JOIN enrollment e ON s.student_id = e.student_id
+        WHERE e.evaluation_score IS NOT NULL
+        GROUP BY s.skill_level
+        ORDER BY s.skill_level
+    `);
+    return result.rows;
+};
+
+// Get instructor leaderboard (top-rated instructors)
+const getInstructorLeaderboard = async () => {
+    const result = await pool.query(`
+        SELECT 
+            u.user_id,
+            u.name AS instructor_name,
+            u.email,
+            i.expertise,
+            COUNT(DISTINCT ci.course_id) AS courses_taught,
+            COUNT(DISTINCT e.student_id) AS total_students,
+            ROUND(AVG(e.rating)::NUMERIC, 2) AS avg_rating,
+            ROUND(AVG(e.evaluation_score)::NUMERIC, 2) AS avg_student_score
+        FROM instructor i
+        JOIN user_ u ON i.instructor_id = u.user_id
+        LEFT JOIN course_instructor ci ON i.instructor_id = ci.instructor_id
+        LEFT JOIN enrollment e ON ci.course_id = e.course_id
+        GROUP BY u.user_id, u.name, u.email, i.expertise
+        HAVING COUNT(DISTINCT ci.course_id) > 0
+        ORDER BY avg_rating DESC NULLS LAST, total_students DESC
+    `);
+    return result.rows;
+};
+
+// Get course duration vs completion analysis
+const getCourseDurationVsCompletion = async () => {
+    const result = await pool.query(`
+        SELECT 
+            c.course_id,
+            c.name AS course_name,
+            c.duration AS duration_weeks,
+            COUNT(DISTINCT e.enrollment_id) AS enrollment_count,
+            ROUND(AVG(e.rating)::NUMERIC, 2) AS avg_rating,
+            ROUND(AVG(e.evaluation_score)::NUMERIC, 2) AS avg_score,
+            ROUND(
+                (AVG(
+                    (SELECT COUNT(sp.content_id)::FLOAT / NULLIF(
+                        (SELECT COUNT(*) FROM module_content mc WHERE mc.course_id = c.course_id), 
+                    0) * 100
+                    FROM student_progress sp 
+                    WHERE sp.student_id = e.student_id AND sp.course_id = e.course_id)
+                ))::NUMERIC,
+            2) AS avg_completion_percentage
+        FROM course c
+        LEFT JOIN enrollment e ON c.course_id = e.course_id
+        WHERE e.enrollment_id IS NOT NULL
+        GROUP BY c.course_id, c.name, c.duration
+        HAVING COUNT(DISTINCT e.enrollment_id) > 0
+        ORDER BY c.duration, avg_rating DESC
+    `);
+    return result.rows;
+};
+
+// Get enrollment trends (monthly breakdown)
+const getEnrollmentTrends = async () => {
+    const result = await pool.query(`
+        SELECT 
+            TO_CHAR(enrollment_date, 'YYYY-MM') AS month,
+            COUNT(*) AS enrollment_count,
+            COUNT(DISTINCT student_id) AS unique_students,
+            COUNT(DISTINCT course_id) AS courses_enrolled
+        FROM enrollment
+        GROUP BY TO_CHAR(enrollment_date, 'YYYY-MM')
+        ORDER BY month DESC
+        LIMIT 12
+    `);
+    return result.rows;
+};
+
 // Get analyst
 const getAnalyst = async () => {
     const result = await pool.query(`
@@ -783,4 +1070,16 @@ module.exports = {
 
     // Analyst queries
     getAnalyst,
+    getAnalystDashboardKPIs,
+    getTotalRevenue,
+    getRevenueByUniversity,
+    getFreeVsPaidCourseStats,
+    getDormantVsActiveUsers,
+    getContentDropoffRate,
+    getPreferredLearningMode,
+    getScoreDistribution,
+    getSkillLevelVsSuccess,
+    getInstructorLeaderboard,
+    getCourseDurationVsCompletion,
+    getEnrollmentTrends,
 };
