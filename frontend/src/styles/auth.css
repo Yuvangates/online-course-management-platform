@@ -710,3 +710,25 @@ form {
         font-size: 0.85rem;
     }
 }
+
+/* Auth Navbar */
+.auth-navbar {
+    background: #fff;
+    border-bottom: 1px solid #e0e0e0;
+    padding: 1rem 2rem;
+}
+
+.auth-navbar-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.auth-navbar-logo {
+    color: #333;
+    font-size: 1.5rem;
+    font-weight: bold;
+    text-decoration: none;
+}

@@ -70,7 +70,8 @@ CREATE TABLE course (
     description TEXT,
     duration INT,
     university_id INT NOT NULL REFERENCES university(university_id),
-    textbook_isbn VARCHAR(20) REFERENCES textbook(isbn)
+    textbook_isbn VARCHAR(20) REFERENCES textbook(isbn),
+    Fees INT
 );
 
 
@@ -94,7 +95,7 @@ CREATE TABLE module_content (
     content_id INT NOT NULL, -- Partial Key (e.g., Video 1, Video 2)
    
     title VARCHAR(150) NOT NULL,
-    content_type VARCHAR(20) CHECK (content_type IN ('Video', 'Note')),
+    content_type VARCHAR(20) CHECK (content_type IN ('Video', 'Note', 'assignment')),
     url VARCHAR(255),
    
     -- Composite Primary Key (The full chain)
@@ -119,6 +120,9 @@ CREATE TABLE enrollment (
     course_id INT NOT NULL REFERENCES course(course_id),
     enrollment_date DATE DEFAULT CURRENT_DATE,
     evaluation_score INT CHECK (evaluation_score BETWEEN 0 AND 100),
+    Last_access TIMESTAMP,
+    Review TEXT,
+    rating INT CHECK (rating BETWEEN 1 AND 5),
    
     UNIQUE(student_id, course_id)
 );
@@ -130,4 +134,26 @@ CREATE TABLE course_instructor (
     instructor_id INT NOT NULL REFERENCES instructor(instructor_id) ON DELETE CASCADE,
    
     PRIMARY KEY (course_id, instructor_id)
+);
+
+-- Tracks exactly which video/note a student has finished
+CREATE TABLE student_progress (
+    -- Who?
+    student_id INT NOT NULL REFERENCES student(student_id) ON DELETE CASCADE,
+    
+    -- What? (References the composite PK of module_content)
+    course_id INT NOT NULL,
+    module_number INT NOT NULL,
+    content_id INT NOT NULL,
+    
+    -- When?
+    completion_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    -- Constraint: Prevent marking the same video complete twice
+    PRIMARY KEY (student_id, course_id, module_number, content_id),
+    
+    -- Foreign Key connecting to the specific content item
+    FOREIGN KEY (course_id, module_number, content_id)
+        REFERENCES module_content(course_id, module_number, content_id)
+        ON DELETE CASCADE
 );

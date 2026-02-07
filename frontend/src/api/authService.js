@@ -39,7 +39,8 @@ const authService = {
             name,
             role,
             country,
-            ...additionalData,
+            date_of_birth: additionalData.date_of_birth,
+            skill_level: additionalData.skill_level,
         });
         return response.data;
     },

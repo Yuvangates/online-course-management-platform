@@ -56,12 +56,12 @@ INSERT INTO student (student_id, date_of_birth, skill_level) VALUES
 
 
 -- Insert Courses
-INSERT INTO course (name, description, duration, university_id, textbook_isbn) VALUES
-('Introduction to Data Structures', 'Learn fundamental data structures like arrays, linked lists, trees, and graphs', 8, 1, '978-0201361512'),
-('Advanced Algorithms', 'Deep dive into algorithm design and complexity analysis', 10, 1, '978-0262033848'),
-('Database Management Systems', 'Understand relational databases, SQL, and database design', 8, 3, '978-0078022159'),
-('Web Development Basics', 'Learn HTML, CSS, and JavaScript fundamentals', 6, 4, '978-1118008188'),
-('Machine Learning Fundamentals', 'Introduction to ML algorithms and applications', 10, 1, '978-0262033848');
+INSERT INTO course (name, description, duration, university_id, textbook_isbn, Fees) VALUES
+('Introduction to Data Structures', 'Learn fundamental data structures like arrays, linked lists, trees, and graphs', 8, 1, '978-0201361512', 100),
+('Advanced Algorithms', 'Deep dive into algorithm design and complexity analysis', 10, 1, '978-0262033848', 150),
+('Database Management Systems', 'Understand relational databases, SQL, and database design', 8, 3, '978-0078022159', 120),
+('Web Development Basics', 'Learn HTML, CSS, and JavaScript fundamentals', 6, 4, '978-1118008188', 80),
+('Machine Learning Fundamentals', 'Introduction to ML algorithms and applications', 10, 1, '978-0262033848', 200);
 
 
 -- Insert Modules
@@ -92,6 +92,7 @@ INSERT INTO module_content (course_id, module_number, content_id, title, content
 (1, 1, 2, 'DS Overview Note', 'Note', '/notes/ds-overview.pdf'),
 (1, 2, 1, 'Arrays Tutorial', 'Video', '/videos/arrays-tutorial.mp4'),
 (1, 2, 2, 'Linked Lists Visualization', 'Video', '/videos/linked-lists.mp4'),
+(1, 2, 3, 'Array Assignment', 'assignment', '/assignments/array-assignment.pdf'),
 (2, 1, 1, 'Algorithm Design Paradigms', 'Video', '/videos/algorithm-paradigms.mp4'),
 (3, 1, 1, 'Database Fundamentals Video', 'Video', '/videos/db-intro.mp4'),
 (4, 1, 1, 'HTML Basics', 'Video', '/videos/html-basics.mp4'),
@@ -109,14 +110,21 @@ INSERT INTO course_instructor (course_id, instructor_id) VALUES
 
 
 -- Insert Student Enrollments
-INSERT INTO enrollment (student_id, course_id, enrollment_date, evaluation_score) VALUES
-(5, 1, '2024-01-15', 85),
-(5, 2, '2024-02-01', NULL),
-(6, 1, '2024-01-15', 70),
-(6, 4, '2024-02-10', NULL),
-(7, 1, '2024-01-15', 95),
-(7, 3, '2024-01-20', 88),
-(8, 2, '2024-02-01', 75),
-(8, 5, '2024-03-01', NULL),
-(9, 1, '2024-01-15', 60),
-(9, 4, '2024-02-10', NULL);
+INSERT INTO enrollment (student_id, course_id, enrollment_date, evaluation_score, Last_access, Review, rating) VALUES
+(5, 1, '2024-01-15', 85, '2024-03-10 10:00:00', 'Great course!', 5),
+(5, 2, '2024-02-01', NULL, '2024-03-12 11:00:00', NULL, NULL),
+(6, 1, '2024-01-15', 70, '2024-03-05 09:00:00', 'Good, but challenging.', 4),
+(6, 4, '2024-02-10', NULL, '2024-03-11 14:00:00', NULL, NULL),
+(7, 1, '2024-01-15', 95, '2024-03-13 16:00:00', 'Excellent course, highly recommended.', 5),
+(7, 3, '2024-01-20', 88, '2024-03-14 12:00:00', 'Very informative.', 4),
+(8, 2, '2024-02-01', 75, '2024-03-09 18:00:00', 'Could be better.', 3),
+(8, 5, '2024-03-01', NULL, '2024-03-15 10:00:00', NULL, NULL),
+(9, 1, '2024-01-15', 60, '2024-03-01 11:00:00', 'I struggled a bit.', 3),
+(9, 4, '2024-02-10', NULL, '2024-03-12 13:00:00', NULL, NULL);
+
+-- Insert Student Progress
+INSERT INTO student_progress (student_id, course_id, module_number, content_id, completion_date) VALUES
+(5, 1, 1, 1, '2024-01-20 10:00:00'),
+(5, 1, 1, 2, '2024-01-21 11:00:00'),
+(5, 1, 2, 1, '2024-01-25 14:00:00'),
+(6, 1, 1, 1, '2024-01-22 09:00:00');

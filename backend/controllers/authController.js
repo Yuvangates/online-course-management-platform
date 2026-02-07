@@ -18,12 +18,12 @@ const register = async (req, res) => {
 
         // Validation
         if (!email || !password || !name) {
-            return res.status(400).json({ error: 'Email, password, and name are required' });
+            return res.status(400).json({ error: 'Please fill all fields.' });
         }
 
         // Only students can self-register
         if (role && role !== 'Student') {
-            return res.status(403).json({ error: 'Only students can self-register. Other roles are created by admins.' });
+            return res.status(403).json({ error: 'Registration failed. Please try again.' });
         }
 
         // Hash password
@@ -40,8 +40,8 @@ const register = async (req, res) => {
 
         // Create student record
         await queries.createStudent({
-            userId: user.user_id,
-            university_id: null,
+            student_id: user.user_id,
+            date_of_birth: date_of_birth,
             skill_level: skill_level || 'Beginner',
         });
 
@@ -49,7 +49,6 @@ const register = async (req, res) => {
         const token = generateToken(user);
 
         res.status(201).json({
-            message: 'User registered successfully',
             token,
             user: {
                 user_id: user.user_id,
@@ -61,7 +60,7 @@ const register = async (req, res) => {
         });
     } catch (error) {
         console.error('Register error:', error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: 'Registration failed. Please try again.' });
     }
 };
 
@@ -72,26 +71,25 @@ const login = async (req, res) => {
 
         // Validation
         if (!email || !password) {
-            return res.status(400).json({ error: 'Email and password are required' });
+            return res.status(400).json({ error: 'Please fill all fields.' });
         }
 
         // Get user by email
         const user = await queries.getUserByEmail(email);
         if (!user) {
-            return res.status(401).json({ error: 'Invalid email or password' });
+            return res.status(401).json({ error: 'Invalid credentials.' });
         }
 
         // Compare passwords
         const isPasswordValid = await bcrypt.compare(password, user.password_hash);
         if (!isPasswordValid) {
-            return res.status(401).json({ error: 'Invalid email or password' });
+            return res.status(401).json({ error: 'Invalid credentials.' });
         }
 
         // Generate token
         const token = generateToken(user);
 
         res.status(200).json({
-            message: 'Login successful',
             token,
             user: {
                 user_id: user.user_id,
@@ -103,7 +101,7 @@ const login = async (req, res) => {
         });
     } catch (error) {
         console.error('Login error:', error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: 'Login failed. Please try again.' });
     }
 };
 

@@ -7,14 +7,14 @@ const LandingPage = () => {
     <div className="landing-container">
       {/* Navbar */}
       <nav className="landing-navbar">
-        <div className="navbar-brand">EduPlatform</div>
+        <div className="navbar-brand">LearnSphere</div>
         <Link to="/login" className="nav-login-btn">Sign In</Link>
       </nav>
 
       {/* Hero Section */}
       <section className="hero-section">
         <div className="hero-content">
-          <h1 className="hero-title">Welcome to EduPlatform</h1>
+          <h1 className="hero-title">Welcome to LearnSphere</h1>
           <p className="hero-subtitle">
             Transform Education Through Innovative Online Learning
           </p>
@@ -33,7 +33,7 @@ const LandingPage = () => {
 
       {/* Features Section */}
       <section className="features-section">
-        <h2 className="section-title">Why Choose EduPlatform?</h2>
+        <h2 className="section-title">Why Choose LearnSphere?</h2>
         <div className="features-grid">
           <div className="feature-card">
             <div className="feature-icon">👨‍🎓</div>
@@ -125,7 +125,7 @@ const LandingPage = () => {
       {/* Call to Action Section */}
       <section className="cta-section">
         <h2>Ready to Begin Your Learning Journey?</h2>
-        <p>Join thousands of students already learning on EduPlatform</p>
+        <p>Join thousands of students already learning on LearnSphere</p>
         <div className="cta-buttons">
           <Link to="/login" className="cta-button primary">Sign In</Link>
           <a href="#contact" className="cta-button secondary">Learn More</a>
@@ -136,7 +136,7 @@ const LandingPage = () => {
       <footer className="landing-footer">
         <div className="footer-content">
           <div className="footer-section">
-            <h4>EduPlatform</h4>
+            <h4>LearnSphere</h4>
             <p>Transforming online education globally</p>
           </div>
           <div className="footer-section">
@@ -156,7 +156,7 @@ const LandingPage = () => {
           </div>
         </div>
         <div className="footer-bottom">
-          <p>&copy; 2024 EduPlatform. All rights reserved.</p>
+          <p>&copy; 2024 LearnSphere. All rights reserved.</p>
         </div>
       </footer>
     </div>
