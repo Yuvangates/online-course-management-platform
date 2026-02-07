@@ -361,6 +361,67 @@ const getAllUniversities = async (req, res) => {
     }
 };
 
+// ==========================================
+// USER MANAGEMENT
+// ==========================================
+
+// Get all users
+const getAllUsers = async (req, res) => {
+    try {
+        const users = await queries.getAllUsers();
+        res.status(200).json(users);
+    } catch (error) {
+        console.error('Get all users error:', error);
+        res.status(500).json({ error: error.message });
+    }
+};
+
+// Search users by name or email
+const searchUsers = async (req, res) => {
+    try {
+        const { q } = req.query;
+
+        if (!q || q.trim() === '') {
+            const users = await queries.getAllUsers();
+            return res.status(200).json(users);
+        }
+
+        const users = await queries.searchUsersByName(q.trim());
+        res.status(200).json(users);
+    } catch (error) {
+        console.error('Search users error:', error);
+        res.status(500).json({ error: error.message });
+    }
+};
+
+// Delete a user
+const deleteUser = async (req, res) => {
+    try {
+        const { userId } = req.params;
+
+        if (!userId) {
+            return res.status(400).json({ error: 'User ID is required' });
+        }
+
+        // Prevent deleting yourself
+        if (parseInt(userId) === req.user.user_id) {
+            return res.status(400).json({ error: 'Cannot delete your own account' });
+        }
+
+        const user = await queries.getUserById(parseInt(userId));
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        await queries.deleteUser(parseInt(userId));
+
+        res.status(200).json({ message: 'User deleted successfully' });
+    } catch (error) {
+        console.error('Delete user error:', error);
+        res.status(500).json({ error: error.message });
+    }
+};
+
 module.exports = {
     getDashboard,
     createCourse,
@@ -377,4 +438,7 @@ module.exports = {
     createAnalyst,
     getAnalyst,
     getAllUniversities,
+    getAllUsers,
+    searchUsers,
+    deleteUser,
 };

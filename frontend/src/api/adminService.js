@@ -141,6 +141,32 @@ const adminService = {
         });
         return response.data;
     },
+
+    // ==========================================
+    // USER MANAGEMENT
+    // ==========================================
+
+    getAllUsers: async () => {
+        const response = await axios.get(`${API_URL}/users`, {
+            headers: getAuthHeader()
+        });
+        return response.data;
+    },
+
+    searchUsers: async (query) => {
+        const response = await axios.get(`${API_URL}/users/search`, {
+            params: { q: query },
+            headers: getAuthHeader()
+        });
+        return response.data;
+    },
+
+    deleteUser: async (userId) => {
+        const response = await axios.delete(`${API_URL}/users/${userId}`, {
+            headers: getAuthHeader()
+        });
+        return response.data;
+    },
 };
 
 export default adminService;

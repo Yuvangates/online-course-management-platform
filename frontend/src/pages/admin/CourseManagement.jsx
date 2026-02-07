@@ -46,6 +46,11 @@ const CourseManagement = () => {
         }
     };
 
+    const getUniversityName = (universityId) => {
+        const uni = universities.find((u) => u.university_id === universityId);
+        return uni ? uni.name : 'Unknown';
+    };
+
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setFormData((prev) => ({
@@ -191,7 +196,7 @@ const CourseManagement = () => {
                                     {courses.map((course) => (
                                         <tr key={course.course_id}>
                                             <td>{course.name}</td>
-                                            <td>{course.university_id}</td>
+                                            <td>{getUniversityName(course.university_id)}</td>
                                             <td>{course.duration} weeks</td>
                                             <td>
                                                 <button
@@ -211,14 +216,14 @@ const CourseManagement = () => {
             )}
 
             {activeTab === 'course-detail' && selectedCourse && (
-                <CourseDetailView course={selectedCourse} onBack={handleBackToCourses} />
+                <CourseDetailView course={selectedCourse} onBack={handleBackToCourses} getUniversityName={getUniversityName} />
             )}
         </div>
     );
 };
 
 // Course Detail View Component
-const CourseDetailView = ({ course, onBack }) => {
+const CourseDetailView = ({ course, onBack, getUniversityName }) => {
     const [instructors, setInstructors] = useState([]);
     const [students, setStudents] = useState([]);
     const [allInstructors, setAllInstructors] = useState([]);
@@ -325,7 +330,7 @@ const CourseDetailView = ({ course, onBack }) => {
 
             <h2>{course.name}</h2>
             <p className="course-meta">
-                <strong>Duration:</strong> {course.duration} weeks | <strong>University ID:</strong> {course.university_id}
+                <strong>Duration:</strong> {course.duration} weeks | <strong>University:</strong> {getUniversityName(course.university_id)}
             </p>
 
             {error && <div className="alert error">{error}</div>}

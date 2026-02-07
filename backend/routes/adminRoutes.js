@@ -37,4 +37,9 @@ router.get('/analyst', adminController.getAnalyst);
 // Universities
 router.get('/universities', adminController.getAllUniversities);
 
+// User management
+router.get('/users', adminController.getAllUsers);
+router.get('/users/search', adminController.searchUsers);
+router.delete('/users/:userId', adminController.deleteUser);
+
 module.exports = router;

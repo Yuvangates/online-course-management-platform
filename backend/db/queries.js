@@ -69,6 +69,43 @@ const updateUser = async (userId, { name, country }) => {
     return result.rows[0];
 };
 
+// Get all users with role information
+const getAllUsers = async () => {
+    const result = await pool.query(`
+        SELECT u.user_id, u.email, u.name, u.role, u.country,
+               s.skill_level, i.expertise, i.start_date
+        FROM user_ u
+        LEFT JOIN student s ON u.user_id = s.student_id
+        LEFT JOIN instructor i ON u.user_id = i.instructor_id
+        ORDER BY u.name ASC
+    `);
+    return result.rows;
+};
+
+// Search users by name or email
+const searchUsersByName = async (query) => {
+    const searchQuery = `%${query}%`;
+    const result = await pool.query(`
+        SELECT u.user_id, u.email, u.name, u.role, u.country,
+               s.skill_level, i.expertise, i.start_date
+        FROM user_ u
+        LEFT JOIN student s ON u.user_id = s.student_id
+        LEFT JOIN instructor i ON u.user_id = i.instructor_id
+        WHERE (u.name ILIKE $1 OR u.email ILIKE $1)
+        ORDER BY u.name ASC
+    `, [searchQuery]);
+    return result.rows;
+};
+
+// Delete user (cascade will handle related records)
+const deleteUser = async (userId) => {
+    const result = await pool.query(
+        'DELETE FROM user_ WHERE user_id = $1 RETURNING *',
+        [userId]
+    );
+    return result.rows[0];
+};
+
 
 // ==========================================
 // STUDENT QUERIES
@@ -680,6 +717,9 @@ module.exports = {
     createUserAndInstructorInTransaction,
     createUserAndAnalystInTransaction,
     updateUser,
+    getAllUsers,
+    searchUsersByName,
+    deleteUser,
    
     // Student queries
     getStudentById,
