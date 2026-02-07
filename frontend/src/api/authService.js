@@ -64,6 +64,10 @@ const authService = {
         const response = await axiosInstance.get('/auth/profile');
         return response.data;
     },
+    updateProfile: async (payload) => {
+        const response = await axiosInstance.put('/student/profile', payload);
+        return response.data;
+    },
 };
 
 export default authService;

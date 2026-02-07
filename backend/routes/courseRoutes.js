@@ -98,4 +98,49 @@ router.get('/:id/modules', authMiddleware.verifyToken, async (req, res) => {
     }
 });
 
+// Get course universities
+router.get('/:id/universities', authMiddleware.verifyToken, async (req, res) => {
+    try {
+        const id = parseInt(req.params.id, 10);
+        if (isNaN(id)) {
+            return res.status(400).json({ error: 'Invalid course ID' });
+        }
+        const universities = await queries.getCourseUniversities(id);
+        res.status(200).json({ universities });
+    } catch (error) {
+        console.error('Error fetching universities:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Get course rating
+router.get('/:id/rating', authMiddleware.verifyToken, async (req, res) => {
+    try {
+        const id = parseInt(req.params.id, 10);
+        if (isNaN(id)) {
+            return res.status(400).json({ error: 'Invalid course ID' });
+        }
+        const ratingData = await queries.getCourseRating(id);
+        res.status(200).json(ratingData);
+    } catch (error) {
+        console.error('Error fetching rating:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Get course reviews
+router.get('/:id/reviews', authMiddleware.verifyToken, async (req, res) => {
+    try {
+        const id = parseInt(req.params.id, 10);
+        if (isNaN(id)) {
+            return res.status(400).json({ error: 'Invalid course ID' });
+        }
+        const reviews = await queries.getCourseReviewsDetailed(id);
+        res.status(200).json({ reviews });
+    } catch (error) {
+        console.error('Error fetching reviews:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 module.exports = router;
