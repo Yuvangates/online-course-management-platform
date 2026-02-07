@@ -54,11 +54,21 @@ const AssignedCourses = () => {
               return (
                 <div key={course.course_id} className="instructor-course-card">
                   <h3>{course.name}</h3>
+                  {course.university_name && (
+                    <div style={{ fontSize: '0.9rem', color: '#444', marginBottom: '0.5rem', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span>🏛️</span> {course.university_name}
+                    </div>
+                  )}
                   <div className="meta">
-                    <span>{course.duration} weeks</span>
-                    <span>{studentCount} students</span>
-                    <span>{moduleCount} modules</span>
+                    <span>⏱ {course.duration} weeks</span>
+                    <span>👥 {studentCount} students</span>
+                    <span>📚 {moduleCount} modules</span>
                   </div>
+                  {course.other_instructors && (
+                    <div style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.8rem', fontStyle: 'italic' }}>
+                      <span style={{ fontWeight: '600' }}>Co-instructors:</span> {course.other_instructors}
+                    </div>
+                  )}
                   {course.description && (
                     <p className="muted" style={{ flexGrow: 1, marginBottom: '1rem' }}>{course.description}</p>
                   )}

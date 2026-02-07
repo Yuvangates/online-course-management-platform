@@ -218,7 +218,13 @@ const getEnrollmentsByStudent = async (studentId) => {
 const getEnrollmentsByCourse = async (courseId) => {
     // Corrected table names
     const result = await pool.query(`
-        SELECT e.*, u.name AS student_name, u.email
+        SELECT e.*, u.name AS student_name, u.email,
+        COALESCE(
+            (SELECT COUNT(sp.content_id)::FLOAT 
+             FROM student_progress sp 
+             WHERE sp.student_id = e.student_id AND sp.course_id = e.course_id
+            ) / NULLIF((SELECT COUNT(*) FROM module_content mc WHERE mc.course_id = e.course_id), 0) * 100, 
+        0) AS progress_percentage
         FROM enrollment e
         JOIN student s ON e.student_id = s.student_id
         JOIN user_ u ON s.student_id = u.user_id
@@ -314,10 +320,18 @@ const getCoursesByInstructor = async (instructorId) => {
 const getCoursesByInstructorWithCounts = async (instructorId) => {
     const result = await pool.query(`
         SELECT c.*,
+            u.name AS university_name,
             (SELECT COUNT(*) FROM module m WHERE m.course_id = c.course_id) AS module_count,
-            (SELECT COUNT(*) FROM enrollment e WHERE e.course_id = c.course_id) AS student_count
+            (SELECT COUNT(*) FROM enrollment e WHERE e.course_id = c.course_id) AS student_count,
+            (
+                SELECT STRING_AGG(usr.name, ', ')
+                FROM course_instructor ci2
+                JOIN user_ usr ON ci2.instructor_id = usr.user_id
+                WHERE ci2.course_id = c.course_id AND ci2.instructor_id != $1
+            ) AS other_instructors
         FROM course_instructor ci
         JOIN course c ON ci.course_id = c.course_id
+        LEFT JOIN university u ON c.university_id = u.university_id
         WHERE ci.instructor_id = $1
     `, [instructorId]);
     return result.rows;
@@ -436,16 +450,59 @@ const swapModuleOrder = async (courseId, num1, num2) => {
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
-        const temp = -10000 - num1;
-        const temp2 = -10000 - num2;
-        await client.query('UPDATE module SET module_number = $3 WHERE course_id = $1 AND module_number = $2', [courseId, num1, temp]);
-        await client.query('UPDATE module SET module_number = $3 WHERE course_id = $1 AND module_number = $2', [courseId, num2, temp2]);
-        await client.query('UPDATE module_content SET module_number = $3 WHERE course_id = $1 AND module_number = $2', [courseId, num1, temp]);
-        await client.query('UPDATE module_content SET module_number = $3 WHERE course_id = $1 AND module_number = $2', [courseId, num2, temp2]);
-        await client.query('UPDATE module SET module_number = $3 WHERE course_id = $1 AND module_number = $2', [courseId, temp2, num1]);
-        await client.query('UPDATE module SET module_number = $3 WHERE course_id = $1 AND module_number = $2', [courseId, temp, num2]);
-        await client.query('UPDATE module_content SET module_number = $3 WHERE course_id = $1 AND module_number = $2', [courseId, temp2, num1]);
-        await client.query('UPDATE module_content SET module_number = $3 WHERE course_id = $1 AND module_number = $2', [courseId, temp, num2]);
+
+        // Helper to move content from one module to another
+        // Necessary because foreign keys (student_progress) restrict direct updates to module_number
+        const moveContent = async (fromMod, toMod) => {
+            const res = await client.query(
+                'SELECT * FROM module_content WHERE course_id = $1 AND module_number = $2',
+                [courseId, fromMod]
+            );
+            for (const row of res.rows) {
+                // 1. Insert copy into new module
+                await client.query(
+                    'INSERT INTO module_content (course_id, module_number, content_id, title, content_type, url) VALUES ($1, $2, $3, $4, $5, $6)',
+                    [courseId, toMod, row.content_id, row.title, row.content_type, row.url]
+                );
+                // 2. Update dependent student_progress to point to the new parent
+                await client.query(
+                    'UPDATE student_progress SET module_number = $2 WHERE course_id = $1 AND module_number = $3 AND content_id = $4',
+                    [courseId, toMod, fromMod, row.content_id]
+                );
+                // 3. Delete original content row
+                await client.query(
+                    'DELETE FROM module_content WHERE course_id = $1 AND module_number = $2 AND content_id = $3',
+                    [courseId, fromMod, row.content_id]
+                );
+            }
+        };
+
+        // Fetch attributes of both modules
+        const res1 = await client.query('SELECT name, duration_weeks FROM module WHERE course_id = $1 AND module_number = $2', [courseId, num1]);
+        const res2 = await client.query('SELECT name, duration_weeks FROM module WHERE course_id = $1 AND module_number = $2', [courseId, num2]);
+        
+        if (res1.rows.length === 0 || res2.rows.length === 0) throw new Error('Module not found');
+        
+        const m1 = res1.rows[0];
+        const m2 = res2.rows[0];
+        const tempId = -1; // Temporary ID for swapping content
+
+        // 1. Create temp module
+        await client.query('DELETE FROM module WHERE course_id = $1 AND module_number = $2', [courseId, tempId]); // Cleanup
+        await client.query('INSERT INTO module (course_id, module_number, name, duration_weeks) VALUES ($1, $2, $3, $4)', [courseId, tempId, 'TEMP', 0]);
+
+        // 2. Rotate content: 1 -> Temp, 2 -> 1, Temp -> 2
+        await moveContent(num1, tempId);
+        await moveContent(num2, num1);
+        await moveContent(tempId, num2);
+
+        // 3. Swap attributes on the modules
+        await client.query('UPDATE module SET name = $3, duration_weeks = $4 WHERE course_id = $1 AND module_number = $2', [courseId, num1, m2.name, m2.duration_weeks]);
+        await client.query('UPDATE module SET name = $3, duration_weeks = $4 WHERE course_id = $1 AND module_number = $2', [courseId, num2, m1.name, m1.duration_weeks]);
+
+        // 4. Delete temp module
+        await client.query('DELETE FROM module WHERE course_id = $1 AND module_number = $2', [courseId, tempId]);
+        
         await client.query('COMMIT');
     } catch (e) {
         await client.query('ROLLBACK');

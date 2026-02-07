@@ -27,7 +27,7 @@
 /* Stats grid */
 .instructor-stats {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: var(--space-lg);
   margin-bottom: var(--space-3xl);
 }
@@ -80,7 +80,7 @@
 /* Course cards grid */
 .instructor-courses-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
   gap: var(--space-xl);
   margin-bottom: var(--space-2xl);
 }

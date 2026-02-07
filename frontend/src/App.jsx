@@ -12,11 +12,16 @@ import CourseView from './pages/student/CourseView';
 import EnrolledCourses from './pages/student/EnrolledCourses';
 import Profile from './pages/student/Profile';
 import InstructorDashboard from './pages/instructor/InstructorDashboard';
+import InstructorProfile from './pages/instructor/InstructorProfile';
 import AssignedCourses from './pages/instructor/AssignedCourses';
 import ManageCourse from './pages/instructor/ManageCourse';
 import CourseGrade from './pages/instructor/CourseGrade';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import StatsDashboard from './pages/analyst/StatsDashboard';
+
+
+
+            
 
 // Import Components
 import ProtectedRoute from './components/ProtectedRoute';
@@ -109,6 +114,14 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['Instructor']}>
                   <CourseGrade />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/instructor/profile"
+              element={
+                <ProtectedRoute allowedRoles={['Instructor']}>
+                  <InstructorProfile />
                 </ProtectedRoute>
               }
             />

@@ -5,11 +5,12 @@
 @import './instructor-variables.css';
 
 .instructor-container {
-  max-width: var(--container-max-width);
-  margin: 0 auto;
-  padding: var(--container-padding);
+  max-width: 100%;
+  margin: 0;
+  padding: 20px;
   width: 100%;
   min-height: calc(100vh - 80px);
+  box-sizing: border-box;
 }
 
 .instructor-container h1 {
