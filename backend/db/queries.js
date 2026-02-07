@@ -311,6 +311,19 @@ const getCoursesByInstructor = async (instructorId) => {
 };
 
 
+const getCoursesByInstructorWithCounts = async (instructorId) => {
+    const result = await pool.query(`
+        SELECT c.*,
+            (SELECT COUNT(*) FROM module m WHERE m.course_id = c.course_id) AS module_count,
+            (SELECT COUNT(*) FROM enrollment e WHERE e.course_id = c.course_id) AS student_count
+        FROM course_instructor ci
+        JOIN course c ON ci.course_id = c.course_id
+        WHERE ci.instructor_id = $1
+    `, [instructorId]);
+    return result.rows;
+};
+
+
 // ==========================================
 // UNIVERSITY QUERIES
 // ==========================================
@@ -398,6 +411,51 @@ const createModuleContent = async ({ course_id, module_number, content_id, title
 };
 
 
+const updateModule = async (courseId, moduleNumber, { name, duration_weeks }) => {
+    const result = await pool.query(
+        'UPDATE module SET name = COALESCE($3, name), duration_weeks = COALESCE($4, duration_weeks) WHERE course_id = $1 AND module_number = $2 RETURNING *',
+        [courseId, moduleNumber, name, duration_weeks]
+    );
+    return result.rows[0];
+};
+
+
+const updateModuleContent = async (courseId, moduleNumber, contentId, { title, content_type, url }) => {
+    const result = await pool.query(
+        `UPDATE module_content SET title = COALESCE($4, title), content_type = COALESCE($5, content_type), url = COALESCE($6, url)
+         WHERE course_id = $1 AND module_number = $2 AND content_id = $3 RETURNING *`,
+        [courseId, moduleNumber, contentId, title, content_type, url]
+    );
+    return result.rows[0];
+};
+
+
+// Swap two modules by module_number (and their content) for reordering
+const swapModuleOrder = async (courseId, num1, num2) => {
+    if (num1 === num2) return;
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+        const temp = -10000 - num1;
+        const temp2 = -10000 - num2;
+        await client.query('UPDATE module SET module_number = $3 WHERE course_id = $1 AND module_number = $2', [courseId, num1, temp]);
+        await client.query('UPDATE module SET module_number = $3 WHERE course_id = $1 AND module_number = $2', [courseId, num2, temp2]);
+        await client.query('UPDATE module_content SET module_number = $3 WHERE course_id = $1 AND module_number = $2', [courseId, num1, temp]);
+        await client.query('UPDATE module_content SET module_number = $3 WHERE course_id = $1 AND module_number = $2', [courseId, num2, temp2]);
+        await client.query('UPDATE module SET module_number = $3 WHERE course_id = $1 AND module_number = $2', [courseId, temp2, num1]);
+        await client.query('UPDATE module SET module_number = $3 WHERE course_id = $1 AND module_number = $2', [courseId, temp, num2]);
+        await client.query('UPDATE module_content SET module_number = $3 WHERE course_id = $1 AND module_number = $2', [courseId, temp2, num1]);
+        await client.query('UPDATE module_content SET module_number = $3 WHERE course_id = $1 AND module_number = $2', [courseId, temp, num2]);
+        await client.query('COMMIT');
+    } catch (e) {
+        await client.query('ROLLBACK');
+        throw e;
+    } finally {
+        client.release();
+    }
+};
+
+
 // ==========================================
 // STUDENT PROGRESS QUERIES
 // ==========================================
@@ -456,8 +514,9 @@ module.exports = {
     // Course Instructor queries
     assignInstructorToCourse,
     getInstructorsByCourse,
-    getCoursesByInstructor,
-   
+getCoursesByInstructor,
+    getCoursesByInstructorWithCounts,
+
     // University queries
     getAllUniversities,
     getUniversityById,
@@ -472,6 +531,9 @@ module.exports = {
     createModule,
     getModuleContent,
     createModuleContent,
+    updateModule,
+    updateModuleContent,
+    swapModuleOrder,
 
     // Student Progress queries
     markContentAsComplete,

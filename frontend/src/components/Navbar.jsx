@@ -43,8 +43,8 @@ const Navbar = ({ role }) => {
 
                         {user.role === 'Instructor' && (
                             <>
-                                <li><Link to="/instructor/dashboard" className="nav-link">Instructor Panel</Link></li>
-                                <li><Link to="/instructor/create" className="nav-link">Create Course</Link></li>
+                                <li><NavLink to="/instructor/dashboard" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Dashboard</NavLink></li>
+                                <li><NavLink to="/instructor/courses" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Assigned Courses</NavLink></li>
                             </>
                         )}
 

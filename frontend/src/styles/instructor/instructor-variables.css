@@ -1,0 +1,71 @@
+/* ======================================
+   INSTRUCTOR PAGES - DESIGN SYSTEM VARIABLES
+   Bluish theme (matches student)
+   ====================================== */
+
+:root {
+  /* Bluish theme - same as student */
+  --primary-color: #007bff;
+  --primary-dark: #0056b3;
+  --primary-light: #e7f3ff;
+  --instructor-primary: #007bff;
+  --instructor-primary-dark: #0056b3;
+  --instructor-primary-light: #e7f3ff;
+  --instructor-accent: #0056b3;
+
+  /* Shared */
+  --text-dark: #1a2e4a;
+  --text-primary: #072a61;
+  --text-secondary: #6c757d;
+  --text-muted: #9ca3af;
+  --bg-white: #ffffff;
+  --bg-light: #f8f9fa;
+  --bg-lighter: #f3f8ff;
+  --border-color: rgba(0, 123, 255, 0.12);
+  --border-light: rgba(0, 0, 0, 0.06);
+  --success-color: #28a745;
+  --warning-color: #f59e0b;
+  --danger-color: #dc3545;
+
+  /* Spacing */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 2.5rem;
+  --space-3xl: 3rem;
+
+  /* Typography */
+  --font-family-primary: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.9rem;
+  --font-size-base: 0.95rem;
+  --font-size-lg: 1rem;
+  --font-size-xl: 1.2rem;
+  --font-size-2xl: 1.6rem;
+  --font-size-3xl: 2rem;
+  --font-size-4xl: 2.2rem;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+
+  /* Radius & shadow */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.1);
+  --transition-base: 0.25s ease;
+
+  --container-max-width: 1200px;
+  --container-padding: 1rem;
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --container-padding: 2rem;
+  }
+}

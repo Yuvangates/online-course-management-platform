@@ -1,15 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
 import Navbar from '../../components/Navbar';
 import instructorService from '../../api/instructorService';
 import '../../styles/instructor/instructor-dashboard.css';
 
-const InstructorDashboard = () => {
+const AssignedCourses = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
   const [courses, setCourses] = useState([]);
-  const [totalStudents, setTotalStudents] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -18,12 +15,11 @@ const InstructorDashboard = () => {
       try {
         setLoading(true);
         setError('');
-        const data = await instructorService.getDashboard();
+        const data = await instructorService.getAssignedCourses();
         setCourses(data.courses || []);
-        setTotalStudents(data.totalStudents ?? 0);
       } catch (err) {
         console.error(err);
-        setError(err.response?.data?.error || 'Failed to load dashboard');
+        setError(err.response?.data?.error || 'Failed to load courses');
         setCourses([]);
       } finally {
         setLoading(false);
@@ -37,31 +33,13 @@ const InstructorDashboard = () => {
       <Navbar role="Instructor" />
       <div className="instructor-container">
         <div className="instructor-hero">
-          <h1>Welcome, {user?.name || 'Instructor'}!</h1>
-          <p className="muted">Manage your courses, add modules and content, and grade students.</p>
+          <h1>Assigned courses</h1>
+          <p className="muted">View your courses. Edit modules and content, or grade students.</p>
         </div>
 
         {error && (
           <div className="alert error" style={{ marginBottom: '1rem' }}>{error}</div>
         )}
-
-        <div className="instructor-stats">
-          <div className="instructor-stat-card">
-            <p className="value">{courses.length}</p>
-            <p className="label">Courses you teach</p>
-          </div>
-          <div className="instructor-stat-card">
-            <p className="value">{totalStudents}</p>
-            <p className="label">Total students</p>
-          </div>
-        </div>
-
-        <div className="instructor-section-title">
-          <h2>Your courses</h2>
-        </div>
-        <p className="muted" style={{ marginTop: '-0.5rem', marginBottom: '1rem' }}>
-          Edit modules and content, or grade students. You cannot create new courses or change enrollments.
-        </p>
 
         {loading ? (
           <div className="empty-state">Loading courses...</div>
@@ -110,4 +88,4 @@ const InstructorDashboard = () => {
   );
 };
 
-export default InstructorDashboard;
+export default AssignedCourses;
