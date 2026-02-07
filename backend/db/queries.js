@@ -533,6 +533,143 @@ const getStudentProgress = async (studentId, courseId) => {
     return result.rows[0];
 };
 
+// ==========================================
+// ADMIN QUERIES
+// ==========================================
+
+// Create user and instructor in transaction
+const createUserAndInstructorInTransaction = async ({ userData, instructorData }) => {
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+
+        // 1. Create user
+        const userRes = await client.query(
+            'INSERT INTO user_ (email, password_hash, name, role, country) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+            [userData.email, userData.password_hash, userData.name, userData.role, userData.country]
+        );
+        const newUser = userRes.rows[0];
+
+        // 2. Create instructor using the new user's ID
+        await client.query(
+            'INSERT INTO instructor (instructor_id, expertise, start_date) VALUES ($1, $2, $3)',
+            [newUser.user_id, instructorData.expertise, instructorData.start_date || new Date()]
+        );
+
+        await client.query('COMMIT');
+        return newUser;
+    } catch (e) {
+        await client.query('ROLLBACK');
+        throw e;
+    } finally {
+        client.release();
+    }
+};
+
+// Create user and analyst in transaction
+const createUserAndAnalystInTransaction = async ({ userData }) => {
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+
+        // 1. Create user
+        const userRes = await client.query(
+            'INSERT INTO user_ (email, password_hash, name, role, country) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+            [userData.email, userData.password_hash, userData.name, userData.role, userData.country]
+        );
+        const newUser = userRes.rows[0];
+
+        // 2. Create analyst using the new user's ID
+        await client.query(
+            'INSERT INTO analyst (analyst_id) VALUES ($1)',
+            [newUser.user_id]
+        );
+
+        await client.query('COMMIT');
+        return newUser;
+    } catch (e) {
+        await client.query('ROLLBACK');
+        throw e;
+    } finally {
+        client.release();
+    }
+};
+
+// Search instructors by name or email
+const searchInstructors = async (query) => {
+    const searchQuery = `%${query}%`;
+    const result = await pool.query(`
+        SELECT u.*, i.expertise, i.start_date
+        FROM user_ u
+        JOIN instructor i ON u.user_id = i.instructor_id
+        WHERE (u.name ILIKE $1 OR u.email ILIKE $1) AND u.role = 'Instructor'
+    `, [searchQuery]);
+    return result.rows;
+};
+
+// Search students by name or email
+const searchStudents = async (query) => {
+    const searchQuery = `%${query}%`;
+    const result = await pool.query(`
+        SELECT u.*, s.date_of_birth, s.skill_level
+        FROM user_ u
+        JOIN student s ON u.user_id = s.student_id
+        WHERE (u.name ILIKE $1 OR u.email ILIKE $1) AND u.role = 'Student'
+    `, [searchQuery]);
+    return result.rows;
+};
+
+// Get students enrolled in a course
+const getStudentsByCourse = async (courseId) => {
+    const result = await pool.query(`
+        SELECT u.user_id, u.email, u.name, e.enrollment_id, e.enrollment_date, e.evaluation_score, e.rating
+        FROM enrollment e
+        JOIN student s ON e.student_id = s.student_id
+        JOIN user_ u ON s.student_id = u.user_id
+        WHERE e.course_id = $1
+        ORDER BY e.enrollment_date DESC
+    `, [courseId]);
+    return result.rows;
+};
+
+// Remove instructor from course
+const removeInstructorFromCourse = async ({ course_id, instructor_id }) => {
+    const result = await pool.query(
+        'DELETE FROM course_instructor WHERE course_id = $1 AND instructor_id = $2 RETURNING *',
+        [course_id, instructor_id]
+    );
+    return result.rows[0];
+};
+
+// Remove student from enrollment
+const removeStudentFromEnrollment = async (enrollmentId) => {
+    const result = await pool.query(
+        'DELETE FROM enrollment WHERE enrollment_id = $1 RETURNING *',
+        [enrollmentId]
+    );
+    return result.rows[0];
+};
+
+// Check if instructor is already assigned to course
+const checkInstructorAssignment = async (courseId, instructorId) => {
+    const result = await pool.query(
+        'SELECT * FROM course_instructor WHERE course_id = $1 AND instructor_id = $2',
+        [courseId, instructorId]
+    );
+    return result.rows[0];
+};
+
+// Get analyst
+const getAnalyst = async () => {
+    const result = await pool.query(`
+        SELECT u.*
+        FROM user_ u
+        JOIN analyst a ON u.user_id = a.analyst_id
+        WHERE u.role = 'Analyst'
+        LIMIT 1
+    `);
+    return result.rows[0];
+};
 
 module.exports = {
     // User queries
@@ -540,17 +677,21 @@ module.exports = {
     getUserByEmail,
     createUser,
     createUserAndStudentInTransaction,
+    createUserAndInstructorInTransaction,
+    createUserAndAnalystInTransaction,
     updateUser,
    
     // Student queries
     getStudentById,
     createStudent,
     getAllStudents,
+    searchStudents,
    
     // Instructor queries
     getInstructorById,
     createInstructor,
     getAllInstructors,
+    searchInstructors,
    
     // Course queries
     getCourseById,
@@ -567,12 +708,16 @@ module.exports = {
     checkEnrollment,
     updateEnrollmentReview,
     getCourseReviews,
+    removeStudentFromEnrollment,
+    getStudentsByCourse,
    
     // Course Instructor queries
     assignInstructorToCourse,
     getInstructorsByCourse,
-getCoursesByInstructor,
+    getCoursesByInstructor,
     getCoursesByInstructorWithCounts,
+    removeInstructorFromCourse,
+    checkInstructorAssignment,
 
     // University queries
     getAllUniversities,
@@ -595,4 +740,7 @@ getCoursesByInstructor,
     // Student Progress queries
     markContentAsComplete,
     getStudentProgress,
+
+    // Analyst queries
+    getAnalyst,
 };
