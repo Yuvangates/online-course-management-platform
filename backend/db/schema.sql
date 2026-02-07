@@ -71,7 +71,8 @@ CREATE TABLE course (
     duration INT,
     university_id INT NOT NULL REFERENCES university(university_id),
     textbook_isbn VARCHAR(20) REFERENCES textbook(isbn),
-    Fees INT
+    Fees INT,
+    image_url VARCHAR(255) DEFAULT 'default_course.jpg'
 );
 
 
