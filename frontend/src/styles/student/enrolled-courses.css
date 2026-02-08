@@ -9,46 +9,195 @@
    ====================================== */
 
 .enrolled-header {
-  margin-bottom: var(--space-2xl);
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--space-lg);
+  align-items: flex-start;
+  margin-bottom: var(--space-3xl);
+  gap: var(--space-2xl);
 }
 
 .enrolled-header h1 {
+  margin: 0 0 var(--space-sm) 0;
+  font-size: var(--font-size-3xl);
+  color: var(--text-primary);
+}
+
+.enrolled-header .subtitle {
   margin: 0;
-  color: var(--text-dark);
+  color: var(--text-secondary);
+  font-size: var(--font-size-base);
 }
 
-.enrolled-header-stats {
-  display: flex;
-  gap: var(--space-lg);
-  align-items: center;
+/* ======================================
+   COURSES GRID
+   ====================================== */
+
+.enrolled-courses-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: var(--space-2xl);
+  margin-bottom: var(--space-3xl);
 }
 
-.stat-badge {
-  background: var(--primary-light);
-  color: var(--primary-color);
-  padding: var(--space-sm) var(--space-lg);
+.enrolled-course-card {
+  background: white;
   border-radius: var(--radius-lg);
-  font-weight: var(--font-weight-semibold);
-  font-size: var(--font-size-sm);
+  padding: var(--space-2xl);
+  border: 2px solid var(--border-color);
   display: flex;
-  align-items: center;
-  gap: var(--space-xs);
+  flex-direction: column;
+  gap: var(--space-lg);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-base);
+  position: relative;
+  overflow: hidden;
 }
 
-.stat-badge.secondary {
-  background: var(--success-light);
-  color: var(--success-color);
+.enrolled-course-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: linear-gradient(90deg, var(--primary-color), var(--primary-dark));
 }
 
-.stat-badge.warning {
-  background: var(--warning-light);
-  color: var(--warning-color);
+.enrolled-course-card:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-4px);
+  border-color: var(--primary-color);
 }
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-lg);
+}
+
+.card-header h3 {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  color: var(--text-primary);
+  flex: 1;
+  line-height: 1.4;
+}
+
+.score-badge {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+  color: white;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  white-space: nowrap;
+  box-shadow: var(--shadow-md);
+}
+
+.card-details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.card-details p {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.enrollment-date {
+  color: var(--text-secondary);
+  font-weight: var(--font-weight-medium);
+}
+
+.grade {
+  color: #28a745;
+  font-weight: var(--font-weight-semibold);
+  padding: var(--space-sm) var(--space-md);
+  background: #d4edda;
+  border-radius: var(--radius-sm);
+}
+
+.in-progress {
+  color: #ff9800;
+  font-weight: var(--font-weight-semibold);
+  padding: var(--space-sm) var(--space-md);
+  background: #fff3cd;
+  border-radius: var(--radius-sm);
+}
+
+.last-access {
+  color: var(--text-secondary);
+  font-size: var(--font-size-xs);
+}
+
+/* ======================================
+   EMPTY STATE
+   ====================================== */
+
+.empty-state {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: var(--space-3xl) var(--space-2xl);
+}
+
+.empty-state p {
+  font-size: var(--font-size-lg);
+  color: var(--text-secondary);
+  margin-bottom: var(--space-lg);
+}
+
+.empty-state .btn {
+  display: inline-block;
+}
+
+/* ======================================
+   ALERTS
+   ====================================== */
+
+.alert {
+  padding: var(--space-lg);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-2xl);
+}
+
+.alert.error {
+  background: #f8d7da;
+  border: 1px solid #f5c6cb;
+  color: #721c24;
+}
+
+/* ======================================
+   RESPONSIVE DESIGN
+   ====================================== */
+
+@media (max-width: 768px) {
+  .enrolled-courses-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .score-badge {
+    width: 100%;
+    text-align: center;
+  }
+
+  .enrolled-course-card {
+    padding: var(--space-lg);
+  }
+
+  .enrolled-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
 
 /* ======================================
    FILTERS & SEARCH
@@ -155,18 +304,18 @@
   right: -50%;
   width: 200%;
   height: 200%;
-  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
   animation: shimmer 3s infinite;
 }
 
-.course-card-header > * {
+.course-card-header>* {
   position: relative;
   z-index: 1;
 }
 
 .course-card-code {
   display: inline-block;
-  background: rgba(255,255,255,0.2);
+  background: rgba(255, 255, 255, 0.2);
   padding: var(--space-xs) var(--space-sm);
   border-radius: var(--radius-sm);
   font-size: var(--font-size-xs);
@@ -357,6 +506,7 @@
   0% {
     transform: translate(-100%, -100%) rotate(45deg);
   }
+
   100% {
     transform: translate(100%, 100%) rotate(45deg);
   }

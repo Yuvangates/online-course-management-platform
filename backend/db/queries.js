@@ -21,7 +21,7 @@ const getUserByEmail = async (email) => {
 
 const createUser = async ({ email, password_hash, name, role, country }) => {
     const result = await pool.query(
-            'INSERT INTO user_ (email, password_hash, name, role, country) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+        'INSERT INTO user_ (email, password_hash, name, role, country) VALUES ($1, $2, $3, $4, $5) RETURNING *',
         [email, password_hash, name, role, country]
     );
     return result.rows[0];
@@ -63,7 +63,7 @@ const createUserAndStudentInTransaction = async ({ userData, studentData }) => {
 
 const updateUser = async (userId, { name, country }) => {
     const result = await pool.query(
-            'UPDATE user_ SET name = $2, country = $3 WHERE user_id = $1 RETURNING *',
+        'UPDATE user_ SET name = $2, country = $3 WHERE user_id = $1 RETURNING *',
         [userId, name, country]
     );
     return result.rows[0];
@@ -107,6 +107,32 @@ const deleteUser = async (userId) => {
 };
 
 
+const updateStudentProfile = async (userId, { date_of_birth, skill_level }) => {
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+
+        // Upsert student details
+        await client.query(
+            `INSERT INTO student (student_id, date_of_birth, skill_level)
+             VALUES ($1, $2, $3)
+             ON CONFLICT (student_id) DO UPDATE SET date_of_birth = EXCLUDED.date_of_birth, skill_level = EXCLUDED.skill_level`,
+            [userId, date_of_birth || null, skill_level || null]
+        );
+
+        await client.query('COMMIT');
+        // Return the full student/user profile
+        const updated = await getStudentById(userId);
+        return updated;
+    } catch (e) {
+        await client.query('ROLLBACK');
+        throw e;
+    } finally {
+        client.release();
+    }
+};
+
+
 // ==========================================
 // STUDENT QUERIES
 // ==========================================
@@ -125,7 +151,7 @@ const getStudentById = async (studentId) => {
 
 const createStudent = async ({ student_id, date_of_birth, skill_level }) => {
     const result = await pool.query(
-            'INSERT INTO student (student_id, date_of_birth, skill_level) VALUES ($1, $2, $3) RETURNING *',
+        'INSERT INTO student (student_id, date_of_birth, skill_level) VALUES ($1, $2, $3) RETURNING *',
         [student_id, date_of_birth, skill_level]
     );
     return result.rows[0];
@@ -162,7 +188,7 @@ const getInstructorById = async (instructorId) => {
 
 const createInstructor = async ({ instructor_id, expertise, start_date }) => {
     const result = await pool.query(
-            'INSERT INTO instructor (instructor_id, expertise, start_date) VALUES ($1, $2, $3) RETURNING *',
+        'INSERT INTO instructor (instructor_id, expertise, start_date) VALUES ($1, $2, $3) RETURNING *',
         [instructor_id, expertise, start_date || new Date()]
     );
     return result.rows[0];
@@ -198,8 +224,11 @@ const getCourseById = async (courseId) => {
 
 const getAllCourses = async () => {
     const result = await pool.query(`
-        SELECT c.*
+        SELECT c.*, u.university_id, u.name as university_name,
+               (SELECT AVG(rating) FROM enrollment e WHERE e.course_id = c.course_id AND e.rating IS NOT NULL) as average_rating,
+               (SELECT COUNT(rating) FROM enrollment e WHERE e.course_id = c.course_id AND e.rating IS NOT NULL) as total_ratings
         FROM course c
+        LEFT JOIN university u ON c.university_id = u.university_id
     `);
     return result.rows;
 };
@@ -207,7 +236,7 @@ const getAllCourses = async () => {
 
 const createCourse = async ({ name, description, duration, university_id, textbook_isbn }) => {
     const result = await pool.query(
-            'INSERT INTO course (name, description, duration, university_id, textbook_isbn, Fees) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+        'INSERT INTO course (name, description, duration, university_id, textbook_isbn, Fees) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
         [name, description, duration, university_id, textbook_isbn, 100]
     );
     return result.rows[0];
@@ -216,7 +245,7 @@ const createCourse = async ({ name, description, duration, university_id, textbo
 
 const updateCourse = async (courseId, { name, description, duration, university_id, textbook_isbn }) => {
     const result = await pool.query(
-            'UPDATE course SET name = $2, description = $3, duration = $4, university_id = $5, textbook_isbn = $6, Fees = $7 WHERE course_id = $1 RETURNING *',
+        'UPDATE course SET name = $2, description = $3, duration = $4, university_id = $5, textbook_isbn = $6, Fees = $7 WHERE course_id = $1 RETURNING *',
         [courseId, name, description, duration, university_id, textbook_isbn, 100]
     );
     return result.rows[0];
@@ -274,7 +303,7 @@ const getEnrollmentsByCourse = async (courseId) => {
 
 const enrollStudent = async ({ student_id, course_id }) => {
     const result = await pool.query(
-            'INSERT INTO enrollment (student_id, course_id, enrollment_date) VALUES ($1, $2, CURRENT_DATE) RETURNING *',
+        'INSERT INTO enrollment (student_id, course_id, enrollment_date) VALUES ($1, $2, CURRENT_DATE) RETURNING *',
         [student_id, course_id]
     );
     return result.rows[0];
@@ -283,7 +312,7 @@ const enrollStudent = async ({ student_id, course_id }) => {
 
 const updateEnrollmentScore = async (enrollmentId, evaluation_score) => {
     const result = await pool.query(
-            'UPDATE enrollment SET evaluation_score = $2 WHERE enrollment_id = $1 RETURNING *',
+        'UPDATE enrollment SET evaluation_score = $2 WHERE enrollment_id = $1 RETURNING *',
         [enrollmentId, evaluation_score]
     );
     return result.rows[0];
@@ -292,7 +321,7 @@ const updateEnrollmentScore = async (enrollmentId, evaluation_score) => {
 
 const checkEnrollment = async (studentId, courseId) => {
     const result = await pool.query(
-            'SELECT * FROM enrollment WHERE student_id = $1 AND course_id = $2',
+        'SELECT * FROM enrollment WHERE student_id = $1 AND course_id = $2',
         [studentId, courseId]
     );
     return result.rows[0];
@@ -323,7 +352,7 @@ const getCourseReviews = async (courseId) => {
 
 const assignInstructorToCourse = async ({ course_id, instructor_id }) => {
     const result = await pool.query(
-            'INSERT INTO course_instructor (course_id, instructor_id) VALUES ($1, $2) RETURNING *',
+        'INSERT INTO course_instructor (course_id, instructor_id) VALUES ($1, $2) RETURNING *',
         [course_id, instructor_id]
     );
     return result.rows[0];
@@ -394,7 +423,7 @@ const getUniversityById = async (universityId) => {
 
 const createUniversity = async ({ name, country }) => {
     const result = await pool.query(
-            'INSERT INTO university (name, country) VALUES ($1, $2) RETURNING *',
+        'INSERT INTO university (name, country) VALUES ($1, $2) RETURNING *',
         [name, country]
     );
     return result.rows[0];
@@ -414,7 +443,7 @@ const getTextbookByIsbn = async (isbn) => {
 
 const createTextbook = async ({ isbn, name, author }) => {
     const result = await pool.query(
-            'INSERT INTO textbook (isbn, name, author) VALUES ($1, $2, $3) RETURNING *',
+        'INSERT INTO textbook (isbn, name, author) VALUES ($1, $2, $3) RETURNING *',
         [isbn, name, author]
     );
     return result.rows[0];
@@ -428,7 +457,7 @@ const createTextbook = async ({ isbn, name, author }) => {
 
 const getModulesByCourse = async (courseId) => {
     const result = await pool.query(
-            'SELECT * FROM module WHERE course_id = $1 ORDER BY module_number ASC',
+        'SELECT * FROM module WHERE course_id = $1 ORDER BY module_number ASC',
         [courseId]
     );
     return result.rows;
@@ -437,7 +466,7 @@ const getModulesByCourse = async (courseId) => {
 
 const createModule = async ({ course_id, module_number, name, duration_weeks }) => {
     const result = await pool.query(
-            'INSERT INTO module (course_id, module_number, name, duration_weeks) VALUES ($1, $2, $3, $4) RETURNING *',
+        'INSERT INTO module (course_id, module_number, name, duration_weeks) VALUES ($1, $2, $3, $4) RETURNING *',
         [course_id, module_number, name, duration_weeks]
     );
     return result.rows[0];
@@ -683,6 +712,30 @@ const removeStudentFromEnrollment = async (enrollmentId) => {
     const result = await pool.query(
         'DELETE FROM enrollment WHERE enrollment_id = $1 RETURNING *',
         [enrollmentId]
+      );
+     return result.rows[0];
+};
+
+const getStudentCompletedContent = async (studentId, courseId) => {
+    const result = await pool.query(
+        'SELECT * FROM student_progress WHERE student_id = $1 AND course_id = $2',
+        [studentId, courseId]
+    );
+    return result.rows;
+};
+
+const getCourseUniversities = async (courseId) => {
+    const result = await pool.query(
+        'SELECT u.* FROM university u JOIN course c ON u.university_id = c.university_id WHERE c.course_id = $1',
+        [courseId]
+    );
+    return result.rows;
+};
+
+const getCourseRating = async (courseId) => {
+    const result = await pool.query(
+        'SELECT AVG(rating) as average_rating, COUNT(rating) as total_ratings FROM enrollment WHERE course_id = $1 AND rating IS NOT NULL',
+        [courseId]
     );
     return result.rows[0];
 };
@@ -994,6 +1047,18 @@ const getAnalyst = async () => {
     `);
     return result.rows[0];
 };
+const getCourseReviewsDetailed = async (courseId) => {
+    const result = await pool.query(
+        `SELECT e.Review, e.rating, u.name as student_name, e.enrollment_date 
+         FROM enrollment e 
+         JOIN user_ u ON e.student_id = u.user_id 
+         WHERE e.course_id = $1 AND e.Review IS NOT NULL 
+         ORDER BY e.enrollment_date DESC`,
+        [courseId]
+    );
+    return result.rows;
+};
+
 
 module.exports = {
     // User queries
@@ -1026,7 +1091,7 @@ module.exports = {
     createCourse,
     updateCourse,
     searchCourses,
-   
+
     // Enrollment queries
     getEnrollmentsByStudent,
     getEnrollmentsByCourse,
@@ -1050,11 +1115,11 @@ module.exports = {
     getAllUniversities,
     getUniversityById,
     createUniversity,
-   
+
     // Textbook queries
     getTextbookByIsbn,
     createTextbook,
-   
+
     // Module & Content queries
     getModulesByCourse,
     createModule,
@@ -1082,4 +1147,11 @@ module.exports = {
     getInstructorLeaderboard,
     getCourseDurationVsCompletion,
     getEnrollmentTrends,
+    getStudentCompletedContent,
+
+    // Course universities and ratings
+    getCourseUniversities,
+    getCourseRating,
+    getCourseReviewsDetailed,
+    updateStudentProfile,
 };

@@ -52,8 +52,8 @@ const CourseSearch = () => {
       return;
     }
     setResults(
-      allCourses.filter(c => 
-        c.name.toLowerCase().includes(q) || 
+      allCourses.filter(c =>
+        c.name.toLowerCase().includes(q) ||
         c.description.toLowerCase().includes(q)
       )
     );
@@ -63,8 +63,8 @@ const CourseSearch = () => {
   useEffect(() => {
     const q = query.trim().toLowerCase();
     if (!q) return setSuggestions([]);
-    const s = allCourses.filter(c => 
-      c.name.toLowerCase().includes(q) || 
+    const s = allCourses.filter(c =>
+      c.name.toLowerCase().includes(q) ||
       c.description.toLowerCase().includes(q)
     ).slice(0, 5);
     setSuggestions(s);
@@ -111,7 +111,7 @@ const CourseSearch = () => {
               {suggestions.length > 0 && (
                 <ul className="suggestions-list" role="listbox">
                   {suggestions.map(s => (
-                    <li key={s.course_id} role="option" tabIndex={0} onClick={() => onSelectSuggestion(s)} onKeyDown={(e)=>{ if(e.key=== 'Enter') onSelectSuggestion(s)}}>
+                    <li key={s.course_id} role="option" tabIndex={0} onClick={() => onSelectSuggestion(s)} onKeyDown={(e) => { if (e.key === 'Enter') onSelectSuggestion(s) }}>
                       <strong>{s.name}</strong>
                       <div className="muted">{s.duration} weeks</div>
                     </li>
@@ -135,11 +135,15 @@ const CourseSearch = () => {
                   <h3>{course.name}</h3>
                   <p>{course.description?.substring(0, 100)}...</p>
                   <p className="muted">Duration: {course.duration} weeks</p>
+                  {course.university_name && <p className="muted">🏫 {course.university_name}</p>}
+                  {course.average_rating && (
+                    <p className="muted">⭐ {parseFloat(course.average_rating).toFixed(1)}/5 ({parseInt(course.total_ratings) || 0} ratings)</p>
+                  )}
                   <div className="course-actions">
                     <Link to={`/student/course/${course.course_id}`} className="btn outline">View</Link>
-                    <button 
-                      className="btn primary" 
-                      onClick={() => enrollCourse(course.course_id)} 
+                    <button
+                      className="btn primary"
+                      onClick={() => enrollCourse(course.course_id)}
                       disabled={isEnrolled(course.course_id)}
                     >
                       {isEnrolled(course.course_id) ? 'Enrolled' : 'Enroll'}

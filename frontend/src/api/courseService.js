@@ -103,9 +103,97 @@ const courseService = {
   },
 
   // Get module content
-  getModuleContent: async (moduleId) => {
+  getModuleContent: async (courseId, moduleNumber) => {
     try {
-      const response = await axios.get(`${API_URL}/modules/${moduleId}/content`, {
+      const response = await axios.get(`${API_URL}/courses/${courseId}/modules/${moduleNumber}/content`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Get course universities
+  getCourseUniversities: async (courseId) => {
+    try {
+      const response = await axios.get(`${API_URL}/courses/${courseId}/universities`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Get course rating
+  getCourseRating: async (courseId) => {
+    try {
+      const response = await axios.get(`${API_URL}/courses/${courseId}/rating`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Get course reviews
+  getCourseReviews: async (courseId) => {
+    try {
+      const response = await axios.get(`${API_URL}/courses/${courseId}/reviews`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Submit a review for a course (student only)
+  submitReview: async (courseId, { review, rating }) => {
+    try {
+      const response = await axios.post(`${API_URL}/student/courses/${courseId}/review`, { review, rating }, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Mark content as complete
+  markContentComplete: async (courseId, moduleNumber, contentId) => {
+    try {
+      const response = await axios.post(`${API_URL}/student/progress/mark-complete`, {
+        course_id: courseId,
+        module_number: moduleNumber,
+        content_id: contentId
+      }, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Get student progress
+  getStudentProgress: async (courseId) => {
+    try {
+      const response = await axios.get(`${API_URL}/student/progress/${courseId}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`
         }

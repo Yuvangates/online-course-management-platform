@@ -8,7 +8,7 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import StudentDashboard from './pages/student/StudentDashboard';
 import CourseSearch from './pages/student/CourseSearch';
-import CourseView from './pages/student/CourseView';
+import { CourseView } from './pages/student/CourseView';
 import EnrolledCourses from './pages/student/EnrolledCourses';
 import Profile from './pages/student/Profile';
 import InstructorDashboard from './pages/instructor/InstructorDashboard';

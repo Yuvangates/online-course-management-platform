@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 import courseService from '../../api/courseService';
-import '../../styles/student/student-dashboard.css'; // Re-use styles
+import '../../styles/student/enrolled-courses.css';
 
 const EnrolledCourses = () => {
     const navigate = useNavigate();
@@ -30,28 +30,60 @@ const EnrolledCourses = () => {
         <>
             <Navbar role="Student" />
             <div className="student-container">
-                <h1>My Courses</h1>
-                <p className="muted">All courses you are currently enrolled in.</p>
-                
-                {error && <div style={{ color: '#c62828', padding: '1rem', marginBottom: '1rem' }}>{error}</div>}
+                <div className="enrolled-header">
+                    <div>
+                        <h1>My Courses</h1>
+                        <p className="subtitle">All courses you are currently enrolled in.</p>
+                    </div>
+                </div>
 
-                <div className="courses-grid" style={{ marginTop: '2rem' }}>
+                {error && <div className="alert error">{error}</div>}
+
+                <div className="enrolled-courses-grid" style={{ marginTop: '2rem' }}>
                     {loading ? (
-                        <div className="empty">Loading courses...</div>
+                        <div className="empty-state">
+                            <p>Loading courses...</p>
+                        </div>
                     ) : enrolledCourses.length === 0 ? (
-                        <div className="empty">You are not enrolled in any courses. <a href="/student/search">Browse courses</a> to get started.</div>
+                        <div className="empty-state">
+                            <p>📚 You are not enrolled in any courses yet.</p>
+                            <a href="/student/search" className="btn primary">Browse Courses</a>
+                        </div>
                     ) : (
                         enrolledCourses.map(enrollment => (
-                            <div key={enrollment.enrollment_id} className="course-card">
-                                <h4>{enrollment.course_name}</h4>
-                                <p className="muted">Enrolled: {new Date(enrollment.enrollment_date).toLocaleDateString()}</p>
-                                <p>Grade: {enrollment.evaluation_score ? `${enrollment.evaluation_score}` : 'Not graded yet'}</p>
-                                <button 
-                                    className="btn outline" 
+                            <div key={enrollment.enrollment_id} className="enrolled-course-card">
+                                <div className="card-header">
+                                    <h3>{enrollment.course_name}</h3>
+                                    {enrollment.evaluation_score && (
+                                        <span className="score-badge">{enrollment.evaluation_score}%</span>
+                                    )}
+                                </div>
+                                <div className="card-details">
+                                    <p className="enrollment-date">
+                                        📅 Enrolled: {new Date(enrollment.enrollment_date).toLocaleDateString()}
+                                    </p>
+                                    {enrollment.evaluation_score && (
+                                        <p className="grade">
+                                            ✓ Completed: {enrollment.evaluation_score}%
+                                        </p>
+                                    )}
+                                    {!enrollment.evaluation_score && (
+                                        <p className="in-progress">
+                                            ⏳ In Progress
+                                        </p>
+                                    )}
+                                    {enrollment.Last_access && (
+                                        <p className="last-access">
+                                            👁️ Last accessed: {new Date(enrollment.Last_access).toLocaleDateString()}
+                                        </p>
+                                    )}
+                                </div>
+                                <button
+                                    className="btn outline"
                                     onClick={() => navigate(`/student/course/${enrollment.course_id}`)}
-                                    style={{ marginTop: '1rem' }}
+                                    style={{ marginTop: 'auto' }}
                                 >
-                                    View Course
+                                    Continue Learning →
                                 </button>
                             </div>
                         ))
