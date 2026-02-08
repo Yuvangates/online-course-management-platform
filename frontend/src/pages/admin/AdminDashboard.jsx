@@ -3,7 +3,10 @@ import Navbar from '../../components/Navbar';
 import adminService from '../../api/adminService';
 import CourseManagement from './CourseManagement';
 import InstructorManagement from './InstructorManagement';
+import StudentManagement from './StudentManagement';
 import AnalystManagement from './AnalystManagement';
+import UniversityManagement from './UniversityManagement';
+import TextBookManagement from './TextBookManagement';
 import '../../styles/admin/admin.css';
 
 const AdminDashboard = () => {
@@ -61,10 +64,28 @@ const AdminDashboard = () => {
                             Instructors
                         </button>
                         <button
+                            className={`nav-item ${activeTab === 'students' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('students')}
+                        >
+                            Students
+                        </button>
+                        <button
                             className={`nav-item ${activeTab === 'analyst' ? 'active' : ''}`}
                             onClick={() => setActiveTab('analyst')}
                         >
                             Analyst
+                        </button>
+                        <button
+                            className={`nav-item ${activeTab === 'universities' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('universities')}
+                        >
+                            Universities
+                        </button>
+                        <button
+                            className={`nav-item ${activeTab === 'textbooks' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('textbooks')}
+                        >
+                            TextBooks
                         </button>
                     </nav>
                 </div>
@@ -84,20 +105,34 @@ const AdminDashboard = () => {
                                 <>
                                     <div className="stat-grid">
                                         <div className="card">
+                                            <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>📚</div>
                                             <h3>Total Courses</h3>
                                             <p className="stat-value">{stats.totalCourses}</p>
                                         </div>
                                         <div className="card">
+                                            <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>👨‍🏫</div>
                                             <h3>Total Instructors</h3>
                                             <p className="stat-value">{stats.totalInstructors}</p>
                                         </div>
                                         <div className="card">
+                                            <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>👨‍🎓</div>
                                             <h3>Total Students</h3>
                                             <p className="stat-value">{stats.totalStudents}</p>
                                         </div>
                                         <div className="card">
+                                            <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>📊</div>
                                             <h3>Analyst Status</h3>
-                                            <p className="stat-value">{stats.hasAnalyst ? '✓' : '✗'}</p>
+                                            <p className="stat-value">{stats.hasAnalyst ? '✓ Active' : '✗ Not Set'}</p>
+                                        </div>
+                                        <div className="card">
+                                            <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🏫</div>
+                                            <h3>Total Universities</h3>
+                                            <p className="stat-value">{stats.totalUniversities}</p>
+                                        </div>
+                                        <div className="card">
+                                            <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>📖</div>
+                                            <h3>Total TextBooks</h3>
+                                            <p className="stat-value">{stats.totalTextbooks}</p>
                                         </div>
                                     </div>
 
@@ -108,20 +143,32 @@ const AdminDashboard = () => {
                                                 className="action-btn"
                                                 onClick={() => setActiveTab('courses')}
                                             >
-                                                Create Course
+                                                📚 Create Course
                                             </button>
                                             <button
                                                 className="action-btn"
                                                 onClick={() => setActiveTab('instructors')}
                                             >
-                                                Add Instructor
+                                                👨‍🏫 Add Instructor
+                                            </button>
+                                            <button
+                                                className="action-btn"
+                                                onClick={() => setActiveTab('universities')}
+                                            >
+                                                🏫 Add University
+                                            </button>
+                                            <button
+                                                className="action-btn"
+                                                onClick={() => setActiveTab('textbooks')}
+                                            >
+                                                📖 Add TextBook
                                             </button>
                                             {!stats.hasAnalyst && (
                                                 <button
                                                     className="action-btn"
                                                     onClick={() => setActiveTab('analyst')}
                                                 >
-                                                    Create Analyst
+                                                    📊 Create Analyst
                                                 </button>
                                             )}
                                         </div>
@@ -133,7 +180,10 @@ const AdminDashboard = () => {
 
                     {activeTab === 'courses' && <CourseManagement />}
                     {activeTab === 'instructors' && <InstructorManagement />}
+                    {activeTab === 'students' && <StudentManagement />}
                     {activeTab === 'analyst' && <AnalystManagement />}
+                    {activeTab === 'universities' && <UniversityManagement />}
+                    {activeTab === 'textbooks' && <TextBookManagement />}
                 </div>
             </div>
         </>

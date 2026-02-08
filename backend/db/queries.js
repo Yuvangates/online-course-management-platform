@@ -246,10 +246,10 @@ const createCourse = async ({ name, description, duration, university_id, textbo
 };
 
 
-const updateCourse = async (courseId, { name, description, duration, university_id, textbook_isbn }) => {
+const updateCourse = async (courseId, { name, description, duration, university_id, textbook_isbn, image_url, fee }) => {
     const result = await pool.query(
-        'UPDATE course SET name = $2, description = $3, duration = $4, university_id = $5, textbook_isbn = $6, Fees = $7 WHERE course_id = $1 RETURNING *',
-        [courseId, name, description, duration, university_id, textbook_isbn, 100]
+        'UPDATE course SET name = $2, description = $3, duration = $4, university_id = $5, textbook_isbn = $6, image_url = $7, Fees = $8 WHERE course_id = $1 RETURNING *',
+        [courseId, name, description, duration, university_id, textbook_isbn, image_url, fee]
     );
     return result.rows[0];
 };
@@ -435,10 +435,26 @@ const createUniversity = async ({ name, country }) => {
     return result.rows[0];
 };
 
+const updateUniversity = async (universityId, { name, country }) => {
+    const result = await pool.query(
+        'UPDATE university SET name = $2, country = $3 WHERE university_id = $1 RETURNING *',
+        [universityId, name, country]
+      );
+  return result.rows[0];
+};
+
 const updateUserProfile = async (userId, { name, country, email }) => {
     const result = await pool.query(
         'UPDATE user_ SET name = $2, country = $3, email = $4 WHERE user_id = $1 RETURNING user_id, name, email, role, country',
         [userId, name, country, email]
+    );
+    return result.rows[0];
+};
+
+const deleteUniversity = async (universityId) => {
+    const result = await pool.query(
+        'DELETE FROM university WHERE university_id = $1 RETURNING *',
+        [universityId]
     );
     return result.rows[0];
 };
@@ -454,17 +470,40 @@ const updateUserPassword = async (userId, password_hash) => {
 // TEXTBOOK QUERIES
 // ==========================================
 
+const getAllTextbooks = async () => {
+    const result = await pool.query('SELECT * FROM textbook ORDER BY name ASC');
+    return result.rows;
+};
 
 const getTextbookByIsbn = async (isbn) => {
     const result = await pool.query('SELECT * FROM textbook WHERE isbn = $1', [isbn]);
     return result.rows[0];
 };
 
+const getTextbookById = async (isbn) => {
+    return getTextbookByIsbn(isbn);
+};
 
 const createTextbook = async ({ isbn, name, author }) => {
     const result = await pool.query(
         'INSERT INTO textbook (isbn, name, author) VALUES ($1, $2, $3) RETURNING *',
         [isbn, name, author]
+    );
+    return result.rows[0];
+};
+
+const updateTextbook = async (isbn, { name, author }) => {
+    const result = await pool.query(
+        'UPDATE textbook SET name = $2, author = $3 WHERE isbn = $1 RETURNING *',
+        [isbn, name, author]
+    );
+    return result.rows[0];
+};
+
+const deleteTextbook = async (isbn) => {
+    const result = await pool.query(
+        'DELETE FROM textbook WHERE isbn = $1 RETURNING *',
+        [isbn]
     );
     return result.rows[0];
 };
@@ -1152,10 +1191,16 @@ module.exports = {
     getAllUniversities,
     getUniversityById,
     createUniversity,
+    updateUniversity,
+    deleteUniversity,
 
     // Textbook queries
+    getAllTextbooks,
     getTextbookByIsbn,
+    getTextbookById,
     createTextbook,
+    updateTextbook,
+    deleteTextbook,
 
     // Module & Content queries
     getModulesByCourse,

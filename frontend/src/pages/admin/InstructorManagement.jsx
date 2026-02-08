@@ -3,15 +3,18 @@ import adminService from '../../api/adminService';
 
 const InstructorManagement = () => {
     const [instructors, setInstructors] = useState([]);
+    const [filteredInstructors, setFilteredInstructors] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [showForm, setShowForm] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
     const [formData, setFormData] = useState({
         name: '',
         email: '',
         password: '',
         expertise: '',
         start_date: '',
+        country: '',
     });
 
     useEffect(() => {
@@ -24,10 +27,42 @@ const InstructorManagement = () => {
         try {
             const data = await adminService.getAllInstructors();
             setInstructors(data);
+            setFilteredInstructors(data);
         } catch (err) {
             setError(err.response?.data?.error || 'Failed to fetch instructors');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleSearch = () => {
+        if (!searchQuery.trim()) {
+            setFilteredInstructors(instructors);
+            return;
+        }
+
+        const filtered = instructors.filter(
+            (instructor) =>
+                instructor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                instructor.email.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+        setFilteredInstructors(filtered);
+    };
+
+    useEffect(() => {
+        handleSearch();
+    }, [searchQuery, instructors]);
+
+    const handleDeleteInstructor = async (instructorId, instructorName) => {
+        if (!window.confirm(`Are you sure you want to remove ${instructorName}?`)) {
+            return;
+        }
+
+        try {
+            await adminService.deleteUser(instructorId);
+            await fetchInstructors();
+        } catch (err) {
+            setError(err.response?.data?.error || 'Failed to remove instructor');
         }
     };
 
@@ -88,6 +123,7 @@ const InstructorManagement = () => {
                 password: formData.password,
                 expertise: formData.expertise.trim(),
                 start_date: formData.start_date,
+                country: formData.country.trim(),
             };
             
             await adminService.createInstructor(instructorData);
@@ -97,6 +133,7 @@ const InstructorManagement = () => {
                 password: '',
                 expertise: '',
                 start_date: '',
+                country: '',
             });
             setShowForm(false);
             await fetchInstructors();
@@ -110,16 +147,29 @@ const InstructorManagement = () => {
     return (
         <div className="management-container">
             {/* Header */}
-            <div className="section-header">
+            <div className="section-header-with-button">
                 <h2>Instructor Management</h2>
                 <button
-                    className="btn-primary"
+                    className="btn-primary-large"
                     onClick={() => setShowForm(!showForm)}
                     disabled={loading}
                 >
                     {showForm ? 'Cancel' : 'Add Instructor'}
                 </button>
             </div>
+
+            {/* Search Bar */}
+            {!showForm && (
+                <div className="search-box">
+                    <input
+                        type="text"
+                        placeholder="Search instructors by name or email..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="search-input"
+                    />
+                </div>
+            )}
 
             {/* Error Display */}
             {error && <div className="alert error">{error}</div>}
@@ -190,12 +240,23 @@ const InstructorManagement = () => {
                                     disabled={loading}
                                 />
                             </div>
+                            <div className="form-group">
+                                <label>Country *</label>
+                                <input
+                                    type="text"
+                                    name="country"
+                                    value={formData.country}
+                                    onChange={handleInputChange}
+                                    placeholder="e.g., USA, India"
+                                    disabled={loading}
+                                />
+                            </div>
                         </div>
 
                         <div className="form-actions">
                             <button
                                 type="submit"
-                                className="btn-success"
+                                className="btn-primary-large"
                                 disabled={loading}
                             >
                                 {loading ? 'Creating...' : 'Create Instructor'}
@@ -209,13 +270,13 @@ const InstructorManagement = () => {
             {loading && !showForm && <div className="loading">Loading instructors...</div>}
 
             {/* Instructors List */}
-            {!loading && instructors.length === 0 ? (
+            {!loading && filteredInstructors.length === 0 ? (
                 <div className="empty-state">
                     <p>No instructors found. Create your first instructor!</p>
                 </div>
             ) : (
                 <div className="cards-grid">
-                    {instructors.map(instructor => (
+                    {filteredInstructors.map(instructor => (
                         <div key={instructor.instructor_id} className="card">
                             <div className="card-header">
                                 <h3>{instructor.name}</h3>
@@ -223,11 +284,22 @@ const InstructorManagement = () => {
                             <div className="card-content">
                                 <p><strong>Email:</strong> {instructor.email}</p>
                                 <p><strong>Expertise:</strong> {instructor.expertise}</p>
+                                {instructor.country && (
+                                    <p><strong>Country:</strong> {instructor.country}</p>
+                                )}
                                 {instructor.start_date && (
                                     <p>
-                                        Experience: {calculateExperience(instructor.start_date)}
+                                        <strong>Experience:</strong> {calculateExperience(instructor.start_date)}
                                     </p>
                                 )}
+                            </div>
+                            <div className="card-actions">
+                                <button
+                                    className="btn-danger"
+                                    onClick={() => handleDeleteInstructor(instructor.instructor_id, instructor.name)}
+                                >
+                                    Remove Account
+                                </button>
                             </div>
                         </div>
                     ))}

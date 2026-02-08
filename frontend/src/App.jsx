@@ -17,7 +17,7 @@ import AssignedCourses from './pages/instructor/AssignedCourses';
 import ManageCourse from './pages/instructor/ManageCourse';
 import CourseGrade from './pages/instructor/CourseGrade';
 import AdminDashboard from './pages/admin/AdminDashboard';
-import UserManagement from './pages/admin/UserManagement';
+import StudentManagement from "./pages/admin/StudentManagement";
 import StatsDashboard from './pages/analyst/StatsDashboard';
 
 
@@ -144,6 +144,23 @@ const AppContent = () => {
           }
         />
 
+            {/* Admin Routes */}
+            <Route
+              path="/admin/dashboard"
+              element={
+                <ProtectedRoute allowedRoles={['Admin']}>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/users"
+              element={
+                <ProtectedRoute allowedRoles={['Admin']}>
+                  <StudentManagement />
+                </ProtectedRoute>
+              }
+            />
         {/* Analyst Routes */}
         <Route
           path="/analyst/dashboard"

@@ -6,6 +6,7 @@ const CourseManagement = () => {
     const [activeTab, setActiveTab] = useState('courses');
     const [courses, setCourses] = useState([]);
     const [universities, setUniversities] = useState([]);
+    const [textbooks, setTextbooks] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [showForm, setShowForm] = useState(false);
@@ -16,11 +17,15 @@ const CourseManagement = () => {
         description: '',
         duration: 30,
         university_id: '',
+        textbook_isbn: '',
+        image_url: '',
+        fee: '',
     });
 
     useEffect(() => {
         fetchCourses();
         fetchUniversities();
+        fetchTextbooks();
     }, []);
 
     const fetchCourses = async () => {
@@ -51,6 +56,15 @@ const CourseManagement = () => {
         return uni ? uni.name : 'Unknown';
     };
 
+    const fetchTextbooks = async () => {
+        try {
+            const data = await adminService.getAllTextbooks();
+            setTextbooks(data);
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setFormData((prev) => ({
@@ -73,6 +87,9 @@ const CourseManagement = () => {
                 description: formData.description,
                 duration: formData.duration,
                 university_id: formData.university_id,
+                textbook_isbn: formData.textbook_isbn || null,
+                image_url: formData.image_url || 'default_course.jpg',
+                fee: formData.fee || 0,
             });
 
             setFormData({
@@ -80,6 +97,9 @@ const CourseManagement = () => {
                 description: '',
                 duration: 30,
                 university_id: '',
+                textbook_isbn: '',
+                image_url: '',
+                fee: '',
             });
             setShowForm(false);
             await fetchCourses();
@@ -171,6 +191,49 @@ const CourseManagement = () => {
                                 </div>
                             </div>
 
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label>Textbook</label>
+                                    <select
+                                        name="textbook_isbn"
+                                        value={formData.textbook_isbn}
+                                        onChange={handleInputChange}
+                                    >
+                                        <option value="">Select Textbook (Optional)</option>
+                                        {textbooks.map((textbook) => (
+                                            <option key={textbook.isbn} value={textbook.isbn}>
+                                                {textbook.name} - {textbook.author}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Fee</label>
+                                    <input
+                                        type="number"
+                                        name="fee"
+                                        value={formData.fee}
+                                        onChange={handleInputChange}
+                                        placeholder="Course fee amount"
+                                        min={0}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label>Image URL</label>
+                                    <input
+                                        type="text"
+                                        name="image_url"
+                                        value={formData.image_url}
+                                        onChange={handleInputChange}
+                                        placeholder="e.g., https://example.com/course.jpg"
+                                    />
+                                </div>
+                            </div>
+
                             <button type="submit" className="btn-primary">
                                 Create Course
                             </button>
@@ -216,20 +279,72 @@ const CourseManagement = () => {
             )}
 
             {activeTab === 'course-detail' && selectedCourse && (
-                <CourseDetailView course={selectedCourse} onBack={handleBackToCourses} getUniversityName={getUniversityName} />
+                <CourseDetailView 
+                    course={selectedCourse} 
+                    onBack={handleBackToCourses} 
+                    getUniversityName={getUniversityName}
+                    universities={universities}
+                    textbooks={textbooks}
+                    onCourseUpdate={fetchCourses}
+                />
             )}
         </div>
     );
 };
 
 // Course Detail View Component
-const CourseDetailView = ({ course, onBack, getUniversityName }) => {
+const CourseDetailView = ({ course, onBack, getUniversityName, universities, textbooks, onCourseUpdate }) => {
     const [instructors, setInstructors] = useState([]);
     const [students, setStudents] = useState([]);
     const [allInstructors, setAllInstructors] = useState([]);
     const [error, setError] = useState('');
     const [searchInstructorQuery, setSearchInstructorQuery] = useState('');
     const [showAddInstructor, setShowAddInstructor] = useState(false);
+    const [showEditForm, setShowEditForm] = useState(false);
+    const [editFormData, setEditFormData] = useState({
+        name: course.name,
+        description: course.description || '',
+        duration: course.duration,
+        university_id: course.university_id,
+        textbook_isbn: course.textbook_isbn || '',
+        image_url: course.image_url || '',
+        fee: course.fee || '',
+    });
+
+    const handleEditInputChange = (e) => {
+        const { name, value } = e.target;
+        setEditFormData(prev => ({
+            ...prev,
+            [name]: name === 'university_id' || name === 'duration' ? parseInt(value) : value,
+        }));
+    };
+
+    const handleUpdateCourse = async (e) => {
+        e.preventDefault();
+        try {
+            setError('');
+            if (!editFormData.name.trim() || !editFormData.university_id) {
+                setError('Name and university are required');
+                return;
+            }
+
+            await adminService.updateCourse(course.course_id, {
+                name: editFormData.name,
+                description: editFormData.description,
+                duration: editFormData.duration,
+                university_id: editFormData.university_id,
+                textbook_isbn: editFormData.textbook_isbn || null,
+                image_url: editFormData.image_url || 'default_course.jpg',
+                fee: editFormData.fee || 0,
+            });
+
+            setShowEditForm(false);
+            onCourseUpdate();
+        } catch (err) {
+            console.error(err);
+            setError(err.response?.data?.error || 'Failed to update course');
+        }
+    };
 
     const fetchAllInstructors = async () => {
         try {
@@ -324,9 +439,17 @@ const CourseDetailView = ({ course, onBack, getUniversityName }) => {
 
     return (
         <div className="course-detail">
-            <button className="btn-back" onClick={onBack}>
-                ← Back to Courses
-            </button>
+            <div className="course-header-actions">
+                <button className="btn-back" onClick={onBack}>
+                    ← Back to Courses
+                </button>
+                <button 
+                    className="btn-primary-large"
+                    onClick={() => setShowEditForm(!showEditForm)}
+                >
+                    {showEditForm ? 'Cancel' : 'Edit Course'}
+                </button>
+            </div>
 
             <h2>{course.name}</h2>
             <p className="course-meta">
@@ -334,6 +457,114 @@ const CourseDetailView = ({ course, onBack, getUniversityName }) => {
             </p>
 
             {error && <div className="alert error">{error}</div>}
+
+            {/* Edit Form */}
+            {showEditForm && (
+                <div className="form-container">
+                    <h3>Edit Course</h3>
+                    <form onSubmit={handleUpdateCourse}>
+                        <div className="form-group">
+                            <label>Course Name *</label>
+                            <input
+                                type="text"
+                                name="name"
+                                value={editFormData.name}
+                                onChange={handleEditInputChange}
+                                placeholder="e.g., Advanced JavaScript"
+                                required
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label>Description</label>
+                            <textarea
+                                name="description"
+                                value={editFormData.description}
+                                onChange={handleEditInputChange}
+                                placeholder="Course description..."
+                                rows={3}
+                            />
+                        </div>
+
+                        <div className="form-row">
+                            <div className="form-group">
+                                <label>University *</label>
+                                <select
+                                    name="university_id"
+                                    value={editFormData.university_id}
+                                    onChange={handleEditInputChange}
+                                    required
+                                >
+                                    <option value="">Select University</option>
+                                    {universities.map((uni) => (
+                                        <option key={uni.university_id} value={uni.university_id}>
+                                            {uni.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div className="form-group">
+                                <label>Duration (weeks)</label>
+                                <input
+                                    type="number"
+                                    name="duration"
+                                    value={editFormData.duration}
+                                    onChange={handleEditInputChange}
+                                    min={1}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="form-row">
+                            <div className="form-group">
+                                <label>Textbook</label>
+                                <select
+                                    name="textbook_isbn"
+                                    value={editFormData.textbook_isbn}
+                                    onChange={handleEditInputChange}
+                                >
+                                    <option value="">Select Textbook (Optional)</option>
+                                    {textbooks.map((textbook) => (
+                                        <option key={textbook.isbn} value={textbook.isbn}>
+                                            {textbook.name} - {textbook.author}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div className="form-group">
+                                <label>Fee</label>
+                                <input
+                                    type="number"
+                                    name="fee"
+                                    value={editFormData.fee}
+                                    onChange={handleEditInputChange}
+                                    placeholder="Course fee amount"
+                                    min={0}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="form-row">
+                            <div className="form-group">
+                                <label>Image URL</label>
+                                <input
+                                    type="text"
+                                    name="image_url"
+                                    value={editFormData.image_url}
+                                    onChange={handleEditInputChange}
+                                    placeholder="e.g., https://example.com/course.jpg"
+                                />
+                            </div>
+                        </div>
+
+                        <button type="submit" className="btn-primary-large">
+                            Save Changes
+                        </button>
+                    </form>
+                </div>
+            )}
 
             {/* Instructors Section */}
             <div className="detail-section">
