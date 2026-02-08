@@ -274,6 +274,11 @@ const ManageCourse = () => {
                 <strong>Co-instructors:</strong> {course.other_instructors}
               </div>
             )}
+            {course?.textbook_isbn && (
+              <div className="course-textbook">
+                <strong>Textbook:</strong> {course.textbook_name} <em>by {course.textbook_author || 'N/A'}</em> (ISBN: {course.textbook_isbn})
+              </div>
+            )}
             <div className="course-actions">
               <button type="button" className="btn-instructor outline" onClick={() => setIsEditMode(!isEditMode)}>
                 {isEditMode ? '👁 Switch to Preview' : '✎ Switch to Edit'}

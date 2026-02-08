@@ -214,8 +214,11 @@ const getAllInstructors = async () => {
 
 const getCourseById = async (courseId) => {
     const result = await pool.query(`
-        SELECT c.*
+        SELECT c.*,
+               t.name as textbook_name,
+               t.author as textbook_author
         FROM course c
+        LEFT JOIN textbook t ON c.textbook_isbn = t.isbn
         WHERE c.course_id = $1
     `, [courseId]);
     return result.rows[0];
@@ -386,6 +389,8 @@ const getCoursesByInstructor = async (instructorId) => {
 const getCoursesByInstructorWithCounts = async (instructorId) => {
     const result = await pool.query(`
         SELECT c.*,
+            t.name AS textbook_name,
+            t.author AS textbook_author,
             u.name AS university_name,
             (SELECT COUNT(*) FROM module m WHERE m.course_id = c.course_id) AS module_count,
             (SELECT COUNT(*) FROM enrollment e WHERE e.course_id = c.course_id) AS student_count,
@@ -398,6 +403,7 @@ const getCoursesByInstructorWithCounts = async (instructorId) => {
         FROM course_instructor ci
         JOIN course c ON ci.course_id = c.course_id
         LEFT JOIN university u ON c.university_id = u.university_id
+        LEFT JOIN textbook t ON c.textbook_isbn = t.isbn
         WHERE ci.instructor_id = $1
     `, [instructorId]);
     return result.rows;

@@ -87,6 +87,18 @@
   font-weight: var(--font-weight-medium);
 }
 
+.course-textbook {
+  margin-top: var(--space-md);
+  font-size: 0.9rem;
+  background: rgba(0,0,0,0.25);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-sm);
+  display: inline-block;
+  color: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  max-width: 100%;
+}
+
 .course-actions .btn-instructor.outline {
   border-color: white;
   background: rgba(255, 255, 255, 0.1);
