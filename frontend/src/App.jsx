@@ -20,10 +20,6 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import StudentManagement from "./pages/admin/StudentManagement";
 import StatsDashboard from './pages/analyst/StatsDashboard';
 
-
-
-            
-
 // Import Components
 import ProtectedRoute from './components/ProtectedRoute';
 import Footer from './components/Footer';
@@ -136,31 +132,21 @@ const AppContent = () => {
           }
         />
         <Route
-          path="/admin/users"
+          path="/admin/dashboard"
           element={
             <ProtectedRoute allowedRoles={['Admin']}>
-              <UserManagement />
+              <AdminDashboard />
             </ProtectedRoute>
           }
         />
-
-            {/* Admin Routes */}
-            <Route
-              path="/admin/dashboard"
-              element={
-                <ProtectedRoute allowedRoles={['Admin']}>
-                  <AdminDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/users"
-              element={
-                <ProtectedRoute allowedRoles={['Admin']}>
-                  <StudentManagement />
-                </ProtectedRoute>
-              }
-            />
+        <Route
+          path="/admin/users"
+          element={
+            <ProtectedRoute allowedRoles={['Admin']}>
+              <StudentManagement />
+            </ProtectedRoute>
+          }
+        />
         {/* Analyst Routes */}
         <Route
           path="/analyst/dashboard"
