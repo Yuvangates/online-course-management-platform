@@ -7,7 +7,7 @@
 .instructor-container {
   max-width: 100%;
   margin: 0;
-  padding: 20px;
+  padding: var(--space-lg) var(--space-xl);
   width: 100%;
   min-height: calc(100vh - 80px);
   box-sizing: border-box;
@@ -68,9 +68,60 @@
   transform: translateY(-2px);
 }
 
-.btn-instructor.sm {
+.btn-instructor.secondary {
+  background: var(--bg-light);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-light);
+}
+
+.btn-instructor.secondary:hover {
+  background: white;
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-instructor.danger {
+  background: white;
+  color: var(--danger-color);
+  border: 1.5px solid var(--danger-color);
+}
+
+.btn-instructor.danger:hover {
+  background: var(--danger-color);
+  color: white;
+  transform: translateY(-2px);
+}
+
+.btn-instructor.small {
   padding: var(--space-sm) var(--space-md);
   font-size: var(--font-size-sm);
+}
+
+/* Common Form Elements */
+.form-group {
+  margin-bottom: var(--space-lg);
+}
+
+.form-label {
+  display: block;
+  margin-bottom: var(--space-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+.form-input {
+  width: 100%;
+  padding: var(--space-md) var(--space-lg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-base);
+  background: white;
+  transition: all var(--transition-base);
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px var(--primary-light);
 }
 
 /* Table for students / grading */

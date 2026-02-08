@@ -78,7 +78,7 @@ const AssignedCourses = () => {
                       className="btn-instructor outline"
                       onClick={() => navigate(`/instructor/course/${course.course_id}/modules`)}
                     >
-                      Edit modules
+                      Manage course
                     </button>
                     <button
                       type="button"

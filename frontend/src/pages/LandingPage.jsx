@@ -1,14 +1,42 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import '../styles/landing.css';
+import { useNavigate } from 'react-router-dom';
 
 const LandingPage = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignInClick = () => {
+  if (user) {
+    switch (user.role) {
+      case 'Student':
+        navigate('/student/dashboard');
+        break;
+      case 'Instructor':
+        navigate('/instructor/dashboard');
+        break;
+      case 'Admin':
+        navigate('/admin/dashboard');
+        break;
+      case 'Analyst':
+        navigate('/analyst/dashboard');
+        break;
+      default:
+        navigate('/login'); // Fallback for unknown roles
+    }
+  } else {
+    navigate('/login');
+  }
+};
+
+
   return (
     <div className="landing-container">
       {/* Navbar */}
       <nav className="landing-navbar">
         <div className="navbar-brand">LearnSphere</div>
-        <Link to="/login" className="nav-login-btn">Sign In</Link>
+          <button onClick={handleSignInClick} className="btn primary">Sign In</button>
       </nav>
 
       {/* Hero Section */}
@@ -22,7 +50,7 @@ const LandingPage = () => {
             Connect with expert instructors, access comprehensive courses, and achieve your learning goals
             in a flexible, supportive environment.
           </p>
-          <Link to="/login" className="cta-button">Get Started Now</Link>
+          <button onClick={handleSignInClick} className="cta-button">Get Started Now</button>
         </div>
         <div className="hero-image">
           <div className="placeholder-image">
@@ -127,7 +155,7 @@ const LandingPage = () => {
         <h2>Ready to Begin Your Learning Journey?</h2>
         <p>Join thousands of students already learning on LearnSphere</p>
         <div className="cta-buttons">
-          <Link to="/login" className="cta-button primary">Sign In</Link>
+          <button onClick={handleSignInClick} className="cta-button primary">Sign In</button>
           <a href="#contact" className="cta-button secondary">Learn More</a>
         </div>
       </section>

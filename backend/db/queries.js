@@ -214,8 +214,11 @@ const getAllInstructors = async () => {
 
 const getCourseById = async (courseId) => {
     const result = await pool.query(`
-        SELECT c.*
+        SELECT c.*,
+               t.name as textbook_name,
+               t.author as textbook_author
         FROM course c
+        LEFT JOIN textbook t ON c.textbook_isbn = t.isbn
         WHERE c.course_id = $1
     `, [courseId]);
     return result.rows[0];
@@ -386,6 +389,8 @@ const getCoursesByInstructor = async (instructorId) => {
 const getCoursesByInstructorWithCounts = async (instructorId) => {
     const result = await pool.query(`
         SELECT c.*,
+            t.name AS textbook_name,
+            t.author AS textbook_author,
             u.name AS university_name,
             (SELECT COUNT(*) FROM module m WHERE m.course_id = c.course_id) AS module_count,
             (SELECT COUNT(*) FROM enrollment e WHERE e.course_id = c.course_id) AS student_count,
@@ -398,6 +403,7 @@ const getCoursesByInstructorWithCounts = async (instructorId) => {
         FROM course_instructor ci
         JOIN course c ON ci.course_id = c.course_id
         LEFT JOIN university u ON c.university_id = u.university_id
+        LEFT JOIN textbook t ON c.textbook_isbn = t.isbn
         WHERE ci.instructor_id = $1
     `, [instructorId]);
     return result.rows;
@@ -433,6 +439,14 @@ const updateUniversity = async (universityId, { name, country }) => {
     const result = await pool.query(
         'UPDATE university SET name = $2, country = $3 WHERE university_id = $1 RETURNING *',
         [universityId, name, country]
+      );
+  return result.rows[0];
+};
+
+const updateUserProfile = async (userId, { name, country, email }) => {
+    const result = await pool.query(
+        'UPDATE user_ SET name = $2, country = $3, email = $4 WHERE user_id = $1 RETURNING user_id, name, email, role, country',
+        [userId, name, country, email]
     );
     return result.rows[0];
 };
@@ -443,6 +457,13 @@ const deleteUniversity = async (universityId) => {
         [universityId]
     );
     return result.rows[0];
+};
+
+const updateUserPassword = async (userId, password_hash) => {
+    await pool.query(
+        'UPDATE user_ SET password_hash = $1 WHERE user_id = $2',
+        [password_hash, userId]
+    );
 };
 
 // ==========================================
@@ -545,6 +566,23 @@ const updateModuleContent = async (courseId, moduleNumber, contentId, { title, c
         [courseId, moduleNumber, contentId, title, content_type, url]
     );
     return result.rows[0];
+};
+
+
+const deleteModule = async (courseId, moduleNumber) => {
+    const result = await pool.query(
+        'DELETE FROM module WHERE course_id = $1 AND module_number = $2',
+        [courseId, moduleNumber]
+    );
+    return result.rowCount > 0;
+};
+
+const deleteModuleContent = async (courseId, moduleNumber, contentId) => {
+    const result = await pool.query(
+        'DELETE FROM module_content WHERE course_id = $1 AND module_number = $2 AND content_id = $3',
+        [courseId, moduleNumber, contentId]
+    );
+    return result.rowCount > 0;
 };
 
 
@@ -1171,6 +1209,8 @@ module.exports = {
     createModuleContent,
     updateModule,
     updateModuleContent,
+    deleteModule,
+    deleteModuleContent,
     swapModuleOrder,
 
     // Student Progress queries
@@ -1197,5 +1237,7 @@ module.exports = {
     getCourseUniversities,
     getCourseRating,
     getCourseReviewsDetailed,
-    updateStudentProfile,
+    updateStudentProfile, // This is for students, we'll add a new one for general profile
+    updateUserProfile,
+    updateUserPassword,
 };

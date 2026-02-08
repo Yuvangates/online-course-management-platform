@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 
 // Import Pages
@@ -31,101 +31,118 @@ import Footer from './components/Footer';
 // Import Styles
 import './styles/main.css';
 
-function App() {
+const AppContent = () => {
+  const location = useLocation();
+
   return (
-    <Router>
-      <AuthProvider>
-        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <Routes>
+        {/* Public Routes */}
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
 
-          <Routes>
-            {/* Public Routes */}
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
+        {/* Student Routes */}
+        <Route
+          path="/student/dashboard"
+          element={
+            <ProtectedRoute allowedRoles={['Student']}>
+              <StudentDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/student/search"
+          element={
+            <ProtectedRoute allowedRoles={['Student']}>
+              <CourseSearch />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/student/course/:id"
+          element={
+            <ProtectedRoute allowedRoles={['Student']}>
+              <CourseView />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/student/enrolled"
+          element={
+            <ProtectedRoute allowedRoles={['Student']}>
+              <EnrolledCourses />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/student/profile"
+          element={
+            <ProtectedRoute allowedRoles={['Student']}>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
 
-            {/* Student Routes */}
-            <Route
-              path="/student/dashboard"
-              element={
-                <ProtectedRoute allowedRoles={['Student']}>
-                  <StudentDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/student/search"
-              element={
-                <ProtectedRoute allowedRoles={['Student']}>
-                  <CourseSearch />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/student/course/:id"
-              element={
-                <ProtectedRoute allowedRoles={['Student']}>
-                  <CourseView />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/student/enrolled"
-              element={
-                <ProtectedRoute allowedRoles={['Student']}>
-                  <EnrolledCourses />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/student/profile"
-              element={
-                <ProtectedRoute allowedRoles={['Student']}>
-                  <Profile />
-                </ProtectedRoute>
-              }
-            />
+        {/* Instructor Routes */}
+        <Route
+          path="/instructor/dashboard"
+          element={
+            <ProtectedRoute allowedRoles={['Instructor']}>
+              <InstructorDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/instructor/courses"
+          element={
+            <ProtectedRoute allowedRoles={['Instructor']}>
+              <AssignedCourses />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/instructor/course/:id/modules"
+          element={
+            <ProtectedRoute allowedRoles={['Instructor']}>
+              <ManageCourse />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/instructor/course/:id/grade"
+          element={
+            <ProtectedRoute allowedRoles={['Instructor']}>
+              <CourseGrade />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/instructor/profile"
+          element={
+            <ProtectedRoute allowedRoles={['Instructor']}>
+              <InstructorProfile />
+            </ProtectedRoute>
+          }
+        />
 
-            {/* Instructor Routes */}
-            <Route
-              path="/instructor/dashboard"
-              element={
-                <ProtectedRoute allowedRoles={['Instructor']}>
-                  <InstructorDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/instructor/courses"
-              element={
-                <ProtectedRoute allowedRoles={['Instructor']}>
-                  <AssignedCourses />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/instructor/course/:id/modules"
-              element={
-                <ProtectedRoute allowedRoles={['Instructor']}>
-                  <ManageCourse />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/instructor/course/:id/grade"
-              element={
-                <ProtectedRoute allowedRoles={['Instructor']}>
-                  <CourseGrade />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/instructor/profile"
-              element={
-                <ProtectedRoute allowedRoles={['Instructor']}>
-                  <InstructorProfile />
-                </ProtectedRoute>
-              }
-            />
+        {/* Admin Routes */}
+        <Route
+          path="/admin/dashboard"
+          element={
+            <ProtectedRoute allowedRoles={['Admin']}>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/users"
+          element={
+            <ProtectedRoute allowedRoles={['Admin']}>
+              <UserManagement />
+            </ProtectedRoute>
+          }
+        />
 
             {/* Admin Routes */}
             <Route
@@ -144,20 +161,27 @@ function App() {
                 </ProtectedRoute>
               }
             />
+        {/* Analyst Routes */}
+        <Route
+          path="/analyst/dashboard"
+          element={
+            <ProtectedRoute allowedRoles={['Analyst']}>
+              <StatsDashboard />
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
 
-            {/* Analyst Routes */}
-            <Route
-              path="/analyst/dashboard"
-              element={
-                <ProtectedRoute allowedRoles={['Analyst']}>
-                  <StatsDashboard />
-                </ProtectedRoute>
-              }
-            />
-          </Routes>
+      {location.pathname !== '/' && <Footer />}
+    </div>
+  );
+};
 
-          <Footer />
-        </div>
+function App() {
+  return (
+    <Router>
+      <AuthProvider>
+        <AppContent />
       </AuthProvider>
     </Router>
   );

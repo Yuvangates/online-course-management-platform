@@ -58,7 +58,7 @@ INSERT INTO student (student_id, date_of_birth, skill_level) VALUES
 -- Insert Courses
 INSERT INTO course (name, description, duration, university_id, textbook_isbn, Fees, image_url) VALUES
 ('Introduction to Data Structures', 'Learn fundamental data structures like arrays, linked lists, trees, and graphs', 8, 1, '978-0201361512', 100, 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=500&h=300&fit=crop'),
-('Advanced Algorithms', 'Deep dive into algorithm design and complexity analysis', 10, 1, '978-0262033848', 150, 'https://images.unsplash.com/photo-1516321356521-4fead9b2596f?w=500&h=300&fit=crop'),
+('Advanced Algorithms', 'Deep dive into algorithm design and complexity analysis', 10, 1, '978-0262033848', 150, 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=500&h=300&fit=crop'),
 ('Database Management Systems', 'Understand relational databases, SQL, and database design', 8, 3, '978-0078022159', 120, 'https://images.unsplash.com/photo-1516534775068-bb57e39c2d0b?w=500&h=300&fit=crop'),
 ('Web Development Basics', 'Learn HTML, CSS, and JavaScript fundamentals', 6, 4, '978-1118008188', 80, 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=500&h=300&fit=crop'),
 ('Machine Learning Fundamentals', 'Introduction to ML algorithms and applications', 10, 1, '978-0262033848', 200, 'https://images.unsplash.com/photo-1515879218367-8466d910aaa4?w=500&h=300&fit=crop');
