@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 import analystService from '../../api/analystService';
 import { LineChart, BarChart, PieChart, DoughnutChart, lineChartOptions, barChartOptions, pieChartOptions, doughnutChartOptions } from '../../components/Charts';
@@ -6,7 +7,8 @@ import { generateAnalyticsReport } from '../../utils/exportReport';
 import '../../styles/analyst/analyst.css';
 
 const AnalystDashboard = () => {
-    const [activeTab, setActiveTab] = useState('dashboard');
+    const [searchParams, setSearchParams] = useSearchParams();
+    const activeTab = searchParams.get('tab') || 'dashboard';
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
@@ -330,31 +332,31 @@ const AnalystDashboard = () => {
                         <h3>Analytics</h3>
                         <button
                             className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
-                            onClick={() => setActiveTab('dashboard')}
+                            onClick={() => setSearchParams({ tab: 'dashboard' })}
                         >
                             Dashboard
                         </button>
                         <button
                             className={`nav-item ${activeTab === 'revenue' ? 'active' : ''}`}
-                            onClick={() => setActiveTab('revenue')}
+                            onClick={() => setSearchParams({ tab: 'revenue' })}
                         >
                             Revenue
                         </button>
                         <button
                             className={`nav-item ${activeTab === 'engagement' ? 'active' : ''}`}
-                            onClick={() => setActiveTab('engagement')}
+                            onClick={() => setSearchParams({ tab: 'engagement' })}
                         >
                             Engagement
                         </button>
                         <button
                             className={`nav-item ${activeTab === 'performance' ? 'active' : ''}`}
-                            onClick={() => setActiveTab('performance')}
+                            onClick={() => setSearchParams({ tab: 'performance' })}
                         >
                             Performance
                         </button>
                         <button
                             className={`nav-item ${activeTab === 'instructors' ? 'active' : ''}`}
-                            onClick={() => setActiveTab('instructors')}
+                            onClick={() => setSearchParams({ tab: 'instructors' })}
                         >
                             Instructors
                         </button>
