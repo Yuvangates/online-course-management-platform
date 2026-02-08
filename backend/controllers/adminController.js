@@ -8,12 +8,16 @@ const getDashboard = async (req, res) => {
         const students = await queries.getAllStudents();
         const instructors = await queries.getAllInstructors();
         const analyst = await queries.getAnalyst();
+        const universities = await queries.getAllUniversities();
+        const textbooks = await queries.getAllTextbooks();
 
         res.status(200).json({
             totalCourses: courses.length,
             totalStudents: students.length,
             totalInstructors: instructors.length,
             hasAnalyst: !!analyst,
+            totalUniversities: universities.length,
+            totalTextbooks: textbooks.length,
         });
     } catch (error) {
         console.error('Dashboard error:', error);
@@ -24,7 +28,7 @@ const getDashboard = async (req, res) => {
 // Create a new course
 const createCourse = async (req, res) => {
     try {
-        const { name, description, duration, university_id } = req.body;
+        const { name, description, duration, university_id, image_url, fee } = req.body;
 
         // Validation
         if (!name || !university_id) {
@@ -37,11 +41,49 @@ const createCourse = async (req, res) => {
             duration: duration || 30,
             university_id,
             textbook_isbn: null,
+            image_url: image_url || 'default_course.jpg',
+            fee: fee || 0,
         });
 
         res.status(201).json(course);
     } catch (error) {
         console.error('Create course error:', error);
+        if (error.message.includes('unique')) {
+            return res.status(400).json({ error: 'Course name already exists' });
+        }
+        res.status(500).json({ error: error.message });
+    }
+};
+
+// Update a course
+const updateCourse = async (req, res) => {
+    try {
+        const { courseId } = req.params;
+        const { name, description, duration, university_id, textbook_isbn, image_url, fee } = req.body;
+
+        // Validation
+        if (!name || !university_id) {
+            return res.status(400).json({ error: 'Name and university are required' });
+        }
+
+        const course = await queries.getCourseById(courseId);
+        if (!course) {
+            return res.status(404).json({ error: 'Course not found' });
+        }
+
+        const updatedCourse = await queries.updateCourse(courseId, {
+            name,
+            description: description || '',
+            duration: duration || 30,
+            university_id,
+            textbook_isbn: textbook_isbn || null,
+            image_url: image_url || 'default_course.jpg',
+            fee: fee || 0,
+        });
+
+        res.status(200).json(updatedCourse);
+    } catch (error) {
+        console.error('Update course error:', error);
         if (error.message.includes('unique')) {
             return res.status(400).json({ error: 'Course name already exists' });
         }
@@ -87,7 +129,7 @@ const getCourseDetails = async (req, res) => {
 // Create a new instructor
 const createInstructor = async (req, res) => {
     try {
-        const { email, password, name, country, expertise } = req.body;
+        const { email, password, name, country, expertise, start_date } = req.body;
 
         // Validation
         if (!email || !password || !name) {
@@ -114,7 +156,7 @@ const createInstructor = async (req, res) => {
             },
             instructorData: {
                 expertise: expertise || '',
-                start_date: new Date(),
+                start_date:  start_date || new Date(),
             },
         });
 
@@ -361,6 +403,146 @@ const getAllUniversities = async (req, res) => {
     }
 };
 
+// Create a new university
+const createUniversity = async (req, res) => {
+    try {
+        const { name, country } = req.body;
+
+        if (!name || !country) {
+            return res.status(400).json({ error: 'Name and country are required' });
+        }
+
+        const university = await queries.createUniversity({ name, country });
+        res.status(201).json(university);
+    } catch (error) {
+        console.error('Create university error:', error);
+        if (error.message.includes('unique')) {
+            return res.status(400).json({ error: 'University name already exists' });
+        }
+        res.status(500).json({ error: error.message });
+    }
+};
+
+// Update a university
+const updateUniversity = async (req, res) => {
+    try {
+        const { universityId } = req.params;
+        const { name, country } = req.body;
+
+        if (!name || !country) {
+            return res.status(400).json({ error: 'Name and country are required' });
+        }
+
+        const university = await queries.getUniversityById(universityId);
+        if (!university) {
+            return res.status(404).json({ error: 'University not found' });
+        }
+
+        const updated = await queries.updateUniversity(universityId, { name, country });
+        res.status(200).json(updated);
+    } catch (error) {
+        console.error('Update university error:', error);
+        if (error.message.includes('unique')) {
+            return res.status(400).json({ error: 'University name already exists' });
+        }
+        res.status(500).json({ error: error.message });
+    }
+};
+
+// Delete a university
+const deleteUniversity = async (req, res) => {
+    try {
+        const { universityId } = req.params;
+
+        const university = await queries.getUniversityById(universityId);
+        if (!university) {
+            return res.status(404).json({ error: 'University not found' });
+        }
+
+        await queries.deleteUniversity(universityId);
+        res.status(200).json({ message: 'University deleted successfully' });
+    } catch (error) {
+        console.error('Delete university error:', error);
+        res.status(500).json({ error: error.message });
+    }
+};
+
+// ==========================================
+// TEXTBOOK MANAGEMENT
+// ==========================================
+
+// Get all textbooks
+const getAllTextbooks = async (req, res) => {
+    try {
+        const textbooks = await queries.getAllTextbooks();
+        res.status(200).json(textbooks);
+    } catch (error) {
+        console.error('Get textbooks error:', error);
+        res.status(500).json({ error: error.message });
+    }
+};
+
+// Create a new textbook
+const createTextbook = async (req, res) => {
+    try {
+        const { isbn, name, author } = req.body;
+
+        if (!isbn || !name || !author) {
+            return res.status(400).json({ error: 'ISBN, name, and author are required' });
+        }
+
+        const textbook = await queries.createTextbook({ isbn, name, author });
+        res.status(201).json(textbook);
+    } catch (error) {
+        console.error('Create textbook error:', error);
+        if (error.message.includes('unique') || error.message.includes('Duplicate')) {
+            return res.status(400).json({ error: 'Textbook with this ISBN already exists' });
+        }
+        res.status(500).json({ error: error.message });
+    }
+};
+
+// Update a textbook
+const updateTextbook = async (req, res) => {
+    try {
+        const { isbn } = req.params;
+        const { name, author } = req.body;
+
+        if (!name || !author) {
+            return res.status(400).json({ error: 'Name and author are required' });
+        }
+
+        const textbook = await queries.getTextbookById(isbn);
+        if (!textbook) {
+            return res.status(404).json({ error: 'Textbook not found' });
+        }
+
+        const updated = await queries.updateTextbook(isbn, { name, author });
+        res.status(200).json(updated);
+    } catch (error) {
+        console.error('Update textbook error:', error);
+        res.status(500).json({ error: error.message });
+    }
+};
+
+// Delete a textbook
+const deleteTextbook = async (req, res) => {
+    try {
+        const { isbn } = req.params;
+
+        const textbook = await queries.getTextbookById(isbn);
+        if (!textbook) {
+            return res.status(404).json({ error: 'Textbook not found' });
+        }
+
+        await queries.deleteTextbook(isbn);
+        res.status(200).json({ message: 'Textbook deleted successfully' });
+    } catch (error) {
+        console.error('Delete textbook error:', error);
+        res.status(500).json({ error: error.message });
+    }
+};
+
 // ==========================================
 // USER MANAGEMENT
 // ==========================================
@@ -425,6 +607,7 @@ const deleteUser = async (req, res) => {
 module.exports = {
     getDashboard,
     createCourse,
+    updateCourse,
     getAllCourses,
     getCourseDetails,
     createInstructor,
@@ -438,6 +621,13 @@ module.exports = {
     createAnalyst,
     getAnalyst,
     getAllUniversities,
+    createUniversity,
+    updateUniversity,
+    deleteUniversity,
+    getAllTextbooks,
+    createTextbook,
+    updateTextbook,
+    deleteTextbook,
     getAllUsers,
     searchUsers,
     deleteUser,

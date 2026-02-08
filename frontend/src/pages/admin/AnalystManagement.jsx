@@ -41,6 +41,25 @@ const AnalystManagement = () => {
         }));
     };
 
+    const handleDeleteAnalyst = async () => {
+        if (!analyst || !analyst.analyst_id) {
+            setError('Cannot find analyst to delete');
+            return;
+        }
+
+        if (!window.confirm(`Are you sure you want to remove ${analyst.name}?`)) {
+            return;
+        }
+
+        try {
+            await adminService.deleteUser(analyst.analyst_id);
+            setAnalyst(null);
+            setError('');
+        } catch (err) {
+            setError(err.response?.data?.error || 'Failed to remove analyst');
+        }
+    };
+
     const handleCreateAnalyst = async (e) => {
         e.preventDefault();
         try {
@@ -117,6 +136,12 @@ const AnalystManagement = () => {
                         <p className="note">
                             The analyst role has been assigned. Only one analyst can exist in the system.
                         </p>
+                        <button
+                            className="btn-danger"
+                            onClick={handleDeleteAnalyst}
+                        >
+                            Remove Account
+                        </button>
                     </div>
                 </div>
             ) : (

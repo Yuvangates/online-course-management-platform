@@ -13,6 +13,7 @@ router.get('/dashboard', adminController.getDashboard);
 
 // Course management
 router.post('/courses', adminController.createCourse);
+router.put('/courses/:courseId', adminController.updateCourse);
 router.get('/courses', adminController.getAllCourses);
 router.get('/courses/:courseId', adminController.getCourseDetails);
 
@@ -36,6 +37,15 @@ router.get('/analyst', adminController.getAnalyst);
 
 // Universities
 router.get('/universities', adminController.getAllUniversities);
+router.post('/universities', adminController.createUniversity);
+router.put('/universities/:universityId', adminController.updateUniversity);
+router.delete('/universities/:universityId', adminController.deleteUniversity);
+
+// TextBooks
+router.get('/textbooks', adminController.getAllTextbooks);
+router.post('/textbooks', adminController.createTextbook);
+router.put('/textbooks/:isbn', adminController.updateTextbook);
+router.delete('/textbooks/:isbn', adminController.deleteTextbook);
 
 // User management
 router.get('/users', adminController.getAllUsers);

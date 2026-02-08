@@ -40,6 +40,13 @@ const adminService = {
         return response.data;
     },
 
+    updateCourse: async (courseId, courseData) => {
+        const response = await axios.put(`${API_URL}/courses/${courseId}`, courseData, {
+            headers: getAuthHeader()
+        });
+        return response.data;
+    },
+
     // ==========================================
     // INSTRUCTOR MANAGEMENT
     // ==========================================
@@ -163,6 +170,70 @@ const adminService = {
 
     deleteUser: async (userId) => {
         const response = await axios.delete(`${API_URL}/users/${userId}`, {
+            headers: getAuthHeader()
+        });
+        return response.data;
+    },
+
+    // ==========================================
+    // UNIVERSITY MANAGEMENT
+    // ==========================================
+
+    getAllUniversities: async () => {
+        const response = await axios.get(`${API_URL}/universities`, {
+            headers: getAuthHeader()
+        });
+        return response.data;
+    },
+
+    createUniversity: async (universityData) => {
+        const response = await axios.post(`${API_URL}/universities`, universityData, {
+            headers: getAuthHeader()
+        });
+        return response.data;
+    },
+
+    updateUniversity: async (universityId, universityData) => {
+        const response = await axios.put(`${API_URL}/universities/${universityId}`, universityData, {
+            headers: getAuthHeader()
+        });
+        return response.data;
+    },
+
+    deleteUniversity: async (universityId) => {
+        const response = await axios.delete(`${API_URL}/universities/${universityId}`, {
+            headers: getAuthHeader()
+        });
+        return response.data;
+    },
+
+    // ==========================================
+    // TEXTBOOK MANAGEMENT
+    // ==========================================
+
+    getAllTextbooks: async () => {
+        const response = await axios.get(`${API_URL}/textbooks`, {
+            headers: getAuthHeader()
+        });
+        return response.data;
+    },
+
+    createTextbook: async (textbookData) => {
+        const response = await axios.post(`${API_URL}/textbooks`, textbookData, {
+            headers: getAuthHeader()
+        });
+        return response.data;
+    },
+
+    updateTextbook: async (isbn, textbookData) => {
+        const response = await axios.put(`${API_URL}/textbooks/${isbn}`, textbookData, {
+            headers: getAuthHeader()
+        });
+        return response.data;
+    },
+
+    deleteTextbook: async (isbn) => {
+        const response = await axios.delete(`${API_URL}/textbooks/${isbn}`, {
             headers: getAuthHeader()
         });
         return response.data;
