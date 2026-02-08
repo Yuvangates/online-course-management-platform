@@ -8,6 +8,16 @@ const PORT = process.env.PORT || 5000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+console.log('Environment Variables:', {
+    PORT: process.env.PORT,
+    FRONTEND_URL: process.env.FRONTEND_URL,
+    JWT_SECRET: process.env.JWT_SECRET ? '***' : 'Not Set',
+    DB_HOST: process.env.DB_HOST,
+    DB_USER: process.env.DB_USER,
+    DB_PASSWORD: process.env.DB_PASSWORD ? '***' : 'Not Set',
+    DB_NAME: process.env.DB_NAME,
+});
+
 // CORS setup
 const cors = require('cors');
 app.use(cors({
