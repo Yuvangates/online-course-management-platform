@@ -386,8 +386,6 @@ const getCoursesByInstructor = async (instructorId) => {
 const getCoursesByInstructorWithCounts = async (instructorId) => {
     const result = await pool.query(`
         SELECT c.*,
-            t.name AS textbook_name,
-            t.author AS textbook_author,
             u.name AS university_name,
             (SELECT COUNT(*) FROM module m WHERE m.course_id = c.course_id) AS module_count,
             (SELECT COUNT(*) FROM enrollment e WHERE e.course_id = c.course_id) AS student_count,
@@ -400,7 +398,6 @@ const getCoursesByInstructorWithCounts = async (instructorId) => {
         FROM course_instructor ci
         JOIN course c ON ci.course_id = c.course_id
         LEFT JOIN university u ON c.university_id = u.university_id
-        LEFT JOIN textbook t ON c.textbook_isbn = t.isbn
         WHERE ci.instructor_id = $1
     `, [instructorId]);
     return result.rows;
@@ -445,46 +442,6 @@ const updateUserPassword = async (userId, password_hash) => {
         'UPDATE user_ SET password_hash = $1 WHERE user_id = $2',
         [password_hash, userId]
     );
-};
-
-const upsertTextbookAndUpdateCourse = async (courseId, { isbn, name, author }) => {
-    const client = await pool.connect();
-    try {
-        await client.query('BEGIN');
-
-        // Step 1: Upsert the textbook. If it exists, update it. If not, insert it.
-        await client.query(
-            `INSERT INTO textbook (isbn, name, author)
-             VALUES ($1, $2, $3)
-             ON CONFLICT (isbn) DO UPDATE
-             SET name = EXCLUDED.name, author = EXCLUDED.author`,
-            [isbn, name, author]
-        );
-
-        // Step 2: Update the course to reference this textbook's ISBN.
-        await client.query(
-            'UPDATE course SET textbook_isbn = $1 WHERE course_id = $2',
-            [isbn, courseId]
-        );
-
-        await client.query('COMMIT');
-        
-        // Return the updated course details with the new textbook info
-        const updatedCourseRes = await client.query(
-            `SELECT c.*, t.name as textbook_name, t.author as textbook_author 
-             FROM course c 
-             LEFT JOIN textbook t ON c.textbook_isbn = t.isbn 
-             WHERE c.course_id = $1`,
-            [courseId]
-        );
-        return updatedCourseRes.rows[0];
-
-    } catch (e) {
-        await client.query('ROLLBACK');
-        throw e;
-    } finally {
-        client.release();
-    }
 };
 
 // ==========================================
@@ -1232,5 +1189,4 @@ module.exports = {
     updateStudentProfile, // This is for students, we'll add a new one for general profile
     updateUserProfile,
     updateUserPassword,
-    upsertTextbookAndUpdateCourse,
 };

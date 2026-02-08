@@ -139,15 +139,6 @@ const instructorService = {
     );
     return response.data;
   },
-
-  updateCourseTextbook: async (courseId, { isbn, textbook_name, textbook_author }) => {
-    const response = await axios.put(
-      `${API_URL}/instructor/courses/${courseId}/textbook`,
-      { isbn, name: textbook_name, author: textbook_author },
-      { headers: getAuthHeader() }
-    );
-    return response.data;
-  },
 };
 
 export default instructorService;

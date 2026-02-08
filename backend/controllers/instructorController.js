@@ -451,28 +451,3 @@ exports.updateEnrollmentGrade = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
-
-/**
- * @desc    Update the textbook for a course
- * @route   PUT /api/instructor/courses/:id/textbook
- * @access  Private (Instructor)
- */
-exports.updateCourseTextbook = async (req, res) => {
-    try {
-        const { isbn, name, author } = req.body;
-        if (!isbn || !name) {
-            return res.status(400).json({ error: 'Textbook ISBN and Name are required.' });
-        }
-
-        const updatedCourse = await queries.upsertTextbookAndUpdateCourse(req.courseId, {
-            isbn: isbn.trim(),
-            name: name.trim(),
-            author: author ? author.trim() : null,
-        });
-
-        res.status(200).json({ message: 'Textbook updated successfully', course: updatedCourse });
-    } catch (error) {
-        console.error('Update course textbook error:', error);
-        res.status(500).json({ error: error.message });
-    }
-};

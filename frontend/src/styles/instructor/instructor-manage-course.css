@@ -87,15 +87,6 @@
   font-weight: var(--font-weight-medium);
 }
 
-.course-textbook {
-  margin-top: var(--space-md);
-  font-size: 0.9rem;
-  background: rgba(0,0,0,0.2);
-  padding: var(--space-sm) var(--space-md);
-  border-radius: var(--radius-sm);
-  display: inline-block;
-}
-
 .course-actions .btn-instructor.outline {
   border-color: white;
   background: rgba(255, 255, 255, 0.1);
@@ -120,10 +111,6 @@
 }
 
 .module-management-section {
-  /* margin is now on management-controls */
-}
-
-.textbook-management-section {
   /* margin is now on management-controls */
 }
 

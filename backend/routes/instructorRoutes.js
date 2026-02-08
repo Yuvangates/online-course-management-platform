@@ -49,9 +49,6 @@ router.put('/courses/:id/modules/:num/content/:contentId', ensureTeachesCourse, 
 router.delete('/courses/:id/modules/:num/content/:contentId', ensureTeachesCourse, instructorController.deleteModuleContent);
 router.post('/courses/:id/modules/:num/content/swap', ensureTeachesCourse, instructorController.swapModuleContent);
 
-// Textbook
-router.put('/courses/:id/textbook', ensureTeachesCourse, instructorController.updateCourseTextbook);
-
 // Grading
 router.put('/enrollments/:id/grade', instructorController.updateEnrollmentGrade);
 

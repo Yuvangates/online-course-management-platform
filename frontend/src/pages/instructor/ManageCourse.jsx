@@ -23,11 +23,9 @@ const ManageCourse = () => {
   const [addModule, setAddModule] = useState(false);
   const [addContentFor, setAddContentFor] = useState(null);
   const [isEditMode, setIsEditMode] = useState(false);
-  const [isEditingTextbook, setIsEditingTextbook] = useState(false);
 
   const [formModule, setFormModule] = useState({ module_number: '', name: '', duration_weeks: '' });
   const [formContent, setFormContent] = useState({ content_id: '', title: '', content_type: 'Note', url: '' });
-  const [formTextbook, setFormTextbook] = useState({ isbn: '', textbook_name: '', textbook_author: '' });
 
   // Timer for success messages
   useEffect(() => {
@@ -63,11 +61,6 @@ const ManageCourse = () => {
         const courseObj = courseData.course || courseData;
         setCourse(courseObj);
         setModules(modulesRes.modules || []);
-        setFormTextbook({
-          isbn: courseObj.textbook_isbn || '',
-          textbook_name: courseObj.textbook_name || '',
-          textbook_author: courseObj.textbook_author || ''
-        });
       } catch (err) {
         console.error('Error loading course:', err);
         setError(err.response?.data?.error || 'Unable to load course details. Please try again later.');
@@ -249,24 +242,6 @@ const ManageCourse = () => {
     }
   };
 
-  const handleUpdateTextbook = async (e) => {
-    e.preventDefault();
-    if (!formTextbook.isbn || !formTextbook.textbook_name) {
-      setError('Textbook ISBN and Name are required.');
-      return;
-    }
-    try {
-      const res = await instructorService.updateCourseTextbook(courseId, formTextbook);
-      // The backend returns the updated course, so we can update our local state
-      setCourse(prev => ({ ...prev, ...res.course }));
-      setIsEditingTextbook(false);
-      setMessage('Textbook updated successfully.');
-    } catch (err) {
-      console.error('Error updating textbook:', err);
-      setError(err.response?.data?.error || 'Could not update textbook.');
-    }
-  };
-
   const toggleModule = (mod) => {
     const next = expandedModule?.module_number === mod.module_number ? null : mod;
     setExpandedModule(next);
@@ -299,11 +274,6 @@ const ManageCourse = () => {
                 <strong>Co-instructors:</strong> {course.other_instructors}
               </div>
             )}
-            {course?.textbook_isbn && !isEditMode && (
-              <div className="course-textbook">
-                <strong>Textbook:</strong> {course.textbook_name} <em>by {course.textbook_author || 'N/A'}</em> (ISBN: {course.textbook_isbn})
-              </div>
-            )}
             <div className="course-actions">
               <button type="button" className="btn-instructor outline" onClick={() => setIsEditMode(!isEditMode)}>
                 {isEditMode ? '👁 Switch to Preview' : '✎ Switch to Edit'}
@@ -331,10 +301,9 @@ const ManageCourse = () => {
           <>
             {isEditMode && (
               <div className="management-controls">
-                {isEditMode && !addModule && !editingModule && !isEditingTextbook && (
+                {isEditMode && !addModule && !editingModule && (
                   <div className="top-level-actions">
                     <button type="button" className="btn-instructor primary" onClick={() => setAddModule(true)}>+ Add module</button>
-                    <button type="button" className="btn-instructor primary" onClick={() => setIsEditingTextbook(true)}>{course?.textbook_isbn ? '✎ Edit Textbook' : '+ Add Textbook'}</button>
                   </div>
                 )}
 
@@ -384,34 +353,6 @@ const ManageCourse = () => {
                           <div className="edit-form-actions">
                             <button type="submit" className="btn-instructor primary">Update</button>
                             <button type="button" className="btn-instructor secondary" onClick={() => { setEditingModule(null); setFormModule({ module_number: '', name: '', duration_weeks: '' }); }}>Cancel</button>
-                          </div>
-                        </form>
-                      </div>
-                  </div>
-                )}
-
-                {isEditMode && isEditingTextbook && (
-                  <div className="textbook-management-section">
-                    <div className="card edit-form-card">
-                        <h3>{course?.textbook_isbn ? 'Edit Textbook' : 'Add Textbook'}</h3>
-                        <form onSubmit={handleUpdateTextbook}>
-                          <div className="edit-form-row">
-                            <div className="form-group">
-                              <label className="form-label">ISBN</label>
-                              <input type="text" className="form-input" value={formTextbook.isbn} onChange={(e) => setFormTextbook(f => ({ ...f, isbn: e.target.value }))} required />
-                            </div>
-                            <div className="form-group" style={{ flex: 2 }}>
-                              <label className="form-label">Textbook Name</label>
-                              <input type="text" className="form-input" value={formTextbook.textbook_name} onChange={(e) => setFormTextbook(f => ({ ...f, textbook_name: e.target.value }))} required />
-                            </div>
-                            <div className="form-group" style={{ flex: 2 }}>
-                              <label className="form-label">Author</label>
-                              <input type="text" className="form-input" value={formTextbook.textbook_author} onChange={(e) => setFormTextbook(f => ({ ...f, textbook_author: e.target.value }))} />
-                            </div>
-                          </div>
-                          <div className="edit-form-actions">
-                            <button type="submit" className="btn-instructor primary">Save Textbook</button>
-                            <button type="button" className="btn-instructor secondary" onClick={() => setIsEditingTextbook(false)}>Cancel</button>
                           </div>
                         </form>
                       </div>
