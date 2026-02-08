@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/api/analyst';
+const API_URL = 'https://online-course-management-platform-9swy.onrender.com/api/analyst';
 
 const getAuthHeader = () => ({
     Authorization: `Bearer ${localStorage.getItem('token')}`
