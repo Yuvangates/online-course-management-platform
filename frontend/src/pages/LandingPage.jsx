@@ -67,8 +67,7 @@ const LandingPage = () => {
             <div className="feature-icon">👨‍🎓</div>
             <h3>For Students</h3>
             <p>
-              Explore diverse courses, learn at your own pace, track your progress, and gain valuable
-              skills from industry experts.
+              Explore diverse courses, learn at your own pace, and gain valuable skills.
             </p>
           </div>
 
@@ -76,8 +75,7 @@ const LandingPage = () => {
             <div className="feature-icon">👨‍🏫</div>
             <h3>For Instructors</h3>
             <p>
-              Create and manage courses, structure content into modules, engage students, and track
-              learning outcomes effectively.
+              Create courses, structure content with modules, and track student outcomes.
             </p>
           </div>
 
@@ -85,8 +83,7 @@ const LandingPage = () => {
             <div className="feature-icon">👨‍💼</div>
             <h3>For Admins</h3>
             <p>
-              Manage users, oversee courses, maintain platform integrity, and ensure smooth operations
-              across all universities.
+              Manage users, oversee courses, and ensure smooth platform operations.
             </p>
           </div>
 
@@ -94,8 +91,7 @@ const LandingPage = () => {
             <div className="feature-icon">📊</div>
             <h3>For Analysts</h3>
             <p>
-              Access detailed analytics, generate reports, track performance metrics, and make
-              data-driven platform improvements.
+              Access detailed analytics, generate reports, and drive improvements.
             </p>
           </div>
         </div>
@@ -160,33 +156,6 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="landing-footer">
-        <div className="footer-content">
-          <div className="footer-section">
-            <h4>LearnSphere</h4>
-            <p>Transforming online education globally</p>
-          </div>
-          <div className="footer-section">
-            <h4>Quick Links</h4>
-            <ul>
-              <li><a href="#about">About Us</a></li>
-              <li><a href="#courses">Courses</a></li>
-              <li><a href="#contact">Contact</a></li>
-            </ul>
-          </div>
-          <div className="footer-section">
-            <h4>Legal</h4>
-            <ul>
-              <li><a href="#privacy">Privacy Policy</a></li>
-              <li><a href="#terms">Terms of Service</a></li>
-            </ul>
-          </div>
-        </div>
-        <div className="footer-bottom">
-          <p>&copy; 2024 LearnSphere. All rights reserved.</p>
-        </div>
-      </footer>
     </div>
   );
 };

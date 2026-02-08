@@ -43,7 +43,7 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-sm);
-  transition: all var(--transition-base);
+  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .btn-instructor.primary {

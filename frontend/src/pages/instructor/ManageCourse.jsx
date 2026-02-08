@@ -392,7 +392,11 @@ const ManageCourse = () => {
                       )}
                     </div>
 
-                    <div className={`module-content ${expandedModule?.module_number === mod.module_number ? 'expanded' : ''}`}>
+                    <div
+                      className={`module-content ${
+                        expandedModule?.module_number === mod.module_number ? 'expanded' : ''
+                      }`}
+                    >
                       <div className="module-content-inner">
                         {expandedModule?.module_number === mod.module_number && (
                           <>

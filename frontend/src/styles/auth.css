@@ -16,9 +16,9 @@
   position: absolute;
   top: 2rem;
   left: 2rem;
-  background: transparent;
+  background: var(--primary-color);
   border: 1px solid transparent;
-  color: var(--text-secondary);
+  color: white;
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-semibold);
   cursor: pointer;
@@ -32,9 +32,9 @@
 }
 
 .back-button:hover {
-  background-color: var(--bg-white);
-  border-color: var(--border-light);
-  color: var(--text-primary);
+  background-color: var(--primary-dark);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 
 .back-button .arrow {

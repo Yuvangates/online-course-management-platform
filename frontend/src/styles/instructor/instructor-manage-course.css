@@ -133,7 +133,7 @@
   border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: var(--shadow-sm);
-  transition: all var(--transition-base);
+  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .module-card:hover {
@@ -186,7 +186,10 @@
   padding: 0 var(--space-lg);
   max-height: 0;
   overflow: hidden;
-  transition: max-height 0.35s ease-in-out, padding 0.35s ease-in-out;
+  /* Simple transition for the container collapse/expand */
+  transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              padding-top 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              padding-bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .module-content.expanded {
@@ -197,13 +200,13 @@
 
 .module-content-inner {
   opacity: 0;
-  transform: translateY(-10px);
-  transition: opacity 0.3s ease-out 0.1s, transform 0.3s ease-out 0.1s;
+  transition: opacity 0.3s ease-in;
 }
 
 .module-content.expanded .module-content-inner {
   opacity: 1;
-  transform: translateY(0);
+  /* Delay the fade-in to allow the container to expand first */
+  transition-delay: 0.15s;
 }
 
 .content-item {

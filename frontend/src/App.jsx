@@ -158,7 +158,7 @@ const AppContent = () => {
         />
       </Routes>
 
-      {location.pathname !== '/' && <Footer />}
+      <Footer />
     </div>
   );
 };

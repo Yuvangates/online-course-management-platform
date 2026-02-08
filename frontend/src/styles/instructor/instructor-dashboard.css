@@ -12,7 +12,7 @@
   padding: var(--space-2xl);
   margin-bottom: var(--space-2xl);
   box-shadow: var(--shadow-md);
-  transition: all var(--transition-base);
+  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .instructor-hero:hover {
@@ -44,7 +44,7 @@
   border-radius: var(--radius-lg);
   padding: var(--space-xl);
   box-shadow: var(--shadow-sm);
-  transition: all var(--transition-base);
+  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
   border-left: 4px solid var(--primary-color);
 }
 
@@ -76,11 +76,16 @@
   justify-content: space-between;
   flex-wrap: wrap;
   gap: var(--space-md);
-  margin-bottom: var(--space-lg);
+  margin-bottom: 0;
 }
 
 .instructor-section-title h2 {
   margin: 0;
+}
+
+.instructor-section-subtitle {
+  color: var(--text-secondary);
+  margin: var(--space-xs) 0 var(--space-lg) 0;
 }
 
 /* Course cards grid */
@@ -97,7 +102,7 @@
   border-radius: var(--radius-lg);
   padding: var(--space-xl);
   box-shadow: var(--shadow-sm);
-  transition: all var(--transition-base);
+  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
   display: flex;
   flex-direction: column;
 }
