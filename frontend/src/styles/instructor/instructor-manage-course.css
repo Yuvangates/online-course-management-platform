@@ -1,89 +1,8 @@
 @import './instructor-common.css';
 
-/* Re-implementing generic buttons for this page to match instructor theme */
-.btn {
-  padding: var(--space-md) var(--space-lg);
-  border-radius: var(--radius-md);
-  border: 1px solid transparent;
-  cursor: pointer;
-  font-weight: var(--font-weight-semibold);
-  font-size: var(--font-size-base);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-sm);
-  transition: all var(--transition-base);
-  text-decoration: none;
-}
-
-.btn.primary {
-  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-  color: white;
-  box-shadow: var(--shadow-sm);
-}
-
-.btn.primary:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-}
-
-.btn.secondary {
-  background: var(--bg-light);
-  color: var(--text-secondary);
-  border: 1px solid var(--border-light);
-}
-
-.btn.secondary:hover {
-  background: white;
-  box-shadow: var(--shadow-sm);
-}
-
-.btn.outline {
-  background: white;
-  color: var(--primary-color);
-  border: 1.5px solid var(--primary-color);
-}
-
-.btn.outline:hover {
-  background: var(--primary-light);
-  transform: translateY(-2px);
-}
-
-.btn.small {
-  padding: var(--space-sm) var(--space-md);
-  font-size: var(--font-size-sm);
-}
-
-/* Form Elements */
-.form-group {
-  margin-bottom: var(--space-lg);
-}
-
-.form-label {
-  display: block;
-  margin-bottom: var(--space-sm);
-  font-weight: var(--font-weight-semibold);
-  color: var(--text-primary);
-}
-
-.form-input {
-  width: 100%;
-  padding: var(--space-md) var(--space-lg);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  font-size: var(--font-size-base);
-  background: white;
-  transition: all var(--transition-base);
-}
-
-.form-input:focus {
-  outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px var(--primary-light);
-}
-
 /* Course Header */
 .course-header {
+  position: relative;
   background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
   color: white;
   padding: var(--space-3xl) var(--space-2xl);
@@ -93,10 +12,28 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  overflow: hidden;
+  background-size: cover;
+  background-position: center;
+}
+
+.course-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(7, 42, 97, 0.5); /* Dark blue overlay, matches theme */
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px); /* For Safari support */
+  z-index: 1;
 }
 
 .course-header-content {
   flex: 1;
+  position: relative;
+  z-index: 2;
 }
 
 .course-header h1 {
@@ -104,6 +41,33 @@
   font-size: var(--font-size-3xl);
   color: white;
   line-height: 1.2;
+}
+
+.course-header .university-name {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.course-header .co-instructors {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 1rem;
+  font-style: italic;
+}
+
+.course-header .co-instructors strong {
+  font-weight: 600;
+}
+
+.course-actions {
+  margin-top: 1.5rem;
+  display: flex;
+  gap: 10px;
 }
 
 .course-meta-row {
@@ -123,6 +87,21 @@
   font-weight: var(--font-weight-medium);
 }
 
+.course-textbook {
+  margin-top: var(--space-md);
+  font-size: 0.9rem;
+  background: rgba(0,0,0,0.2);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-sm);
+  display: inline-block;
+}
+
+.course-actions .btn-instructor.outline {
+  border-color: white;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
 /* Modules List */
 .modules-list {
   display: flex;
@@ -131,6 +110,24 @@
   margin-bottom: var(--space-3xl);
 }
 
+.management-controls {
+  margin-bottom: var(--space-xl);
+}
+
+.top-level-actions {
+  display: flex;
+  gap: var(--space-md);
+}
+
+.module-management-section {
+  /* margin is now on management-controls */
+}
+
+.textbook-management-section {
+  /* margin is now on management-controls */
+}
+
+
 .module-card {
   background: white;
   border: 1px solid var(--border-color);
@@ -138,6 +135,11 @@
   overflow: hidden;
   box-shadow: var(--shadow-sm);
   transition: all var(--transition-base);
+}
+
+.module-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-4px);
 }
 
 .module-header {
@@ -149,6 +151,12 @@
   align-items: center;
   gap: var(--space-lg);
   border-bottom: 1px solid var(--border-light);
+}
+
+.module-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
 }
 
 .module-title-section {
@@ -165,9 +173,38 @@
   text-align: center;
 }
 
+.module-header h4 {
+  display: inline;
+  margin: 0 var(--space-md) 0 0;
+}
+
+.module-duration {
+  font-size: 0.85em;
+  color: var(--text-secondary);
+}
 .module-content {
-  padding: var(--space-lg);
   background: var(--bg-white);
+  padding: 0 var(--space-lg);
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.35s ease-in-out, padding 0.35s ease-in-out;
+}
+
+.module-content.expanded {
+  max-height: 2000px; /* Adjust if content can be larger */
+  padding-top: var(--space-lg);
+  padding-bottom: var(--space-lg);
+}
+
+.module-content-inner {
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity 0.3s ease-out 0.1s, transform 0.3s ease-out 0.1s;
+}
+
+.module-content.expanded .module-content-inner {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .content-item {
@@ -181,12 +218,34 @@
   align-items: center;
 }
 
+.content-item-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.content-item .badge {
+  font-size: 0.8em;
+  background: #eee; padding: 2px 6px; border-radius: 4px;
+}
+
+.content-item-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
 /* Edit Forms */
 .edit-form-card {
   background: var(--bg-lighter);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   padding: var(--space-lg);
+}
+.edit-form-card h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: var(--font-size-xl);
 }
 
 .edit-form-row {
@@ -200,6 +259,17 @@
   margin-bottom: 0;
   flex: 1;
 }
+
+.edit-form-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.content-management-section {
+  margin-bottom: 1rem;
+}
+
 
 /* Alert Popup */
 .alert-popup {

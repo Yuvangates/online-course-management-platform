@@ -62,6 +62,14 @@ const instructorService = {
     return response.data;
   },
 
+  deleteModule: async (courseId, moduleNumber) => {
+    const response = await axios.delete(
+      `${API_URL}/instructor/courses/${courseId}/modules/${moduleNumber}`,
+      { headers: getAuthHeader() }
+    );
+    return response.data;
+  },
+
   swapModules: async (courseId, num1, num2) => {
     const response = await axios.post(
       `${API_URL}/instructor/courses/${courseId}/modules/swap`,
@@ -92,6 +100,50 @@ const instructorService = {
     const response = await axios.put(
       `${API_URL}/instructor/courses/${courseId}/modules/${moduleNumber}/content/${contentId}`,
       { title, content_type, url },
+      { headers: getAuthHeader() }
+    );
+    return response.data;
+  },
+
+  deleteContent: async (courseId, moduleNumber, contentId) => {
+    const response = await axios.delete(
+      `${API_URL}/instructor/courses/${courseId}/modules/${moduleNumber}/content/${contentId}`,
+      { headers: getAuthHeader() }
+    );
+    return response.data;
+  },
+
+  swapContent: async (courseId, moduleNumber, contentId1, contentId2) => {
+    const response = await axios.post(
+      `${API_URL}/instructor/courses/${courseId}/modules/${moduleNumber}/content/swap`,
+      { contentId1, contentId2 },
+      { headers: getAuthHeader() }
+    );
+    return response.data;
+  },
+
+  updateProfile: async ({ name, country, email }) => {
+    const response = await axios.put(
+      `${API_URL}/instructor/profile`,
+      { name, country, email },
+      { headers: getAuthHeader() }
+    );
+    return response.data;
+  },
+
+  updatePassword: async ({ currentPassword, newPassword }) => {
+    const response = await axios.put(
+      `${API_URL}/instructor/profile/password`,
+      { currentPassword, newPassword },
+      { headers: getAuthHeader() }
+    );
+    return response.data;
+  },
+
+  updateCourseTextbook: async (courseId, { isbn, textbook_name, textbook_author }) => {
+    const response = await axios.put(
+      `${API_URL}/instructor/courses/${courseId}/textbook`,
+      { isbn, name: textbook_name, author: textbook_author },
       { headers: getAuthHeader() }
     );
     return response.data;
