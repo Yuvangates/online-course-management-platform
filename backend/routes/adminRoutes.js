@@ -1,55 +1,45 @@
 const express = require('express');
 const router = express.Router();
-const queries = require('../db/queries');
+const adminController = require('../controllers/adminController');
+const { verifyToken } = require('../middleware/authMiddleware');
+const { checkRole } = require('../middleware/roleMiddleware');
 
-// GET /api/admin/dashboard - Get admin dashboard
-router.get('/dashboard', async (req, res) => {
-    try {
-        // Will require auth middleware
-        res.status(501).json({ message: 'Dashboard endpoint coming after auth' });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
+// All admin routes require authentication and Admin role
+router.use(verifyToken);
+router.use(checkRole(['Admin']));
 
-// GET /api/admin/users - Get all users
-router.get('/users', async (req, res) => {
-    try {
-        // Will require auth middleware and admin role check
-        res.status(501).json({ message: 'Users endpoint coming after auth' });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
+// Dashboard
+router.get('/dashboard', adminController.getDashboard);
 
-// GET /api/admin/students - Get all students
-router.get('/students', async (req, res) => {
-    try {
-        const students = await queries.getAllStudents();
-        res.status(200).json(students);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
+// Course management
+router.post('/courses', adminController.createCourse);
+router.get('/courses', adminController.getAllCourses);
+router.get('/courses/:courseId', adminController.getCourseDetails);
 
-// GET /api/admin/instructors - Get all instructors
-router.get('/instructors', async (req, res) => {
-    try {
-        const instructors = await queries.getAllInstructors();
-        res.status(200).json(instructors);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
+// Instructor management
+router.post('/instructors', adminController.createInstructor);
+router.get('/instructors', adminController.getAllInstructors);
+router.get('/instructors/search', adminController.searchInstructors);
 
-// POST /api/admin/users/:id/delete - Delete a user
-router.post('/users/:id/delete', async (req, res) => {
-    try {
-        // Will require auth middleware and admin role check
-        res.status(501).json({ message: 'Delete user endpoint coming after auth' });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
+// Course-Instructor assignment
+router.post('/courses/assign-instructor', adminController.assignInstructorToCourse);
+router.delete('/courses/:courseId/instructors/:instructorId', adminController.removeInstructorFromCourse);
+
+// Student management by course
+router.get('/courses/:courseId/students', adminController.getStudentsByCourse);
+router.get('/students/search', adminController.searchStudents);
+router.delete('/enrollments/:enrollmentId', adminController.removeStudentFromCourse);
+
+// Analyst management
+router.post('/analyst', adminController.createAnalyst);
+router.get('/analyst', adminController.getAnalyst);
+
+// Universities
+router.get('/universities', adminController.getAllUniversities);
+
+// User management
+router.get('/users', adminController.getAllUsers);
+router.get('/users/search', adminController.searchUsers);
+router.delete('/users/:userId', adminController.deleteUser);
 
 module.exports = router;

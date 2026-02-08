@@ -1,0 +1,114 @@
+/* Course Header */
+.course-header {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+  color: white;
+  padding: var(--space-3xl) var(--space-2xl);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-2xl);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.course-header-content {
+  flex: 1;
+}
+
+.course-header h1 {
+  margin: 0 0 var(--space-sm) 0;
+  font-size: var(--font-size-3xl);
+  color: white;
+  line-height: 1.2;
+}
+
+.course-instructor {
+  font-size: var(--font-size-base);
+  opacity: 0.9;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+}
+
+/* Grade Card - Remove hover effects and blue borders */
+.grade-card {
+  border-left: none !important;
+  border-color: #e0e0e0 !important;
+}
+
+.grade-card:hover {
+  transform: none !important;
+  box-shadow: var(--shadow-sm) !important;
+  border-color: #e0e0e0 !important;
+}
+
+/* Grade Table Styling */
+.grade-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: none;
+  border-left: none !important;
+  margin-top: var(--space-md);
+}
+
+.grade-table th {
+  text-align: left;
+  padding: var(--space-md);
+  border-bottom: 2px solid #e0e0e0;
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  background-color: transparent;
+  border-left: none !important;
+  white-space: nowrap;
+}
+
+.grade-table td {
+  padding: var(--space-md);
+  border-bottom: 1px solid var(--border-light);
+  color: var(--text-secondary);
+  border-left: none !important;
+  vertical-align: middle;
+}
+
+.grade-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* Remove hover effect on rows for a cleaner look */
+.grade-table tbody tr:hover {
+  background-color: transparent !important;
+}
+
+/* Input styling within table */
+.grade-table .form-input {
+  padding: var(--space-sm) var(--space-md);
+  font-size: var(--font-size-base);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  transition: border-color 0.2s;
+}
+
+/* Alert Styling Overrides for visibility over colored backgrounds */
+.alert.error, .alert.success {
+  background: #ffffff;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  border: 1px solid rgba(0,0,0,0.1);
+}
+
+/* Centered Alert Popup Animation Fix */
+.alert-popup {
+  position: fixed;
+  top: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  max-width: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  animation: slideDownCentered 0.4s ease-out forwards;
+}
+
+@keyframes slideDownCentered {
+  from { opacity: 0; transform: translate(-50%, -20px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}

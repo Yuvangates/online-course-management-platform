@@ -1,0 +1,459 @@
+import React, { useEffect, useState } from 'react';
+import adminService from '../../api/adminService';
+import '../../styles/admin/admin.css';
+
+const CourseManagement = () => {
+    const [activeTab, setActiveTab] = useState('courses');
+    const [courses, setCourses] = useState([]);
+    const [universities, setUniversities] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+    const [showForm, setShowForm] = useState(false);
+    const [selectedCourse, setSelectedCourse] = useState(null);
+
+    const [formData, setFormData] = useState({
+        name: '',
+        description: '',
+        duration: 30,
+        university_id: '',
+    });
+
+    useEffect(() => {
+        fetchCourses();
+        fetchUniversities();
+    }, []);
+
+    const fetchCourses = async () => {
+        try {
+            setLoading(true);
+            setError('');
+            const data = await adminService.getAllCourses();
+            setCourses(data);
+        } catch (err) {
+            console.error(err);
+            setError(err.response?.data?.error || 'Failed to load courses');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchUniversities = async () => {
+        try {
+            const data = await adminService.getAllUniversities();
+            setUniversities(data);
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const getUniversityName = (universityId) => {
+        const uni = universities.find((u) => u.university_id === universityId);
+        return uni ? uni.name : 'Unknown';
+    };
+
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setFormData((prev) => ({
+            ...prev,
+            [name]: name === 'university_id' || name === 'duration' ? parseInt(value) : value,
+        }));
+    };
+
+    const handleCreateCourse = async (e) => {
+        e.preventDefault();
+        try {
+            setError('');
+            if (!formData.name.trim() || !formData.university_id) {
+                setError('Name and university are required');
+                return;
+            }
+
+            await adminService.createCourse({
+                name: formData.name,
+                description: formData.description,
+                duration: formData.duration,
+                university_id: formData.university_id,
+            });
+
+            setFormData({
+                name: '',
+                description: '',
+                duration: 30,
+                university_id: '',
+            });
+            setShowForm(false);
+            await fetchCourses();
+        } catch (err) {
+            console.error(err);
+            setError(err.response?.data?.error || 'Failed to create course');
+        }
+    };
+
+    const viewCourseDetails = (course) => {
+        setSelectedCourse(course);
+        setActiveTab('course-detail');
+    };
+
+    const handleBackToCourses = () => {
+        setSelectedCourse(null);
+        setActiveTab('courses');
+    };
+
+    return (
+        <div className="admin-section">
+            {activeTab === 'courses' && (
+                <>
+                    <div className="section-header">
+                        <h2>Course Management</h2>
+                        <button
+                            className="btn-primary"
+                            onClick={() => setShowForm(!showForm)}
+                        >
+                            {showForm ? 'Cancel' : 'Create Course'}
+                        </button>
+                    </div>
+
+                    {error && <div className="alert error">{error}</div>}
+
+                    {showForm && (
+                        <form className="form-container" onSubmit={handleCreateCourse}>
+                            <h3>Create New Course</h3>
+                            <div className="form-group">
+                                <label>Course Name *</label>
+                                <input
+                                    type="text"
+                                    name="name"
+                                    value={formData.name}
+                                    onChange={handleInputChange}
+                                    placeholder="e.g., Advanced JavaScript"
+                                    required
+                                />
+                            </div>
+
+                            <div className="form-group">
+                                <label>Description</label>
+                                <textarea
+                                    name="description"
+                                    value={formData.description}
+                                    onChange={handleInputChange}
+                                    placeholder="Course description..."
+                                    rows={3}
+                                />
+                            </div>
+
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label>University *</label>
+                                    <select
+                                        name="university_id"
+                                        value={formData.university_id}
+                                        onChange={handleInputChange}
+                                        required
+                                    >
+                                        <option value="">Select University</option>
+                                        {universities.map((uni) => (
+                                            <option key={uni.university_id} value={uni.university_id}>
+                                                {uni.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Duration (weeks)</label>
+                                    <input
+                                        type="number"
+                                        name="duration"
+                                        value={formData.duration}
+                                        onChange={handleInputChange}
+                                        min={1}
+                                    />
+                                </div>
+                            </div>
+
+                            <button type="submit" className="btn-primary">
+                                Create Course
+                            </button>
+                        </form>
+                    )}
+
+                    {loading ? (
+                        <div className="loading">Loading courses...</div>
+                    ) : courses.length === 0 ? (
+                        <div className="empty-state">No courses found</div>
+                    ) : (
+                        <div className="table-container">
+                            <table className="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>University</th>
+                                        <th>Duration</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {courses.map((course) => (
+                                        <tr key={course.course_id}>
+                                            <td>{course.name}</td>
+                                            <td>{getUniversityName(course.university_id)}</td>
+                                            <td>{course.duration} weeks</td>
+                                            <td>
+                                                <button
+                                                    className="btn-link"
+                                                    onClick={() => viewCourseDetails(course)}
+                                                >
+                                                    Manage
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </>
+            )}
+
+            {activeTab === 'course-detail' && selectedCourse && (
+                <CourseDetailView course={selectedCourse} onBack={handleBackToCourses} getUniversityName={getUniversityName} />
+            )}
+        </div>
+    );
+};
+
+// Course Detail View Component
+const CourseDetailView = ({ course, onBack, getUniversityName }) => {
+    const [instructors, setInstructors] = useState([]);
+    const [students, setStudents] = useState([]);
+    const [allInstructors, setAllInstructors] = useState([]);
+    const [error, setError] = useState('');
+    const [searchInstructorQuery, setSearchInstructorQuery] = useState('');
+    const [showAddInstructor, setShowAddInstructor] = useState(false);
+
+    const fetchAllInstructors = async () => {
+        try {
+            const data = await adminService.getAllInstructors();
+            setAllInstructors(data);
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const handleSearchInstructor = async (e) => {
+        const query = e.target.value;
+        setSearchInstructorQuery(query);
+
+        if (!query.trim()) {
+            const allInsts = await adminService.getAllInstructors();
+            setAllInstructors(allInsts);
+            return;
+        }
+
+        try {
+            const results = await adminService.searchInstructors(query);
+            setAllInstructors(results);
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const handleRemoveInstructor = async (instructorId) => {
+        if (!window.confirm('Remove this instructor from the course?')) return;
+
+        try {
+            setError('');
+            await adminService.removeInstructorFromCourse(course.course_id, instructorId);
+            // Reload course details
+            const data = await adminService.getCourseDetails(course.course_id);
+            setInstructors(data.instructors || []);
+            setStudents(data.students || []);
+        } catch (err) {
+            console.error(err);
+            setError(err.response?.data?.error || 'Failed to remove instructor');
+        }
+    };
+
+    const handleRemoveStudent = async (enrollmentId) => {
+        if (!window.confirm('Remove this student from the course?')) return;
+
+        try {
+            setError('');
+            await adminService.removeStudentFromCourse(enrollmentId);
+            // Reload course details
+            const data = await adminService.getCourseDetails(course.course_id);
+            setInstructors(data.instructors || []);
+            setStudents(data.students || []);
+        } catch (err) {
+            console.error(err);
+            setError(err.response?.data?.error || 'Failed to remove student');
+        }
+    };
+
+    useEffect(() => {
+        const loadData = async () => {
+            try {
+                setError('');
+                const data = await adminService.getCourseDetails(course.course_id);
+                setInstructors(data.instructors || []);
+                setStudents(data.students || []);
+            } catch (err) {
+                console.error(err);
+                setError(err.response?.data?.error || 'Failed to load course details');
+            }
+            await fetchAllInstructors();
+        };
+        loadData();
+    }, [course.course_id]);
+
+    const handleAssignInstructor = async (instructorId) => {
+        try {
+            setError('');
+            await adminService.assignInstructorToCourse(course.course_id, instructorId);
+            // Reload course details
+            const data = await adminService.getCourseDetails(course.course_id);
+            setInstructors(data.instructors || []);
+            setStudents(data.students || []);
+            setSearchInstructorQuery('');
+            setShowAddInstructor(false);
+        } catch (err) {
+            console.error(err);
+            setError(err.response?.data?.error || 'Failed to assign instructor');
+        }
+    };
+
+    return (
+        <div className="course-detail">
+            <button className="btn-back" onClick={onBack}>
+                ← Back to Courses
+            </button>
+
+            <h2>{course.name}</h2>
+            <p className="course-meta">
+                <strong>Duration:</strong> {course.duration} weeks | <strong>University:</strong> {getUniversityName(course.university_id)}
+            </p>
+
+            {error && <div className="alert error">{error}</div>}
+
+            {/* Instructors Section */}
+            <div className="detail-section">
+                <div className="section-header">
+                    <h3>Assigned Instructors ({instructors.length})</h3>
+                    <button
+                        className="btn-secondary"
+                        onClick={() => setShowAddInstructor(!showAddInstructor)}
+                    >
+                        {showAddInstructor ? 'Cancel' : 'Add Instructor'}
+                    </button>
+                </div>
+
+                {showAddInstructor && (
+                    <div className="search-section">
+                        <input
+                            type="text"
+                            placeholder="Search instructors..."
+                            value={searchInstructorQuery}
+                            onChange={handleSearchInstructor}
+                            className="search-input"
+                        />
+                        <div className="search-results">
+                            {allInstructors.length === 0 ? (
+                                <p className="no-results">No instructors found</p>
+                            ) : (
+                                allInstructors.map((instructor) => {
+                                    const isAssigned = instructors.some(
+                                        (i) => i.user_id === instructor.user_id
+                                    );
+                                    return (
+                                        <div key={instructor.user_id} className="search-result-item">
+                                            <div>
+                                                <strong>{instructor.name}</strong>
+                                                <p className="muted">{instructor.email}</p>
+                                            </div>
+                                            <button
+                                                className={isAssigned ? 'btn-disabled' : 'btn-primary'}
+                                                onClick={() => handleAssignInstructor(instructor.user_id)}
+                                                disabled={isAssigned}
+                                            >
+                                                {isAssigned ? 'Assigned' : 'Assign'}
+                                            </button>
+                                        </div>
+                                    );
+                                })
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {instructors.length === 0 ? (
+                    <p className="empty-state">No instructors assigned</p>
+                ) : (
+                    <div className="list-container">
+                        {instructors.map((instructor) => (
+                            <div key={instructor.user_id} className="list-item">
+                                <div>
+                                    <strong>{instructor.name}</strong>
+                                    <p className="muted">{instructor.email}</p>
+                                    {instructor.expertise && (
+                                        <p className="expertise">Expertise: {instructor.expertise}</p>
+                                    )}
+                                </div>
+                                <button
+                                    className="btn-danger"
+                                    onClick={() => handleRemoveInstructor(instructor.user_id)}
+                                >
+                                    Remove
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+
+            {/* Students Section */}
+            <div className="detail-section">
+                <h3>Enrolled Students ({students.length})</h3>
+
+                {students.length === 0 ? (
+                    <p className="empty-state">No students enrolled</p>
+                ) : (
+                    <div className="table-container">
+                        <table className="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Enrolled Date</th>
+                                    <th>Score</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {students.map((student) => (
+                                    <tr key={student.enrollment_id}>
+                                        <td>{student.name}</td>
+                                        <td>{student.email}</td>
+                                        <td>
+                                            {new Date(student.enrollment_date).toLocaleDateString()}
+                                        </td>
+                                        <td>{student.evaluation_score || '-'}</td>
+                                        <td>
+                                            <button
+                                                className="btn-danger"
+                                                onClick={() => handleRemoveStudent(student.enrollment_id)}
+                                            >
+                                                Remove
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
+export default CourseManagement;
