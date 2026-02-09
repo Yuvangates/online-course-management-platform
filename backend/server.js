@@ -1,4 +1,11 @@
 const express = require('express');
+const dns = require('dns');
+
+// Force IPv4 address resolution to fix ENETUNREACH errors on IPv6 networks
+if (dns.setDefaultResultOrder) {
+    dns.setDefaultResultOrder('ipv4first');
+}
+
 require('dotenv').config();
 
 const app = express();
