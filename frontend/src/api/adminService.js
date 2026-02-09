@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'https://online-course-management-platform-9swy.onrender.com/api/admin';
+const API_URL = `${import.meta.env.VITE_API_URL}/admin`;
 
 const getAuthHeader = () => ({
     Authorization: `Bearer ${localStorage.getItem('token')}`
