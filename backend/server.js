@@ -27,8 +27,9 @@ app.use(cors({
 
         const allowedOrigins = [
             'https://learnspherekgp.netlify.app',
-            'https://localhost:5173'
-        ];
+            'http://localhost:5173',
+            process.env.FRONTEND_URL
+        ].filter(Boolean);
 
         if (allowedOrigins.includes(origin)) {
             callback(null, true);
