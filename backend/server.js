@@ -12,10 +12,7 @@ console.log('Environment Variables:', {
     PORT: process.env.PORT,
     FRONTEND_URL: process.env.FRONTEND_URL,
     JWT_SECRET: process.env.JWT_SECRET ? '***' : 'Not Set',
-    DB_HOST: process.env.DB_HOST,
-    DB_USER: process.env.DB_USER,
-    DB_PASSWORD: process.env.DB_PASSWORD ? '***' : 'Not Set',
-    DB_NAME: process.env.DB_NAME,
+    DATABASE_URL: process.env.DATABASE_URL ? 'Set' : 'Not Set',
 });
 
 // CORS setup
