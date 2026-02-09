@@ -70,7 +70,10 @@ const CourseGrade = () => {
     <>
       <Navbar role="Instructor" />
       <div className="instructor-container">
-        <div className="course-header">
+        <div
+          className="course-header"
+          style={course?.image_url ? { backgroundImage: `url(${course.image_url})` } : {}}
+        >
           <div className="course-header-content">
             <h1>{course?.name || 'Course'}</h1>
             <p className="course-instructor" style={{ color: 'rgba(255, 255, 255, 0.9)' }}>

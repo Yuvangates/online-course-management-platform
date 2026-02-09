@@ -59,8 +59,8 @@ const InstructorDashboard = () => {
         <div className="instructor-section-title">
           <h2>Your courses</h2>
         </div>
-        <p className="muted" style={{ marginTop: '-0.5rem', marginBottom: '1rem' }}>
-          Edit modules and content, or grade students. You cannot create new courses or change enrollments.
+        <p className="instructor-section-subtitle">
+          Edit modules and content, or grade students.
         </p>
 
         {loading ? (

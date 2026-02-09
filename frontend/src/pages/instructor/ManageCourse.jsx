@@ -27,6 +27,22 @@ const ManageCourse = () => {
   const [formModule, setFormModule] = useState({ module_number: '', name: '', duration_weeks: '' });
   const [formContent, setFormContent] = useState({ content_id: '', title: '', content_type: 'Note', url: '' });
 
+  // Timer for success messages
+  useEffect(() => {
+    if (message) {
+      const timer = setTimeout(() => setMessage(''), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [message]);
+
+  // Timer for error messages
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => setError(''), 3000); // Set to 3 seconds
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
+
   useEffect(() => {
     const fetch = async () => {
       if (isNaN(courseId)) return;
@@ -42,11 +58,12 @@ const ManageCourse = () => {
         // Fallback to basic fetch if not found (though it should be if assigned)
         const courseData = foundCourse || (await courseService.getCourseById(courseId));
         
-        setCourse(courseData.course || courseData);
+        const courseObj = courseData.course || courseData;
+        setCourse(courseObj);
         setModules(modulesRes.modules || []);
       } catch (err) {
         console.error('Error loading course:', err);
-        setError('Unable to load course details. Please try again later.');
+        setError(err.response?.data?.error || 'Unable to load course details. Please try again later.');
       } finally {
         setLoading(false);
       }
@@ -54,13 +71,25 @@ const ManageCourse = () => {
     fetch();
   }, [courseId]);
 
-  const loadContent = async (moduleNumber) => {
-    if (contentByModule[moduleNumber]) return;
+  const loadContent = async (moduleNumber, forceRefresh = false) => {
+    // If content exists and we are not forcing a refresh, do nothing.
+    if (contentByModule[moduleNumber] && !forceRefresh) {
+      return;
+    }
+
+    // To show a loading indicator, set the content for this module to undefined.
+    // This is useful for forced refreshes.
+    setContentByModule((prev) => ({ ...prev, [moduleNumber]: undefined }));
+
     try {
+      // Fetch the content from the API
       const res = await instructorService.getModuleContent(courseId, moduleNumber);
       const list = res.content || res || [];
+      // After fetching, update the state with the new content.
       setContentByModule((prev) => ({ ...prev, [moduleNumber]: Array.isArray(list) ? list : [] }));
-    } catch {
+    } catch (err) {
+      console.error(`Failed to load content for module ${moduleNumber}`, err);
+      // If fetch fails, set content to an empty array to stop the loading indicator.
       setContentByModule((prev) => ({ ...prev, [moduleNumber]: [] }));
     }
   };
@@ -69,12 +98,9 @@ const ManageCourse = () => {
     try {
       const res = await instructorService.getCourseModules(courseId);
       setModules(res.modules || []);
-    } catch {}
-  };
-
-  const showMsg = (msg) => {
-    setMessage(msg);
-    setTimeout(() => setMessage(null), 3000);
+    } catch (err) {
+      console.error('Failed to refresh modules:', err);
+    }
   };
 
   const handleAddModule = async (e) => {
@@ -93,10 +119,10 @@ const ManageCourse = () => {
       setFormModule({ module_number: '', name: '', duration_weeks: '' });
       setAddModule(false);
       await refreshModules();
-      showMsg('Module added.');
+      setMessage('Module added.');
     } catch (err) {
       console.error('Error adding module:', err);
-      setError('Could not add the module. Please ensure the module number is unique.');
+      setError(err.response?.data?.error || 'Could not add the module. Please ensure the module number is unique.');
     }
   };
 
@@ -111,23 +137,38 @@ const ManageCourse = () => {
       setEditingModule(null);
       setFormModule({ module_number: '', name: '', duration_weeks: '' });
       await refreshModules();
-      showMsg('Module updated.');
+      setMessage('Module updated.');
     } catch (err) {
       console.error('Error updating module:', err);
-      setError('Could not update the module details. Please try again.');
+      setError(err.response?.data?.error || 'Could not update the module details. Please try again.');
+    }
+  };
+
+  const handleDeleteModule = async (moduleNumber) => {
+    if (window.confirm(`Are you sure you want to delete module ${moduleNumber}? This will also delete all its content.`)) {
+      try {
+        const res = await instructorService.deleteModule(courseId, moduleNumber);
+        setModules(res.modules || []);
+        setContentByModule({}); // Clear all cached content
+        setExpandedModule(null); // Collapse all modules
+        setMessage('Module deleted.');
+      } catch (err) {
+        console.error('Error deleting module:', err);
+        setError(err.response?.data?.error || 'Could not delete the module.');
+      }
     }
   };
 
   const handleSwap = async (num1, num2) => {
     try {
-      await instructorService.swapModules(courseId, num1, num2);
-      await refreshModules();
+      const res = await instructorService.swapModules(courseId, num1, num2);
+      setModules(res.modules || []);
       setContentByModule({});
       setExpandedModule(null);
-      showMsg('Order updated');
+      setMessage('Order updated');
     } catch (err) {
       console.error('Error swapping modules:', err);
-      setError('Could not reorder modules. Please try again.');
+      setError(err.response?.data?.error || 'Could not reorder modules. Please try again.');
     }
   };
 
@@ -148,12 +189,11 @@ const ManageCourse = () => {
       });
       setFormContent({ content_id: '', title: '', content_type: 'Note', url: '' });
       setAddContentFor(null);
-      setContentByModule((prev) => ({ ...prev, [addContentFor]: undefined }));
-      await loadContent(addContentFor);
-      showMsg('Content added.');
+      await loadContent(addContentFor, true); // Force refresh
+      setMessage('Content added.');
     } catch (err) {
       console.error('Error adding content:', err);
-      setError('Could not add content. Please ensure the content ID is unique.');
+      setError(err.response?.data?.error || 'Could not add content. Please ensure the content ID is unique.');
     }
   };
 
@@ -168,12 +208,37 @@ const ManageCourse = () => {
       });
       setEditingContent(null);
       setFormContent({ content_id: '', title: '', content_type: 'Note', url: '' });
-      setContentByModule((prev) => ({ ...prev, [editingContent.module_number]: undefined }));
-      await loadContent(editingContent.module_number);
-      showMsg('Content updated.');
+      await loadContent(editingContent.module_number, true); // Force refresh
+      setMessage('Content updated.');
     } catch (err) {
       console.error('Error updating content:', err);
-      setError('Could not update content details. Please try again.');
+      setError(err.response?.data?.error || 'Could not update content details. Please try again.');
+    }
+  };
+
+  const handleDeleteContent = async (moduleNumber, contentId) => {
+    if (window.confirm(`Are you sure you want to delete this content item?`)) {
+      try {
+        const res = await instructorService.deleteContent(courseId, moduleNumber, contentId);
+        setContentByModule(prev => ({ ...prev, [moduleNumber]: res.content || [] }));
+        setMessage('Content deleted.');
+      } catch (err) {
+        console.error('Error deleting content:', err);
+        setError(err.response?.data?.error || 'Could not delete the content item.');
+      }
+    }
+  };
+
+  const handleContentSwap = async (moduleNumber, contentId1, contentId2) => {
+    try {
+      // The backend now returns the updated content list after swapping.
+      const res = await instructorService.swapContent(courseId, moduleNumber, contentId1, contentId2);
+      // Update the state directly with the new list, avoiding a second API call.
+      setContentByModule((prev) => ({ ...prev, [moduleNumber]: res.content || [] }));
+      setMessage('Content order updated.');
+    } catch (err) {
+      console.error('Error swapping content:', err);
+      setError(err.response?.data?.error || 'Could not reorder content. Please try again.');
     }
   };
 
@@ -187,10 +252,13 @@ const ManageCourse = () => {
     <>
       <Navbar role="Instructor" />
       <div className="instructor-container">
-        <div className="course-header">
+        <div
+          className="course-header"
+          style={course?.image_url ? { backgroundImage: `url(${course.image_url})` } : {}}
+        >
           <div className="course-header-content">
             {course?.university_name && (
-              <div style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.8)', marginBottom: '0.5rem', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div className="university-name">
                 <span>🏛️</span> {course.university_name}
               </div>
             )}
@@ -202,12 +270,17 @@ const ManageCourse = () => {
               <span className="course-meta-item">📚 {course?.module_count || 0} modules</span>
             </div>
             {course?.other_instructors && (
-              <div style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.8)', marginBottom: '1rem', fontStyle: 'italic' }}>
-                <span style={{ fontWeight: '600' }}>Co-instructors:</span> {course.other_instructors}
+              <div className="co-instructors">
+                <strong>Co-instructors:</strong> {course.other_instructors}
               </div>
             )}
-            <div style={{ marginTop: '1.5rem', display: 'flex', gap: '10px' }}>
-              <button type="button" className="btn outline" onClick={() => setIsEditMode(!isEditMode)} style={{ borderColor: 'white', color: 'black' }}>
+            {course?.textbook_isbn && (
+              <div className="course-textbook">
+                <strong>Textbook:</strong> {course.textbook_name} <em>by {course.textbook_author || 'N/A'}</em> (ISBN: {course.textbook_isbn})
+              </div>
+            )}
+            <div className="course-actions">
+              <button type="button" className="btn-instructor outline" onClick={() => setIsEditMode(!isEditMode)}>
                 {isEditMode ? '👁 Switch to Preview' : '✎ Switch to Edit'}
               </button>
             </div>
@@ -230,211 +303,202 @@ const ManageCourse = () => {
         {loading ? (
           <div className="empty">Loading...</div>
         ) : (
-          <div className="modules-list">
+          <>
             {isEditMode && (
-              <div style={{ marginBottom: '2rem' }}>
-                {!addModule ? (
-                  <button type="button" className="btn primary" onClick={() => setAddModule(true)} style={{ marginBottom: '1.5rem' }}>
-                    + Add module
-                  </button>
-                ) : (
-                  <div className="card edit-form-card" style={{ marginBottom: '1.5rem' }}>
-                    <h3 style={{ marginBottom: '1rem' }}>New module</h3>
-                    <form onSubmit={handleAddModule}>
-                      <div className="edit-form-row">
-                        <div className="form-group" style={{ flex: '0 0 100px' }}>
-                          <label className="form-label">Number</label>
-                          <input
-                            type="number"
-                            min={1}
-                            className="form-input"
-                            value={formModule.module_number}
-                            onChange={(e) => setFormModule((f) => ({ ...f, module_number: e.target.value }))}
-                            required
-                          />
-                        </div>
-                        <div className="form-group" style={{ flex: 2 }}>
-                          <label className="form-label">Name</label>
-                          <input
-                            type="text"
-                            className="form-input"
-                            value={formModule.name}
-                            onChange={(e) => setFormModule((f) => ({ ...f, name: e.target.value }))}
-                            required
-                          />
-                        </div>
-                        <div className="form-group" style={{ flex: 1 }}>
-                          <label className="form-label">Weeks</label>
-                          <input
-                            type="number"
-                            min={0}
-                            className="form-input"
-                            value={formModule.duration_weeks}
-                            onChange={(e) => setFormModule((f) => ({ ...f, duration_weeks: e.target.value }))}
-                          />
-                        </div>
-                      </div>
-                      <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
-                        <button type="submit" className="btn primary">Save module</button>
-                        <button type="button" className="btn secondary" onClick={() => { setAddModule(false); setFormModule({ module_number: '', name: '', duration_weeks: '' }); }}>Cancel</button>
-                      </div>
-                    </form>
+              <div className="management-controls">
+                {isEditMode && !addModule && !editingModule && (
+                  <div className="top-level-actions">
+                    <button type="button" className="btn-instructor primary" onClick={() => setAddModule(true)}>+ Add module</button>
                   </div>
                 )}
 
-                {editingModule && (
-                  <div className="card edit-form-card" style={{ marginBottom: '1.5rem' }}>
-                    <h3>Edit module</h3>
-                    <form onSubmit={handleUpdateModule}>
-                      <div className="edit-form-row">
-                        <div className="form-group" style={{ flex: 2 }}>
-                          <label className="form-label">Name</label>
-                          <input
-                            type="text"
-                            className="form-input"
-                            value={formModule.name}
-                            onChange={(e) => setFormModule((f) => ({ ...f, name: e.target.value }))}
-                            required
-                          />
-                        </div>
-                        <div className="form-group" style={{ flex: 1 }}>
-                          <label className="form-label">Weeks</label>
-                          <input
-                            type="number"
-                            min={0}
-                            className="form-input"
-                            value={formModule.duration_weeks}
-                            onChange={(e) => setFormModule((f) => ({ ...f, duration_weeks: e.target.value }))}
-                          />
-                        </div>
+                {isEditMode && addModule && (
+                  <div className="module-management-section">
+                      <div className="card edit-form-card">
+                        <h3>New module</h3>
+                        <form onSubmit={handleAddModule}>
+                          <div className="edit-form-row">
+                            <div className="form-group" style={{ flex: '0 0 100px' }}>
+                              <label className="form-label">Number</label>
+                              <input type="number" min={1} className="form-input" value={formModule.module_number} onChange={(e) => setFormModule((f) => ({ ...f, module_number: e.target.value }))} required />
+                            </div>
+                            <div className="form-group" style={{ flex: 2 }}>
+                              <label className="form-label">Name</label>
+                              <input type="text" className="form-input" value={formModule.name} onChange={(e) => setFormModule((f) => ({ ...f, name: e.target.value }))} required />
+                            </div>
+                            <div className="form-group" style={{ flex: 1 }}>
+                              <label className="form-label">Weeks</label>
+                              <input type="number" min={0} className="form-input" value={formModule.duration_weeks} onChange={(e) => setFormModule((f) => ({ ...f, duration_weeks: e.target.value }))} />
+                            </div>
+                          </div>
+                          <div className="edit-form-actions">
+                            <button type="submit" className="btn-instructor primary">Save module</button>
+                            <button type="button" className="btn-instructor secondary" onClick={() => { setAddModule(false); setFormModule({ module_number: '', name: '', duration_weeks: '' }); }}>Cancel</button>
+                          </div>
+                        </form>
                       </div>
-                      <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
-                        <button type="submit" className="btn primary">Update</button>
-                        <button type="button" className="btn secondary" onClick={() => { setEditingModule(null); setFormModule({ module_number: '', name: '', duration_weeks: '' }); }}>Cancel</button>
+                  </div>
+                )}
+
+                {isEditMode && editingModule && (
+                  <div className="module-management-section">
+                    <div className="card edit-form-card">
+                        <h3>Edit module</h3>
+                        <form onSubmit={handleUpdateModule}>
+                          <div className="edit-form-row">
+                            <div className="form-group" style={{ flex: 2 }}>
+                              <label className="form-label">Name</label>
+                              <input type="text" className="form-input" value={formModule.name} onChange={(e) => setFormModule((f) => ({ ...f, name: e.target.value }))} required />
+                            </div>
+                            <div className="form-group" style={{ flex: 1 }}>
+                              <label className="form-label">Weeks</label>
+                              <input type="number" min={0} className="form-input" value={formModule.duration_weeks} onChange={(e) => setFormModule((f) => ({ ...f, duration_weeks: e.target.value }))} />
+                            </div>
+                          </div>
+                          <div className="edit-form-actions">
+                            <button type="submit" className="btn-instructor primary">Update</button>
+                            <button type="button" className="btn-instructor secondary" onClick={() => { setEditingModule(null); setFormModule({ module_number: '', name: '', duration_weeks: '' }); }}>Cancel</button>
+                          </div>
+                        </form>
                       </div>
-                    </form>
                   </div>
                 )}
               </div>
             )}
 
-            {modules.length === 0 ? (
-              <div className="empty-modules">No modules yet.</div>
-            ) : (
-              modules.map((mod, idx) => (
-                <div key={`${mod.course_id}-${mod.module_number}`} className="module-card">
-                  <div className="module-header" onClick={() => toggleModule(mod)}>
-                    <div className="module-title-section">
-                      <span className="module-toggle">
-                        {expandedModule?.module_number === mod.module_number ? '▼' : '▶'}
-                      </span>
-                      <div>
-                        <h4 style={{ display: 'inline', marginRight: '10px' }}>Module {mod.module_number}: {mod.name}</h4>
-                        {mod.duration_weeks ? <span className="module-duration" style={{ fontSize: '0.85em', color: '#666' }}>({mod.duration_weeks} {mod.duration_weeks === 1 ? 'week' : 'weeks'})</span> : null}
+            <div className="modules-list">
+              {modules.length === 0 ? (
+                <div className="empty-modules">No modules yet.</div>
+              ) : (
+                modules.map((mod, idx) => (
+                  <div key={`${mod.course_id}-${mod.module_number}`} className="module-card">
+                    <div className="module-header" onClick={() => toggleModule(mod)}>
+                      <div className="module-title-section">
+                        <span className="module-toggle">
+                          {expandedModule?.module_number === mod.module_number ? '▼' : '▶'}
+                        </span>
+                        <div>
+                          <h4>Module {mod.module_number}: {mod.name}</h4>
+                          {mod.duration_weeks ? <span className="module-duration">({mod.duration_weeks} {mod.duration_weeks === 1 ? 'week' : 'weeks'})</span> : null}
+                        </div>
                       </div>
-                    </div>
-                    {isEditMode && (
-                      <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', gap: '5px' }}>
-                        <button type="button" className="btn secondary small" disabled={idx === 0} onClick={() => handleSwap(mod.module_number, modules[idx - 1].module_number)}>↑</button>
-                        <button type="button" className="btn secondary small" disabled={idx === modules.length - 1} onClick={() => handleSwap(mod.module_number, modules[idx + 1].module_number)}>↓</button>
-                        <button type="button" className="btn outline small" onClick={() => { setEditingModule(mod); setFormModule({ name: mod.name, duration_weeks: mod.duration_weeks ?? '' }); }}>Edit</button>
-                      </div>
-                    )}
-                  </div>
-
-                  {expandedModule?.module_number === mod.module_number && (
-                    <div className="module-content">
                       {isEditMode && (
-                        <div style={{ marginBottom: '1rem' }}>
-                          {addContentFor === mod.module_number ? (
-                            <div className="card edit-form-card" style={{ marginTop: '0.5rem' }}>
-                              <form onSubmit={handleAddContent}>
-                                <div className="edit-form-row">
-                                  <div className="form-group" style={{ flex: '0 0 80px' }}>
-                                    <label className="form-label">ID</label>
-                                    <input type="number" min={1} className="form-input" value={formContent.content_id} onChange={(e) => setFormContent((f) => ({ ...f, content_id: e.target.value }))} required />
-                                  </div>
-                                  <div className="form-group" style={{ flex: 2 }}>
-                                    <label className="form-label">Title</label>
-                                    <input type="text" className="form-input" value={formContent.title} onChange={(e) => setFormContent((f) => ({ ...f, title: e.target.value }))} required />
-                                  </div>
-                                  <div className="form-group" style={{ flex: 1 }}>
-                                    <label className="form-label">Type</label>
-                                    <select className="form-input" value={formContent.content_type} onChange={(e) => setFormContent((f) => ({ ...f, content_type: e.target.value }))}>
-                                      {CONTENT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-                                    </select>
-                                  </div>
-                                </div>
-                                <div className="form-group" style={{ marginTop: '1rem' }}>
-                                  <label className="form-label">URL</label>
-                                  <input type="text" className="form-input" value={formContent.url} onChange={(e) => setFormContent((f) => ({ ...f, url: e.target.value }))} />
-                                </div>
-                                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
-                                  <button type="submit" className="btn primary">Add content</button>
-                                  <button type="button" className="btn secondary" onClick={() => { setAddContentFor(null); setFormContent({ content_id: '', title: '', content_type: 'Note', url: '' }); }}>Cancel</button>
-                                </div>
-                              </form>
-                            </div>
-                          ) : (
-                            <button type="button" className="btn outline small" onClick={() => { setAddContentFor(mod.module_number); setEditingContent(null); }}>+ Add content</button>
-                          )}
-
-                          {editingContent?.module_number === mod.module_number && (
-                            <div className="card edit-form-card" style={{ marginTop: '0.5rem' }}>
-                              <form onSubmit={handleUpdateContent}>
-                                <div className="edit-form-row">
-                                  <div className="form-group" style={{ flex: 2 }}>
-                                    <label className="form-label">Title</label>
-                                    <input type="text" className="form-input" value={formContent.title} onChange={(e) => setFormContent((f) => ({ ...f, title: e.target.value }))} required />
-                                  </div>
-                                  <div className="form-group" style={{ flex: 1 }}>
-                                    <label className="form-label">Type</label>
-                                    <select className="form-input" value={formContent.content_type} onChange={(e) => setFormContent((f) => ({ ...f, content_type: e.target.value }))}>
-                                      {CONTENT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-                                    </select>
-                                  </div>
-                                </div>
-                                <div className="form-group" style={{ marginTop: '1rem' }}>
-                                  <label className="form-label">URL</label>
-                                  <input type="text" className="form-input" value={formContent.url} onChange={(e) => setFormContent((f) => ({ ...f, url: e.target.value }))} />
-                                </div>
-                                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
-                                  <button type="submit" className="btn primary">Update content</button>
-                                  <button type="button" className="btn secondary" onClick={() => { setEditingContent(null); setFormContent({ title: '', content_type: 'Note', url: '' }); }}>Cancel</button>
-                                </div>
-                              </form>
-                            </div>
-                          )}
+                        <div className="module-actions" onClick={(e) => e.stopPropagation()}>
+                          <button type="button" className="btn-instructor secondary small" disabled={idx === 0} onClick={() => handleSwap(mod.module_number, modules[idx - 1].module_number)}>↑</button>
+                          <button type="button" className="btn-instructor secondary small" disabled={idx === modules.length - 1} onClick={() => handleSwap(mod.module_number, modules[idx + 1].module_number)}>↓</button>
+                          <button type="button" className="btn-instructor outline small" onClick={() => { setEditingModule(mod); setFormModule({ name: mod.name, duration_weeks: mod.duration_weeks ?? '' }); }}>Edit</button>
+                          <button type="button" className="btn-instructor danger small" onClick={() => handleDeleteModule(mod.module_number)}>Delete</button>
                         </div>
                       )}
+                    </div>
 
-                      <div className="content-list">
-                        {contentByModule[mod.module_number] === undefined ? (
-                          <div className="muted">Loading content...</div>
-                        ) : (contentByModule[mod.module_number] || []).length === 0 ? (
-                          <div className="muted">No content yet.</div>
-                        ) : (
-                          (contentByModule[mod.module_number] || []).map((c) => (
-                            <div key={c.content_id} className="content-item" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                <strong>{c.title}</strong>
-                                <span className="badge" style={{ fontSize: '0.8em', background: '#eee', padding: '2px 6px', borderRadius: '4px' }}>{c.content_type}</span>
+                    <div
+                      className={`module-content ${
+                        expandedModule?.module_number === mod.module_number ? 'expanded' : ''
+                      }`}
+                    >
+                      <div className="module-content-inner">
+                        {expandedModule?.module_number === mod.module_number && (
+                          <>
+                            {isEditMode && (
+                              <div className="content-management-section">
+                                {addContentFor === mod.module_number ? (
+                                  <div className="card edit-form-card">
+                                    <form onSubmit={handleAddContent}>
+                                      <div className="edit-form-row">
+                                        <div className="form-group" style={{ flex: '0 0 80px' }}>
+                                          <label className="form-label">ID</label>
+                                          <input type="number" min={1} className="form-input" value={formContent.content_id} onChange={(e) => setFormContent((f) => ({ ...f, content_id: e.target.value }))} required />
+                                        </div>
+                                        <div className="form-group" style={{ flex: 2 }}>
+                                          <label className="form-label">Title</label>
+                                          <input type="text" className="form-input" value={formContent.title} onChange={(e) => setFormContent((f) => ({ ...f, title: e.target.value }))} required />
+                                        </div>
+                                        <div className="form-group" style={{ flex: 1 }}>
+                                          <label className="form-label">Type</label>
+                                          <select className="form-input" value={formContent.content_type} onChange={(e) => setFormContent((f) => ({ ...f, content_type: e.target.value }))}>
+                                            {CONTENT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                                          </select>
+                                        </div>
+                                      </div>
+                                      <div className="form-group" style={{ marginTop: '1rem' }}>
+                                        <label className="form-label">URL</label>
+                                        <input type="text" className="form-input" value={formContent.url} onChange={(e) => setFormContent((f) => ({ ...f, url: e.target.value }))} />
+                                      </div>
+                                      <div className="edit-form-actions">
+                                        <button type="submit" className="btn-instructor primary">Add content</button>
+                                        <button type="button" className="btn-instructor secondary" onClick={() => { setAddContentFor(null); setFormContent({ content_id: '', title: '', content_type: 'Note', url: '' }); }}>Cancel</button>
+                                      </div>
+                                    </form>
+                                  </div>
+                                ) : (
+                                  <button type="button" className="btn-instructor outline small" onClick={() => { setAddContentFor(mod.module_number); setEditingContent(null); }}>+ Add content</button>
+                                )}
+
+                                {editingContent?.module_number === mod.module_number && (
+                                  <div className="card edit-form-card">
+                                    <form onSubmit={handleUpdateContent}>
+                                      <div className="edit-form-row">
+                                        <div className="form-group" style={{ flex: 2 }}>
+                                          <label className="form-label">Title</label>
+                                          <input type="text" className="form-input" value={formContent.title} onChange={(e) => setFormContent((f) => ({ ...f, title: e.target.value }))} required />
+                                        </div>
+                                        <div className="form-group" style={{ flex: 1 }}>
+                                          <label className="form-label">Type</label>
+                                          <select className="form-input" value={formContent.content_type} onChange={(e) => setFormContent((f) => ({ ...f, content_type: e.target.value }))}>
+                                            {CONTENT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                                          </select>
+                                        </div>
+                                      </div>
+                                      <div className="form-group" style={{ marginTop: '1rem' }}>
+                                        <label className="form-label">URL</label>
+                                        <input type="text" className="form-input" value={formContent.url} onChange={(e) => setFormContent((f) => ({ ...f, url: e.target.value }))} />
+                                      </div>
+                                      <div className="edit-form-actions">
+                                        <button type="submit" className="btn-instructor primary">Update content</button>
+                                        <button type="button" className="btn-instructor secondary" onClick={() => { setEditingContent(null); setFormContent({ title: '', content_type: 'Note', url: '' }); }}>Cancel</button>
+                                      </div>
+                                    </form>
+                                  </div>
+                                )}
                               </div>
-                              {isEditMode ? (
-                                <button type="button" className="btn outline small" onClick={() => { setEditingContent(c); setAddContentFor(null); setFormContent({ title: c.title, content_type: c.content_type, url: c.url || '' }); }}>Edit</button>
+                            )}
+
+                            <div className="content-list">
+                              {contentByModule[mod.module_number] === undefined && expandedModule?.module_number === mod.module_number ? (
+                                <div className="muted">Loading content...</div>
+                              ) : (contentByModule[mod.module_number] || []).length === 0 ? (
+                                <div className="muted">No content yet.</div>
                               ) : (
-                                c.url && <a href={c.url} target="_blank" rel="noreferrer" className="btn outline small">Open</a>
+                                (contentByModule[mod.module_number] || []).map((c, c_idx, arr) => (
+                                  <div key={c.content_id} className="content-item">
+                                    <div className="content-item-title">
+                                      <strong>{c.title}</strong>
+                                      <span className="badge">{c.content_type}</span>
+                                    </div>
+                                    {isEditMode ? (
+                                      <div className="content-item-actions">
+                                        <button type="button" className="btn-instructor secondary small" title="Move Up" disabled={c_idx === 0} onClick={() => handleContentSwap(mod.module_number, c.content_id, arr[c_idx - 1].content_id)}>↑</button>
+                                        <button type="button" className="btn-instructor secondary small" title="Move Down" disabled={c_idx === arr.length - 1} onClick={() => handleContentSwap(mod.module_number, c.content_id, arr[c_idx + 1].content_id)}>↓</button>
+                                        <button type="button" className="btn-instructor outline small" onClick={() => { setEditingContent(c); setAddContentFor(null); setFormContent({ title: c.title, content_type: c.content_type, url: c.url || '' }); }}>Edit</button>
+                                        <button type="button" className="btn-instructor danger small" onClick={() => handleDeleteContent(mod.module_number, c.content_id)}>Delete</button>
+                                      </div>
+                                    ) : (
+                                      c.url && <a href={c.url} target="_blank" rel="noreferrer" className="btn-instructor outline small">Open</a>
+                                    )}
+                                  </div>
+                                ))
                               )}
                             </div>
-                          ))
+                          </>
                         )}
                       </div>
                     </div>
-                  )}
-                </div>
-              ))
-            )}
-          </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </>
         )}
       </div>
     </>

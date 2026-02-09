@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import authService from '../api/authService';
-import Navbar from '../components/Navbar';
 import '../styles/auth.css';
 
 const RegisterPage = () => {
@@ -19,6 +18,10 @@ const RegisterPage = () => {
     const [error, setError] = useState('');
     const navigate = useNavigate();
     const { login } = useAuth();
+
+    const handleBack = () => {
+        navigate('/');
+    };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -95,8 +98,10 @@ const RegisterPage = () => {
     };
 
     return (
-        <div>
-            <Navbar />
+        <div className="auth-page-wrapper">
+            <button onClick={handleBack} className="back-button">
+                <span className="arrow">&larr;</span> Back
+            </button>
             <div className="auth-container">
                 <div className="auth-box">
                     <h2>Create Account</h2>

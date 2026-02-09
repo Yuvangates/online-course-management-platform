@@ -214,8 +214,11 @@ const getAllInstructors = async () => {
 
 const getCourseById = async (courseId) => {
     const result = await pool.query(`
-        SELECT c.*
+        SELECT c.*,
+               t.name as textbook_name,
+               t.author as textbook_author
         FROM course c
+        LEFT JOIN textbook t ON c.textbook_isbn = t.isbn
         WHERE c.course_id = $1
     `, [courseId]);
     return result.rows[0];
@@ -243,10 +246,10 @@ const createCourse = async ({ name, description, duration, university_id, textbo
 };
 
 
-const updateCourse = async (courseId, { name, description, duration, university_id, textbook_isbn }) => {
+const updateCourse = async (courseId, { name, description, duration, university_id, textbook_isbn, image_url, fee }) => {
     const result = await pool.query(
-        'UPDATE course SET name = $2, description = $3, duration = $4, university_id = $5, textbook_isbn = $6, Fees = $7 WHERE course_id = $1 RETURNING *',
-        [courseId, name, description, duration, university_id, textbook_isbn, 100]
+        'UPDATE course SET name = $2, description = $3, duration = $4, university_id = $5, textbook_isbn = $6, image_url = $7, Fees = $8 WHERE course_id = $1 RETURNING *',
+        [courseId, name, description, duration, university_id, textbook_isbn, image_url, fee]
     );
     return result.rows[0];
 };
@@ -386,6 +389,8 @@ const getCoursesByInstructor = async (instructorId) => {
 const getCoursesByInstructorWithCounts = async (instructorId) => {
     const result = await pool.query(`
         SELECT c.*,
+            t.name AS textbook_name,
+            t.author AS textbook_author,
             u.name AS university_name,
             (SELECT COUNT(*) FROM module m WHERE m.course_id = c.course_id) AS module_count,
             (SELECT COUNT(*) FROM enrollment e WHERE e.course_id = c.course_id) AS student_count,
@@ -398,6 +403,7 @@ const getCoursesByInstructorWithCounts = async (instructorId) => {
         FROM course_instructor ci
         JOIN course c ON ci.course_id = c.course_id
         LEFT JOIN university u ON c.university_id = u.university_id
+        LEFT JOIN textbook t ON c.textbook_isbn = t.isbn
         WHERE ci.instructor_id = $1
     `, [instructorId]);
     return result.rows;
@@ -429,22 +435,75 @@ const createUniversity = async ({ name, country }) => {
     return result.rows[0];
 };
 
+const updateUniversity = async (universityId, { name, country }) => {
+    const result = await pool.query(
+        'UPDATE university SET name = $2, country = $3 WHERE university_id = $1 RETURNING *',
+        [universityId, name, country]
+      );
+  return result.rows[0];
+};
+
+const updateUserProfile = async (userId, { name, country, email }) => {
+    const result = await pool.query(
+        'UPDATE user_ SET name = $2, country = $3, email = $4 WHERE user_id = $1 RETURNING user_id, name, email, role, country',
+        [userId, name, country, email]
+    );
+    return result.rows[0];
+};
+
+const deleteUniversity = async (universityId) => {
+    const result = await pool.query(
+        'DELETE FROM university WHERE university_id = $1 RETURNING *',
+        [universityId]
+    );
+    return result.rows[0];
+};
+
+const updateUserPassword = async (userId, password_hash) => {
+    await pool.query(
+        'UPDATE user_ SET password_hash = $1 WHERE user_id = $2',
+        [password_hash, userId]
+    );
+};
 
 // ==========================================
 // TEXTBOOK QUERIES
 // ==========================================
 
+const getAllTextbooks = async () => {
+    const result = await pool.query('SELECT * FROM textbook ORDER BY name ASC');
+    return result.rows;
+};
 
 const getTextbookByIsbn = async (isbn) => {
     const result = await pool.query('SELECT * FROM textbook WHERE isbn = $1', [isbn]);
     return result.rows[0];
 };
 
+const getTextbookById = async (isbn) => {
+    return getTextbookByIsbn(isbn);
+};
 
 const createTextbook = async ({ isbn, name, author }) => {
     const result = await pool.query(
         'INSERT INTO textbook (isbn, name, author) VALUES ($1, $2, $3) RETURNING *',
         [isbn, name, author]
+    );
+    return result.rows[0];
+};
+
+const updateTextbook = async (isbn, { name, author }) => {
+    const result = await pool.query(
+        'UPDATE textbook SET name = $2, author = $3 WHERE isbn = $1 RETURNING *',
+        [isbn, name, author]
+    );
+    return result.rows[0];
+};
+
+const deleteTextbook = async (isbn) => {
+    const result = await pool.query(
+        'DELETE FROM textbook WHERE isbn = $1 RETURNING *',
+        [isbn]
     );
     return result.rows[0];
 };
@@ -507,6 +566,23 @@ const updateModuleContent = async (courseId, moduleNumber, contentId, { title, c
         [courseId, moduleNumber, contentId, title, content_type, url]
     );
     return result.rows[0];
+};
+
+
+const deleteModule = async (courseId, moduleNumber) => {
+    const result = await pool.query(
+        'DELETE FROM module WHERE course_id = $1 AND module_number = $2',
+        [courseId, moduleNumber]
+    );
+    return result.rowCount > 0;
+};
+
+const deleteModuleContent = async (courseId, moduleNumber, contentId) => {
+    const result = await pool.query(
+        'DELETE FROM module_content WHERE course_id = $1 AND module_number = $2 AND content_id = $3',
+        [courseId, moduleNumber, contentId]
+    );
+    return result.rowCount > 0;
 };
 
 
@@ -1115,10 +1191,16 @@ module.exports = {
     getAllUniversities,
     getUniversityById,
     createUniversity,
+    updateUniversity,
+    deleteUniversity,
 
     // Textbook queries
+    getAllTextbooks,
     getTextbookByIsbn,
+    getTextbookById,
     createTextbook,
+    updateTextbook,
+    deleteTextbook,
 
     // Module & Content queries
     getModulesByCourse,
@@ -1127,6 +1209,8 @@ module.exports = {
     createModuleContent,
     updateModule,
     updateModuleContent,
+    deleteModule,
+    deleteModuleContent,
     swapModuleOrder,
 
     // Student Progress queries
@@ -1153,5 +1237,7 @@ module.exports = {
     getCourseUniversities,
     getCourseRating,
     getCourseReviewsDetailed,
-    updateStudentProfile,
+    updateStudentProfile, // This is for students, we'll add a new one for general profile
+    updateUserProfile,
+    updateUserPassword,
 };

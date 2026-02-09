@@ -52,7 +52,6 @@ const Navbar = ({ role }) => {
                         {user.role === 'Admin' && (
                             <>
                                 <li><Link to="/admin/dashboard" className="nav-link">System Overview</Link></li>
-                                <li><Link to="/admin/users" className="nav-link">Manage Users</Link></li>
                             </>
                         )}
 
