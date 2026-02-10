@@ -27,7 +27,7 @@ const CourseSearch = () => {
         ]);
         setAllCourses(coursesRes.courses || []);
         setResults(coursesRes.courses || []);
-        setEnrolledIds((enrolledRes.enrollments || []).map(e => e.course_id));
+        setEnrolledIds((enrolledRes.enrollments || []).map(e => Number(e.course_id)));
       } catch (err) {
         console.error('Error loading courses:', err);
         setError('Failed to load courses');
@@ -70,7 +70,7 @@ const CourseSearch = () => {
     setSuggestions(s);
   }, [query, allCourses]);
 
-  const isEnrolled = (id) => enrolledIds.includes(id);
+  const isEnrolled = (id) => enrolledIds.includes(Number(id));
 
   const enrollCourse = async (courseId) => {
     try {

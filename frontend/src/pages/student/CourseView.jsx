@@ -41,7 +41,7 @@ export const CourseView = () => {
                 setCourse(detailsRes.course);
                 setModules(detailsRes.modules || []);
                 setInstructors(detailsRes.instructors || []);
-                const enrolledIds = (enrolledRes.enrollments || []).map(e => e.course_id);
+                const enrolledIds = (enrolledRes.enrollments || []).map(e => Number(e.course_id));
                 setEnrolledIds(enrolledIds);
 
                 // Fetch universities and rating
@@ -57,7 +57,7 @@ export const CourseView = () => {
                 setReviews(reviewsList);
 
                 // Check if current student has already reviewed by checking their enrollment record
-                const studentEnrollment = enrolledRes.enrollments?.find(e => e.course_id === courseId);
+                const studentEnrollment = enrolledRes.enrollments?.find(e => Number(e.course_id) === courseId);
                 const hasReview = studentEnrollment?.Review ? true : false;
                 setHasExistingReview(hasReview);
 
@@ -86,7 +86,7 @@ export const CourseView = () => {
         fetchData();
     }, [courseId]);
 
-    const isEnrolled = course && enrolledIds.includes(course.course_id);
+    const isEnrolled = enrolledIds.includes(courseId);
     const isProgressComplete = studentProgress >= 100;
 
     const handleEnroll = async () => {
@@ -98,7 +98,7 @@ export const CourseView = () => {
         try {
             setEnrolling(true);
             await courseService.enrollCourse(course.course_id);
-            setEnrolledIds([...enrolledIds, course.course_id]);
+            setEnrolledIds([...enrolledIds, Number(course.course_id)]);
             setShowPaymentModal(false);
             // Reset progress after enrollment
             setStudentProgress(0);
@@ -126,13 +126,20 @@ export const CourseView = () => {
                     [moduleNumber]: true
                 }));
                 const contentRes = await courseService.getModuleContent(courseId, moduleNumber);
-                const content = contentRes.content || (Array.isArray(contentRes) ? contentRes : []);
+                console.debug('Module content API response for', courseId, moduleNumber, contentRes);
+                const content = (contentRes && contentRes.content) || (Array.isArray(contentRes) ? contentRes : []);
                 setModuleContents(prev => ({
                     ...prev,
                     [moduleNumber]: content
                 }));
             } catch (err) {
                 console.error('Error loading module content:', err);
+                if (err.response) {
+                    console.error('Response data:', err.response.data);
+                    setError(err.response.data?.error || 'Failed to load module content');
+                } else {
+                    setError(err.message || 'Failed to load module content');
+                }
                 setModuleContents(prev => ({
                     ...prev,
                     [moduleNumber]: []
@@ -171,6 +178,7 @@ export const CourseView = () => {
     };
 
     const isContentCompleted = (moduleNumber, contentId) => {
+        if (!completedContent || !Array.isArray(completedContent)) return false;
         return completedContent.some(c => c.module_number === moduleNumber && c.content_id === contentId);
     };
 
@@ -398,9 +406,9 @@ export const CourseView = () => {
                                         </div>
                                     </div>
 
-                                    {/* MODULE CONTENT - EXPANDABLE */}
-                                    {expandedModules[module.module_number] && (
-                                        <div className="module-content">
+                                    {/* MODULE CONTENT - EXPANDABLE - FIXED className */}
+                                    <div className={`module-content ${expandedModules[module.module_number] ? 'expanded' : ''}`}>
+                                        <div className="module-content-inner">
                                             {!isEnrolled ? (
                                                 <div className="enrollment-required">
                                                     <p>🔒 Enroll to access the course content</p>
@@ -423,11 +431,13 @@ export const CourseView = () => {
                                                             </tr>
                                                         </thead>
                                                         <tbody>
-                                                            {moduleContents[module.module_number].map((content, idx) => {
+                                                            {(moduleContents[module.module_number] || []).map((content, idx) => {
                                                                 const isCompleted = isContentCompleted(module.module_number, content.content_id);
                                                                 return (
                                                                     <tr key={idx} className={isCompleted ? 'completed-row' : ''}>
-                                                                        <td className="content-name">{content.title}</td>
+                                                                        <td className="content-name" style={{ color: '#333' }}>
+                                                                            {content.title}
+                                                                        </td>
                                                                         <td className="content-type">
                                                                             <span className="type-badge" style={{ textTransform: 'capitalize' }}>
                                                                                 {content.content_type || content.type}
@@ -466,7 +476,7 @@ export const CourseView = () => {
                                                 </div>
                                             )}
                                         </div>
-                                    )}
+                                    </div>
 
                                 </div>
                             ))}
@@ -565,8 +575,6 @@ export const CourseView = () => {
                     </div>
                 )}
 
-
-
                 {error && (
                     <div className="alert error">
                         <p>{error}</p>
@@ -576,5 +584,3 @@ export const CourseView = () => {
         </>
     );
 };
-
-// export default CourseView;

@@ -231,16 +231,23 @@
 }
 
 /* ======================================
-   MODULE CARD
+   MODULE CARD - FIXED FOR PROPER STACKING
    ====================================== */
 
 .module-card {
   background: white;
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
-  overflow: hidden;
+  overflow: visible;
+  /* CHANGED from hidden to visible */
+  display: flex;
+  flex-direction: column;
   box-shadow: var(--shadow-sm);
   transition: all var(--transition-base);
+  position: relative;
+  /* ADDED for proper stacking context */
+  z-index: auto;
+  /* ADDED to ensure proper layering */
 }
 
 .module-card:hover {
@@ -262,6 +269,11 @@
   gap: var(--space-lg);
   transition: background var(--transition-base);
   border-bottom: 1px solid var(--border-light);
+  flex-shrink: 0;
+  position: relative;
+  /* ADDED */
+  z-index: 2;
+  /* ADDED to keep header above content */
 }
 
 .module-header:hover {
@@ -319,14 +331,41 @@
 }
 
 /* ======================================
-   MODULE CONTENT
+   MODULE CONTENT - FIXED EXPANSION BEHAVIOR
    ====================================== */
 
 .module-content {
-  padding: var(--space-lg) var(--space-2xl);
-  background: var(--bg-lighter);
+  background: var(--bg-white);
+  padding: 0 var(--space-lg);
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    padding-top 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    padding-bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  /* ADDED */
+  z-index: 1;
+  /* ADDED to ensure content appears above previous modules */
+}
+
+.module-content.expanded {
+  max-height: 5000px;
+  /* INCREASED from 2000px to accommodate larger content */
+  padding-top: var(--space-lg);
+  padding-bottom: var(--space-lg);
   border-top: 1px solid var(--border-light);
-  animation: slideDown var(--transition-base);
+  overflow: visible;
+  /* CHANGED from default to visible to prevent clipping */
+}
+
+.module-content-inner {
+  opacity: 0;
+  transition: opacity 0.3s ease-in;
+}
+
+.module-content.expanded .module-content-inner {
+  opacity: 1;
+  transition-delay: 0.15s;
 }
 
 .content-loading {
@@ -431,6 +470,10 @@
   text-align: center;
   padding: var(--space-2xl);
   color: var(--text-secondary);
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .empty-modules {
@@ -717,7 +760,7 @@
 }
 
 /* ======================================
-   CONTENT TABLE
+   CONTENT TABLE - FIXED VISIBILITY
    ====================================== */
 
 .enrollment-required {
@@ -728,20 +771,32 @@
   text-align: center;
   color: #7d6608;
   font-weight: var(--font-weight-medium);
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .content-table-wrapper {
   overflow-x: auto;
   margin: var(--space-lg) 0;
+  display: block;
+  width: 100%;
+  position: relative;
+  /* ADDED */
+  z-index: 1;
+  /* ADDED */
 }
 
 .content-table {
   width: 100%;
   border-collapse: collapse;
-  background: white;
+  min-width: 0;
   border: 1px solid var(--border-light);
   border-radius: var(--radius-md);
   overflow: hidden;
+  background: white;
+  /* ADDED to ensure solid background */
 }
 
 .content-table thead {
@@ -757,17 +812,25 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
   border-bottom: 2px solid var(--primary-color);
+  color: #333;
+  background: inherit;
+  /* ADDED */
 }
 
 .content-table td {
   padding: var(--space-lg);
   border-bottom: 1px solid var(--border-light);
   font-size: var(--font-size-sm);
-  color: var(--text-primary);
+  color: #333333;
+  /* Explicitly dark color */
+  background-color: #ffffff;
+  /* Solid white background */
 }
 
 .content-table tbody tr {
   transition: all var(--transition-base);
+  background-color: white;
+  /* ADDED */
 }
 
 .content-table tbody tr:hover {
@@ -810,6 +873,14 @@
 
 .content-link {
   text-align: center;
+}
+
+.content-link .btn.outline {
+  display: inline-block;
+  border: 1px solid var(--primary-color);
+  color: var(--primary-color);
+  background: white;
+  /* ADDED for visibility */
 }
 
 .completed-col {
@@ -1320,6 +1391,7 @@
     transform: translateY(30px);
     opacity: 0;
   }
+
   to {
     transform: translateY(0);
     opacity: 1;
