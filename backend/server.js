@@ -1,11 +1,4 @@
 const express = require('express');
-const dns = require('dns');
-
-// Force IPv4 address resolution to fix ENETUNREACH errors on IPv6 networks
-if (dns.setDefaultResultOrder) {
-    dns.setDefaultResultOrder('ipv4first');
-}
-
 require('dotenv').config();
 
 const app = express();
@@ -15,13 +8,6 @@ const PORT = process.env.PORT || 5000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-console.log('Environment Variables:', {
-    PORT: process.env.PORT,
-    FRONTEND_URL: process.env.FRONTEND_URL,
-    JWT_SECRET: process.env.JWT_SECRET ? '***' : 'Not Set',
-    DATABASE_URL: process.env.DATABASE_URL ? 'Set' : 'Not Set',
-});
-
 // CORS setup
 const cors = require('cors');
 
@@ -30,8 +16,6 @@ app.use(cors({
         if (!origin) return callback(null, true);
 
         const allowedOrigins = [
-            'https://learnspherekgp.netlify.app',
-            'http://localhost:5173',
             process.env.FRONTEND_URL
         ].filter(Boolean);
 
