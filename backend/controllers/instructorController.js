@@ -444,6 +444,22 @@ exports.updateEnrollmentGrade = async (req, res) => {
             return res.status(403).json({ error: 'You are not authorized to grade this enrollment' });
         }
 
+        // Check if student has completed 100% of the course
+        const progressResult = await pool.query(
+            `SELECT COALESCE(
+                (SELECT COUNT(sp.content_id)::FLOAT 
+                 FROM student_progress sp 
+                 WHERE sp.student_id = $1 AND sp.course_id = $2
+                ) / NULLIF((SELECT COUNT(*) FROM module_content mc WHERE mc.course_id = $2), 0) * 100, 
+            0) AS progress_percentage`,
+            [enrollment.student_id, enrollment.course_id]
+        );
+        
+        const progressPercentage = parseFloat(progressResult.rows[0]?.progress_percentage || 0);
+        if (progressPercentage < 100) {
+            return res.status(400).json({ error: 'Cannot grade student. Student must complete 100% of the course before grading.' });
+        }
+
         await queries.updateEnrollmentScore(enrollmentId, score);
         res.status(200).json({ message: 'Grade updated', evaluation_score: score });
     } catch (error) {
