@@ -113,7 +113,7 @@ router.get('/profile', verifyToken, checkRole(['Student']), async (req, res) => 
 // PUT /api/student/profile - Update student profile (name, country, date_of_birth, skill_level)
 router.put('/profile', verifyToken, checkRole(['Student']), async (req, res) => {
     try {
-        const { name, email, country, date_of_birth, skill_level, password } = req.body;
+        const { name, email, country, date_of_birth, skill_level, password, currentPassword } = req.body;
 
         if (!name && !email && !country && !date_of_birth && !skill_level && !password) {
             return res.status(400).json({ error: 'No fields provided to update' });
@@ -134,6 +134,18 @@ router.put('/profile', verifyToken, checkRole(['Student']), async (req, res) => 
         await queries.updateUserProfile(req.user.user_id, updateUserData);
 
         if (password) {
+            if (!currentPassword) {
+                return res.status(400).json({ error: 'Current password is required to set a new password.' });
+            }
+            const user = await queries.getUserById(req.user.user_id);
+            if (!user) {
+                return res.status(404).json({ error: 'User not found' });
+            }
+            const isMatch = await bcrypt.compare(currentPassword, user.password_hash);
+            if (!isMatch) {
+                return res.status(400).json({ error: 'Incorrect current password.' });
+            }
+
             const hashed = await bcrypt.hash(password, 10);
             await queries.updateUserPassword(req.user.user_id, hashed);
         }

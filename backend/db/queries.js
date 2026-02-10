@@ -303,6 +303,14 @@ const getEnrollmentsByCourse = async (courseId) => {
     return result.rows;
 };
 
+const getEnrollmentById = async (enrollmentId) => {
+    const result = await pool.query(
+        'SELECT * FROM enrollment WHERE enrollment_id = $1',
+        [enrollmentId]
+    );
+    return result.rows[0];
+};
+
 
 const enrollStudent = async ({ student_id, course_id }) => {
     const result = await pool.query(
@@ -1171,6 +1179,7 @@ module.exports = {
     // Enrollment queries
     getEnrollmentsByStudent,
     getEnrollmentsByCourse,
+    getEnrollmentById,
     enrollStudent,
     updateEnrollmentScore,
     checkEnrollment,

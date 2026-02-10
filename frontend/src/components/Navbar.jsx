@@ -36,6 +36,7 @@ const Navbar = ({ role }) => {
                             <>
                                 <li><NavLink to="/student/dashboard" className={({isActive})=> isActive? 'nav-link active':'nav-link'}>Dashboard</NavLink></li>
                                 <li><NavLink to="/student/enrolled" className={({isActive})=> isActive? 'nav-link active':'nav-link'}>My Courses</NavLink></li>
+                                <li><NavLink to="/student/grades" className={({isActive})=> isActive? 'nav-link active':'nav-link'}>Grades</NavLink></li>
                                 <li><NavLink to="/student/profile" className={({isActive})=> isActive? 'nav-link active':'nav-link'}>Profile</NavLink></li>
                                 <li><NavLink to="/student/search" className={({isActive})=> isActive? 'nav-link active':'nav-link'}>Search</NavLink></li>
                             </>

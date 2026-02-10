@@ -28,7 +28,9 @@ const Profile = () => {
                     country: user.country || '',
                     date_of_birth: user.date_of_birth ? user.date_of_birth.split('T')[0] : '',
                     skill_level: user.skill_level || '',
-                    password: ''
+                    password: '',
+                    currentPassword: '',
+                    confirmPassword: ''
                 });
             } catch (err) {
                 setError('Failed to load profile.');
@@ -51,13 +53,26 @@ const Profile = () => {
     const handleSave = async () => {
         try {
             setIsSaving(true);
+            if (formData.password) {
+                if (!formData.currentPassword) {
+                    setError('Current password is required to set a new password.');
+                    setIsSaving(false);
+                    return;
+                }
+                if (formData.password !== formData.confirmPassword) {
+                    setError('New passwords do not match.');
+                    setIsSaving(false);
+                    return;
+                }
+            }
             const payload = {
                 name: formData.name,
                 email: formData.email,
                 country: formData.country,
                 date_of_birth: formData.date_of_birth || null,
                 skill_level: formData.skill_level || null,
-                password: formData.password ? formData.password : undefined
+                password: formData.password ? formData.password : undefined,
+                currentPassword: formData.currentPassword ? formData.currentPassword : undefined
             };
             const updated = await authService.updateProfile(payload);
             setProfile(updated);
@@ -65,7 +80,12 @@ const Profile = () => {
             if (updated) {
                 updateUser(updated);
             }
-            setFormData((prev) => ({ ...prev, password: '' }));
+            setFormData((prev) => ({
+                ...prev,
+                password: '',
+                currentPassword: '',
+                confirmPassword: ''
+            }));
             setIsEditing(false);
         } catch (err) {
             console.log(err);
@@ -89,107 +109,89 @@ const Profile = () => {
         <>
             <Navbar role="Student" />
             <div className="student-container">
-                <div className="profile-header">
-                    <div>
+                <div className="profile-page">
+                    <div className="profile-topbar">
                         <h1>My Profile</h1>
-                        <p className="muted">Manage your personal information and learning preferences.</p>
+                        {!isEditing && (
+                            <button
+                                className="btn outline"
+                                onClick={() => setIsEditing(true)}
+                                type="button"
+                            >
+                                Edit Profile
+                            </button>
+                        )}
                     </div>
-                    {!isEditing && (
-                        <button
-                            className="btn outline"
-                            onClick={() => setIsEditing(true)}
-                            type="button"
-                        >
-                            Edit Profile
-                        </button>
-                    )}
-                </div>
 
-                {error && <div className="alert error">{error}</div>}
+                    {error && <div className="alert error">{error}</div>}
 
-                <div className="profile-card">
-                    <div className="profile-hero">
-                        <div className="profile-avatar">
-                            {profile?.name?.charAt(0).toUpperCase() || 'S'}
-                        </div>
-                        <div className="profile-hero-info">
+                    <div className="profile-card">
+                        <div className="profile-hero">
+                            <div className="profile-avatar">
+                                {profile?.name?.charAt(0).toUpperCase() || 'S'}
+                            </div>
                             <h2>{profile?.name}</h2>
-                            <span className="role-badge">Student</span>
+                            <p className="profile-role">Student</p>
                         </div>
-                    </div>
 
-                    {isEditing ? (
-                        <form className="profile-form" onSubmit={(e) => e.preventDefault()}>
-                            <div className="input-group">
-                                <label htmlFor="name">Full Name</label>
-                                <div className="input-with-icon">
-                                    <span className="input-icon">U</span>
+                        {isEditing ? (
+                            <form className="profile-form" onSubmit={(e) => e.preventDefault()}>
+                                <div className="input-group">
+                                    <label className="input-label" htmlFor="name">Full Name</label>
                                     <input
-                                        type="text"
+                                        className="input-field"
                                         id="name"
                                         name="name"
                                         value={formData.name}
                                         onChange={handleInputChange}
-                                        className="form-input"
+                                        required
                                     />
                                 </div>
-                            </div>
 
-                            <div className="input-group">
-                                <label htmlFor="email">Email Address</label>
-                                <div className="input-with-icon">
-                                    <span className="input-icon">@</span>
+                                <div className="input-group">
+                                    <label className="input-label" htmlFor="email">Email Address</label>
                                     <input
+                                        className="input-field"
                                         type="email"
                                         id="email"
                                         name="email"
                                         value={formData.email}
                                         onChange={handleInputChange}
-                                        className="form-input"
+                                        required
                                     />
                                 </div>
-                            </div>
 
-                            <div className="input-group">
-                                <label htmlFor="country">Country</label>
-                                <div className="input-with-icon">
-                                    <span className="input-icon">G</span>
+                                <div className="input-group">
+                                    <label className="input-label" htmlFor="country">Country</label>
                                     <input
-                                        type="text"
+                                        className="input-field"
                                         id="country"
                                         name="country"
                                         value={formData.country}
                                         onChange={handleInputChange}
-                                        className="form-input"
                                     />
                                 </div>
-                            </div>
 
-                            <div className="input-group">
-                                <label htmlFor="date_of_birth">Date of Birth</label>
-                                <div className="input-with-icon">
-                                    <span className="input-icon">D</span>
+                                <div className="input-group">
+                                    <label className="input-label" htmlFor="date_of_birth">Date of Birth</label>
                                     <input
+                                        className="input-field"
                                         type="date"
                                         id="date_of_birth"
                                         name="date_of_birth"
                                         value={formData.date_of_birth}
                                         onChange={handleInputChange}
-                                        className="form-input"
                                     />
                                 </div>
-                            </div>
 
-                            <div className="input-group">
-                                <label htmlFor="skill_level">Skill Level</label>
-                                <div className="input-with-icon">
-                                    <span className="input-icon">S</span>
+                                <div className="input-group">
+                                    <label className="input-label" htmlFor="skill_level">Skill Level</label>
                                     <select
                                         id="skill_level"
                                         name="skill_level"
                                         value={formData.skill_level}
                                         onChange={handleInputChange}
-                                        className="form-input"
+                                        className="input-field"
                                     >
                                         <option value="">Select a level</option>
                                         <option value="Beginner">Beginner</option>
@@ -197,85 +199,97 @@ const Profile = () => {
                                         <option value="Advanced">Advanced</option>
                                     </select>
                                 </div>
-                            </div>
 
-                            <div className="input-group">
-                                <label htmlFor="password">New Password</label>
-                                <div className="input-with-icon">
-                                    <span className="input-icon">P</span>
+                                <div className="input-group">
+                                    <label className="input-label" htmlFor="currentPassword">Current Password</label>
                                     <input
+                                        className="input-field"
+                                        type="password"
+                                        id="currentPassword"
+                                        name="currentPassword"
+                                        value={formData.currentPassword}
+                                        onChange={handleInputChange}
+                                        placeholder="Required to change password"
+                                    />
+                                </div>
+
+                                <div className="input-group">
+                                    <label className="input-label" htmlFor="password">New Password</label>
+                                    <input
+                                        className="input-field"
                                         type="password"
                                         id="password"
                                         name="password"
                                         value={formData.password}
                                         onChange={handleInputChange}
-                                        className="form-input"
                                         placeholder="Leave blank to keep current"
                                     />
                                 </div>
-                            </div>
 
-                            <div className="profile-actions">
-                                <button
-                                    className="btn outline"
-                                    type="button"
-                                    onClick={() => {
-                                        setIsEditing(false);
-                                        setFormData({
-                                            name: profile?.name || '',
-                                            email: profile?.email || '',
-                                            country: profile?.country || '',
-                                            date_of_birth: profile?.date_of_birth ? profile.date_of_birth.split('T')[0] : '',
-                                            skill_level: profile?.skill_level || '',
-                                            password: ''
-                                        });
-                                    }}
-                                    disabled={isSaving}
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    className="btn primary"
-                                    type="button"
-                                    onClick={handleSave}
-                                    disabled={isSaving}
-                                >
-                                    {isSaving ? 'Saving...' : 'Save Changes'}
-                                </button>
-                            </div>
-                        </form>
-                    ) : (
-                        <div className="profile-details">
-                            <div className="detail-card">
-                                <span className="detail-icon">@</span>
-                                <div>
+                                <div className="input-group">
+                                    <label className="input-label" htmlFor="confirmPassword">Confirm New Password</label>
+                                    <input
+                                        className="input-field"
+                                        type="password"
+                                        id="confirmPassword"
+                                        name="confirmPassword"
+                                        value={formData.confirmPassword}
+                                        onChange={handleInputChange}
+                                    />
+                                </div>
+
+                                <div className="profile-actions">
+                                    <button
+                                        className="btn outline"
+                                        type="button"
+                                        onClick={() => {
+                                            setIsEditing(false);
+                                            setFormData({
+                                                name: profile?.name || '',
+                                                email: profile?.email || '',
+                                                country: profile?.country || '',
+                                                date_of_birth: profile?.date_of_birth ? profile.date_of_birth.split('T')[0] : '',
+                                                skill_level: profile?.skill_level || '',
+                                                password: '',
+                                                currentPassword: '',
+                                                confirmPassword: ''
+                                            });
+                                        }}
+                                        disabled={isSaving}
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        className="btn primary"
+                                        type="button"
+                                        onClick={handleSave}
+                                        disabled={isSaving}
+                                    >
+                                        {isSaving ? 'Saving...' : 'Save Changes'}
+                                    </button>
+                                </div>
+                            </form>
+                        ) : (
+                            <div className="profile-details">
+                                <div className="detail-card">
                                     <p className="detail-label">Email Address</p>
                                     <p className="detail-value">{profile?.email}</p>
                                 </div>
-                            </div>
-                            <div className="detail-card">
-                                <span className="detail-icon">G</span>
-                                <div>
+                                <div className="detail-card">
                                     <p className="detail-label">Country</p>
                                     <p className="detail-value">{profile?.country || 'Not set'}</p>
                                 </div>
-                            </div>
-                            <div className="detail-card">
-                                <span className="detail-icon">D</span>
-                                <div>
+                                <div className="detail-card">
                                     <p className="detail-label">Date of Birth</p>
                                     <p className="detail-value">{profile?.date_of_birth ? new Date(profile.date_of_birth).toLocaleDateString() : 'Not set'}</p>
                                 </div>
-                            </div>
-                            <div className="detail-card">
-                                <span className="detail-icon">S</span>
-                                <div>
+                                <div className="detail-card">
                                     <p className="detail-label">Skill Level</p>
                                     <p className="detail-value">{profile?.skill_level || 'Not set'}</p>
                                 </div>
                             </div>
-                        </div>
-                    )}
+                        )}
+                    </div>
                 </div>
             </div>
         </>
