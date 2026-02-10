@@ -235,6 +235,9 @@
     padding: 1rem;
     background: var(--gray-50);
     border-radius: var(--radius-md);
+    box-sizing: border-box;
+    max-width: 100%;
+    overflow: hidden;
 }
 
 .charts-grid {

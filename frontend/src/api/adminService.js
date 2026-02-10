@@ -138,6 +138,20 @@ const adminService = {
         return response.data;
     },
 
+    getAvailableAnalysts: async () => {
+        const response = await axios.get(`${API_URL}/analysts/available`, {
+            headers: getAuthHeader()
+        });
+        return response.data;
+    },
+
+    assignExistingAnalyst: async (payload) => {
+        const response = await axios.post(`${API_URL}/analyst/assign`, payload, {
+            headers: getAuthHeader()
+        });
+        return response.data;
+    },
+
     // ==========================================
     // UNIVERSITIES
     // ==========================================

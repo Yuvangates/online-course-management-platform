@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import Navbar from '../../components/Navbar';
+import Navbar from '../../components/Sidebar';
 import courseService from '../../api/courseService';
 import '../../styles/student/course-search.css';
 

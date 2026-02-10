@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import Navbar from '../../components/Navbar';
+import Navbar from '../../components/Sidebar';
 import instructorService from '../../api/instructorService';
 import '../../styles/instructor/instructor-dashboard.css';
 

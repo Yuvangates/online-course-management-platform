@@ -8,154 +8,149 @@ const LandingPage = () => {
   const navigate = useNavigate();
 
   const handleSignInClick = () => {
-  if (user) {
-    switch (user.role) {
-      case 'Student':
-        navigate('/student/dashboard');
-        break;
-      case 'Instructor':
-        navigate('/instructor/dashboard');
-        break;
-      case 'Admin':
-        navigate('/admin/dashboard');
-        break;
-      case 'Analyst':
-        navigate('/analyst/dashboard');
-        break;
-      default:
-        navigate('/login'); // Fallback for unknown roles
+    if (user) {
+      switch (user.role) {
+        case 'Student':
+          navigate('/student/dashboard');
+          break;
+        case 'Instructor':
+          navigate('/instructor/dashboard');
+          break;
+        case 'Admin':
+          navigate('/admin/dashboard');
+          break;
+        case 'Analyst':
+          navigate('/analyst/dashboard');
+          break;
+        default:
+          navigate('/login');
+      }
+    } else {
+      navigate('/login');
     }
-  } else {
-    navigate('/login');
-  }
-};
+  };
+
+  const handleRegisterClick = () => {
+    if (user) {
+      handleSignInClick();
+      return;
+    }
+    navigate('/register');
+  };
 
 
   return (
-    <div className="landing-container">
-      {/* Navbar */}
-      <nav className="landing-navbar">
-        <div className="navbar-brand">LearnSphere</div>
-          <button onClick={handleSignInClick} className="btn primary">Sign In</button>
-      </nav>
-
-      {/* Hero Section */}
-      <section className="hero-section">
-        <div className="hero-content">
-          <h1 className="hero-title">Welcome to LearnSphere</h1>
-          <p className="hero-subtitle">
-            Transform Education Through Innovative Online Learning
-          </p>
-          <p className="hero-description">
-            Connect with expert instructors, access comprehensive courses, and achieve your learning goals
-            in a flexible, supportive environment.
-          </p>
-          <button onClick={handleSignInClick} className="cta-button">Get Started Now</button>
-        </div>
-        <div className="hero-image">
-          <div className="placeholder-image">
-            <span>📚 Learning Hub</span>
+    <div className="landing-page">
+      <div className="landing-shell">
+        <nav className="landing-nav">
+          <div className="brand">LearnSphere</div>
+          <div className="nav-actions">
+            <button className="nav-ghost" onClick={handleSignInClick}>Sign In</button>
+            <button className="nav-solid" onClick={handleRegisterClick}>Join Free</button>
           </div>
-        </div>
-      </section>
+        </nav>
 
-      {/* Features Section */}
-      <section className="features-section">
-        <h2 className="section-title">Why Choose LearnSphere?</h2>
-        <div className="features-grid">
-          <div className="feature-card">
-            <div className="feature-icon">👨‍🎓</div>
-            <h3>For Students</h3>
-            <p>
-              Explore diverse courses, learn at your own pace, and gain valuable skills.
+        <header className="hero">
+          <div className="hero-left">
+            <h1>Learn with structure. Finish with confidence.</h1>
+            <p className="hero-lede">
+              LearnSphere is built for students: clear modules, honest progress, and grading that makes
+              sense. Start today and keep your semester on track.
             </p>
+            <div className="hero-actions">
+              <button className="cta-primary" onClick={handleRegisterClick}>Start Learning</button>
+              <button className="cta-secondary" onClick={handleSignInClick}>I have an account</button>
+            </div>
+            <div className="hero-metrics">
+              <div>
+                <strong>120+</strong>
+                <span>Student-ready courses</span>
+              </div>
+              <div>
+                <strong>24/7</strong>
+                <span>Access anywhere</span>
+              </div>
+              <div>
+                <strong>90%</strong>
+                <span>Completion focus</span>
+              </div>
+            </div>
           </div>
+          <div className="hero-right">
+            <div className="hero-card">
+              <h3>Weekly Learning Plan</h3>
+              <p>Small lessons, clear goals, and visible progress.</p>
+              <div className="hero-progress">
+                <span>Progress</span>
+                <div className="hero-bar">
+                  <div className="hero-bar-fill"></div>
+                </div>
+                <strong>68%</strong>
+              </div>
+              <div className="hero-list">
+                <div>✔ Track progress once</div>
+                <div>✔ Clear module flow</div>
+                <div>✔ Grades you can trust</div>
+              </div>
+            </div>
+          </div>
+        </header>
 
-          <div className="feature-card">
-            <div className="feature-icon">👨‍🏫</div>
-            <h3>For Instructors</h3>
-            <p>
-              Create courses, structure content with modules, and track student outcomes.
-            </p>
+        <section className="value-section">
+          <div className="section-head">
+            <h2>Built for student success</h2>
+            <p>Everything you need to stay consistent and finish strong.</p>
           </div>
+          <div className="value-grid">
+            <div className="value-card">
+              <h3>Structured modules</h3>
+              <p>Know exactly what to study next with clear weekly steps.</p>
+            </div>
+            <div className="value-card">
+              <h3>Progress that updates</h3>
+              <p>Complete content once and watch your progress move forward.</p>
+            </div>
+            <div className="value-card">
+              <h3>Feedback that helps</h3>
+              <p>Grades and reviews that show how to improve.</p>
+            </div>
+          </div>
+        </section>
 
-          <div className="feature-card">
-            <div className="feature-icon">👨‍💼</div>
-            <h3>For Admins</h3>
-            <p>
-              Manage users, oversee courses, and ensure smooth platform operations.
-            </p>
+        <section className="steps-section">
+          <div className="section-head">
+            <h2>Start in three steps</h2>
           </div>
+          <div className="steps-grid">
+            <div className="step-card">
+              <span>01</span>
+              <h4>Create your account</h4>
+              <p>Join in seconds and personalize your path.</p>
+            </div>
+            <div className="step-card">
+              <span>02</span>
+              <h4>Choose a course</h4>
+              <p>Browse or search to find the right fit.</p>
+            </div>
+            <div className="step-card">
+              <span>03</span>
+              <h4>Track your progress</h4>
+              <p>Finish modules and stay on schedule.</p>
+            </div>
+          </div>
+        </section>
 
-          <div className="feature-card">
-            <div className="feature-icon">📊</div>
-            <h3>For Analysts</h3>
-            <p>
-              Access detailed analytics, generate reports, and drive improvements.
-            </p>
+        <section className="cta-section">
+          <div className="cta-card">
+            <h2>Ready to begin?</h2>
+            <p>Join students who are studying smarter with LearnSphere.</p>
+            <div className="cta-actions">
+              <button className="cta-primary" onClick={handleRegisterClick}>Join Free</button>
+              <button className="cta-secondary" onClick={handleSignInClick}>Sign In</button>
+            </div>
           </div>
-        </div>
-      </section>
-
-      {/* Statistics Section */}
-      <section className="stats-section">
-        <div className="stats-container">
-          <div className="stat-item">
-            <h3 className="stat-number">5000+</h3>
-            <p className="stat-label">Active Students</p>
-          </div>
-          <div className="stat-item">
-            <h3 className="stat-number">500+</h3>
-            <p className="stat-label">Expert Courses</p>
-          </div>
-          <div className="stat-item">
-            <h3 className="stat-number">50+</h3>
-            <p className="stat-label">Partner Universities</p>
-          </div>
-          <div className="stat-item">
-            <h3 className="stat-number">95%</h3>
-            <p className="stat-label">Completion Rate</p>
-          </div>
-        </div>
-      </section>
-
-      {/* Course Categories */}
-      <section className="categories-section">
-        <h2 className="section-title">Popular Course Categories</h2>
-        <div className="categories-grid">
-          <div className="category-card">
-            <div className="category-icon">💻</div>
-            <h4>Technology</h4>
-            <p>Web Development, AI, Cloud Computing</p>
-          </div>
-          <div className="category-card">
-            <div className="category-icon">📊</div>
-            <h4>Data Science</h4>
-            <p>Machine Learning, Analytics, Big Data</p>
-          </div>
-          <div className="category-card">
-            <div className="category-icon">🎨</div>
-            <h4>Design</h4>
-            <p>UI/UX, Graphics, Animation</p>
-          </div>
-          <div className="category-card">
-            <div className="category-icon">📈</div>
-            <h4>Business</h4>
-            <p>Management, Marketing, Finance</p>
-          </div>
-        </div>
-      </section>
-
-      {/* Call to Action Section */}
-      <section className="cta-section">
-        <h2>Ready to Begin Your Learning Journey?</h2>
-        <p>Join thousands of students already learning on LearnSphere</p>
-        <div className="cta-buttons">
-          <button onClick={handleSignInClick} className="cta-button primary">Sign In</button>
-          <a href="#contact" className="cta-button secondary">Learn More</a>
-        </div>
-      </section>
-
+        </section>
+      </div>
     </div>
   );
 };

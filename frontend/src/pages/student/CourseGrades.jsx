@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import Navbar from '../../components/Navbar';
+import Navbar from '../../components/Sidebar';
 import courseService from '../../api/courseService';
 import '../../styles/student/student-grades.css';
 

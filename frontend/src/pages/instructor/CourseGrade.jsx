@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import Navbar from '../../components/Navbar';
+import Navbar from '../../components/Sidebar';
 import instructorService from '../../api/instructorService';
 import courseService from '../../api/courseService';
 import '../../styles/student/student-common.css';
