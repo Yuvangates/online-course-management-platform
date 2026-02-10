@@ -7,14 +7,24 @@ import '../../styles/student/enrolled-courses.css';
 const EnrolledCourses = () => {
     const navigate = useNavigate();
     const [enrolledCourses, setEnrolledCourses] = useState([]);
+    const [courseLookup, setCourseLookup] = useState({});
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [progressByCourse, setProgressByCourse] = useState({});
 
     useEffect(() => {
         const fetchData = async () => {
             try {
                 setLoading(true);
-                const enrolledRes = await courseService.getEnrolledCourses();
+                const [enrolledRes, coursesRes] = await Promise.all([
+                    courseService.getEnrolledCourses(),
+                    courseService.getAllCourses()
+                ]);
+                const lookup = (coursesRes.courses || []).reduce((acc, course) => {
+                    acc[Number(course.course_id)] = course;
+                    return acc;
+                }, {});
+                setCourseLookup(lookup);
                 setEnrolledCourses(enrolledRes.enrollments || []);
             } catch (err) {
                 console.error('Error fetching courses:', err);
@@ -26,69 +36,92 @@ const EnrolledCourses = () => {
         fetchData();
     }, []);
 
+    useEffect(() => {
+        const loadProgress = async () => {
+            if (!enrolledCourses.length) {
+                setProgressByCourse({});
+                return;
+            }
+
+            try {
+                const progressEntries = await Promise.all(
+                    enrolledCourses.map(async (enrollment) => {
+                        const courseId = Number(enrollment.course_id);
+                        try {
+                            const res = await courseService.getStudentProgress(courseId);
+                            return [courseId, Math.round(res.progress || 0)];
+                        } catch (err) {
+                            console.error('Error loading progress for course', courseId, err);
+                            return [courseId, 0];
+                        }
+                    })
+                );
+                setProgressByCourse(Object.fromEntries(progressEntries));
+            } catch (err) {
+                console.error('Error loading progress:', err);
+            }
+        };
+
+        loadProgress();
+    }, [enrolledCourses]);
+
     return (
         <>
             <Navbar role="Student" />
             <div className="student-container">
-                <div className="enrolled-header">
-                    <div>
-                        <h1>My Courses</h1>
-                        <p className="subtitle">All courses you are currently enrolled in.</p>
-                    </div>
+                <div className="student-hero">
+                    <h1>My courses</h1>
+                    <p className="muted">All courses you are currently enrolled in.</p>
                 </div>
 
                 {error && <div className="alert error">{error}</div>}
 
-                <div className="enrolled-courses-grid" style={{ marginTop: '2rem' }}>
-                    {loading ? (
-                        <div className="empty-state">
-                            <p>Loading courses...</p>
-                        </div>
-                    ) : enrolledCourses.length === 0 ? (
-                        <div className="empty-state">
-                            <p>📚 You are not enrolled in any courses yet.</p>
-                            <a href="/student/search" className="btn primary">Browse Courses</a>
-                        </div>
-                    ) : (
-                        enrolledCourses.map(enrollment => (
-                            <div key={enrollment.enrollment_id} className="enrolled-course-card">
-                                <div className="card-header">
+                {loading ? (
+                    <div className="empty-state">Loading courses...</div>
+                ) : enrolledCourses.length === 0 ? (
+                    <div className="empty-state">You are not enrolled in any courses yet.</div>
+                ) : (
+                    <div className="student-courses-grid">
+                        {enrolledCourses.map(enrollment => {
+                            const enrolledDate = enrollment.enrollment_date
+                                ? new Date(enrollment.enrollment_date).toLocaleDateString()
+                                : 'Not available';
+                            const lastAccess = enrollment.Last_access
+                                ? new Date(enrollment.Last_access).toLocaleDateString()
+                                : null;
+                            const score = enrollment.evaluation_score;
+                            const progress = progressByCourse[Number(enrollment.course_id)] ?? 0;
+                            const courseInfo = courseLookup[Number(enrollment.course_id)] || {};
+
+                            return (
+                                <div key={enrollment.enrollment_id} className="student-course-card">
                                     <h3>{enrollment.course_name}</h3>
-                                    {enrollment.evaluation_score && (
-                                        <span className="score-badge">{enrollment.evaluation_score}%</span>
-                                    )}
+                                    <div className="meta">
+                                        <span>📅 Enrolled {enrolledDate}</span>
+                                        {courseInfo.average_rating && courseInfo.total_ratings && (
+                                            <span>⭐ {parseFloat(courseInfo.average_rating).toFixed(1)} ({parseInt(courseInfo.total_ratings, 10)})</span>
+                                        )}
+                                        {score !== null && score !== undefined ? (
+                                            <span>✅ Grade {score}</span>
+                                        ) : (
+                                            <span>📈 Progress {progress}%</span>
+                                        )}
+                                        {lastAccess && <span>👁️ Last access {lastAccess}</span>}
+                                    </div>
+                                    <div className="card-actions">
+                                        <button
+                                            type="button"
+                                            className="btn primary"
+                                            onClick={() => navigate(`/student/course/${enrollment.course_id}`)}
+                                        >
+                                            Continue learning
+                                        </button>
+                                    </div>
                                 </div>
-                                <div className="card-details">
-                                    <p className="enrollment-date">
-                                        📅 Enrolled: {new Date(enrollment.enrollment_date).toLocaleDateString()}
-                                    </p>
-                                    {enrollment.evaluation_score && (
-                                        <p className="grade">
-                                            ✓ Completed: {enrollment.evaluation_score}%
-                                        </p>
-                                    )}
-                                    {!enrollment.evaluation_score && (
-                                        <p className="in-progress">
-                                            ⏳ In Progress
-                                        </p>
-                                    )}
-                                    {enrollment.Last_access && (
-                                        <p className="last-access">
-                                            👁️ Last accessed: {new Date(enrollment.Last_access).toLocaleDateString()}
-                                        </p>
-                                    )}
-                                </div>
-                                <button
-                                    className="btn outline"
-                                    onClick={() => navigate(`/student/course/${enrollment.course_id}`)}
-                                    style={{ marginTop: 'auto' }}
-                                >
-                                    Continue Learning →
-                                </button>
-                            </div>
-                        ))
-                    )}
-                </div>
+                            );
+                        })}
+                    </div>
+                )}
             </div>
         </>
     );

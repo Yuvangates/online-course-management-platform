@@ -6,7 +6,7 @@ const pool = new Pool(
     process.env.DATABASE_URL
         ? {
               connectionString: process.env.DATABASE_URL,
-              ssl: { rejectUnauthorized: false } // Required for Render external connections
+              ssl: { rejectUnauthorized: false } 
           }
         : {
               user: process.env.DB_USER,

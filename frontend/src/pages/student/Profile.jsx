@@ -27,7 +27,8 @@ const Profile = () => {
                     email: user.email || '',
                     country: user.country || '',
                     date_of_birth: user.date_of_birth ? user.date_of_birth.split('T')[0] : '',
-                    skill_level: user.skill_level || ''
+                    skill_level: user.skill_level || '',
+                    password: ''
                 });
             } catch (err) {
                 setError('Failed to load profile.');
@@ -52,9 +53,11 @@ const Profile = () => {
             setIsSaving(true);
             const payload = {
                 name: formData.name,
+                email: formData.email,
                 country: formData.country,
                 date_of_birth: formData.date_of_birth || null,
-                skill_level: formData.skill_level || null
+                skill_level: formData.skill_level || null,
+                password: formData.password ? formData.password : undefined
             };
             const updated = await authService.updateProfile(payload);
             setProfile(updated);
@@ -62,6 +65,7 @@ const Profile = () => {
             if (updated) {
                 updateUser(updated);
             }
+            setFormData((prev) => ({ ...prev, password: '' }));
             setIsEditing(false);
         } catch (err) {
             console.log(err);
@@ -84,117 +88,137 @@ const Profile = () => {
     return (
         <>
             <Navbar role="Student" />
-            <div className="student-container profile-page">
+            <div className="student-container">
                 <div className="profile-header">
-                    <h1>My Profile</h1>
+                    <div>
+                        <h1>My Profile</h1>
+                        <p className="muted">Manage your personal information and learning preferences.</p>
+                    </div>
                     {!isEditing && (
                         <button
-                            className="btn primary"
+                            className="btn outline"
                             onClick={() => setIsEditing(true)}
+                            type="button"
                         >
-                            ✏️ Edit Profile
+                            Edit Profile
                         </button>
                     )}
                 </div>
 
                 {error && <div className="alert error">{error}</div>}
 
-                {!isEditing ? (
-                    <div className="profile-card">
+                <div className="profile-card">
+                    <div className="profile-hero">
                         <div className="profile-avatar">
-                            <div className="avatar-circle">
-                                {profile?.name?.charAt(0).toUpperCase()}
-                            </div>
+                            {profile?.name?.charAt(0).toUpperCase() || 'S'}
                         </div>
-
-                        <div className="profile-details">
-                            <div className="detail-item">
-                                <span className="label">Name</span>
-                                <span className="value">{profile?.name}</span>
-                            </div>
-                            <div className="detail-item">
-                                <span className="label">Email</span>
-                                <span className="value">{profile?.email}</span>
-                            </div>
-                            <div className="detail-item">
-                                <span className="label">Country</span>
-                                <span className="value">{profile?.country || 'Not set'}</span>
-                            </div>
-                            <div className="detail-item">
-                                <span className="label">Date of Birth</span>
-                                <span className="value">{profile?.date_of_birth ? new Date(profile.date_of_birth).toLocaleDateString() : 'Not set'}</span>
-                            </div>
-                            <div className="detail-item">
-                                <span className="label">Skill Level</span>
-                                <span className="value skill-badge">{profile?.skill_level || 'Not set'}</span>
-                            </div>
+                        <div className="profile-hero-info">
+                            <h2>{profile?.name}</h2>
+                            <span className="role-badge">Student</span>
                         </div>
                     </div>
-                ) : (
-                    <div className="profile-card edit-mode">
-                        <h2>Edit Profile</h2>
-                        <div className="edit-form">
-                            <div className="form-group">
-                                <label htmlFor="name">Name</label>
-                                <input
-                                    type="text"
-                                    id="name"
-                                    name="name"
-                                    value={formData.name}
-                                    onChange={handleInputChange}
-                                    className="form-input"
-                                />
+
+                    {isEditing ? (
+                        <form className="profile-form" onSubmit={(e) => e.preventDefault()}>
+                            <div className="input-group">
+                                <label htmlFor="name">Full Name</label>
+                                <div className="input-with-icon">
+                                    <span className="input-icon">U</span>
+                                    <input
+                                        type="text"
+                                        id="name"
+                                        name="name"
+                                        value={formData.name}
+                                        onChange={handleInputChange}
+                                        className="form-input"
+                                    />
+                                </div>
                             </div>
 
-                            {/* Email cannot be changed once created */}
-                            <div className="form-group">
-                                <label>Email</label>
-                                <div className="value static-value">{profile?.email}</div>
+                            <div className="input-group">
+                                <label htmlFor="email">Email Address</label>
+                                <div className="input-with-icon">
+                                    <span className="input-icon">@</span>
+                                    <input
+                                        type="email"
+                                        id="email"
+                                        name="email"
+                                        value={formData.email}
+                                        onChange={handleInputChange}
+                                        className="form-input"
+                                    />
+                                </div>
                             </div>
 
-                            <div className="form-group">
+                            <div className="input-group">
                                 <label htmlFor="country">Country</label>
-                                <input
-                                    type="text"
-                                    id="country"
-                                    name="country"
-                                    value={formData.country}
-                                    onChange={handleInputChange}
-                                    className="form-input"
-                                />
+                                <div className="input-with-icon">
+                                    <span className="input-icon">G</span>
+                                    <input
+                                        type="text"
+                                        id="country"
+                                        name="country"
+                                        value={formData.country}
+                                        onChange={handleInputChange}
+                                        className="form-input"
+                                    />
+                                </div>
                             </div>
 
-                            <div className="form-group">
+                            <div className="input-group">
                                 <label htmlFor="date_of_birth">Date of Birth</label>
-                                <input
-                                    type="date"
-                                    id="date_of_birth"
-                                    name="date_of_birth"
-                                    value={formData.date_of_birth}
-                                    onChange={handleInputChange}
-                                    className="form-input"
-                                />
+                                <div className="input-with-icon">
+                                    <span className="input-icon">D</span>
+                                    <input
+                                        type="date"
+                                        id="date_of_birth"
+                                        name="date_of_birth"
+                                        value={formData.date_of_birth}
+                                        onChange={handleInputChange}
+                                        className="form-input"
+                                    />
+                                </div>
                             </div>
 
-                            <div className="form-group">
+                            <div className="input-group">
                                 <label htmlFor="skill_level">Skill Level</label>
-                                <select
-                                    id="skill_level"
-                                    name="skill_level"
-                                    value={formData.skill_level}
-                                    onChange={handleInputChange}
-                                    className="form-select"
-                                >
-                                    <option value="">Select a level</option>
-                                    <option value="Beginner">Beginner</option>
-                                    <option value="Intermediate">Intermediate</option>
-                                    <option value="Advanced">Advanced</option>
-                                </select>
+                                <div className="input-with-icon">
+                                    <span className="input-icon">S</span>
+                                    <select
+                                        id="skill_level"
+                                        name="skill_level"
+                                        value={formData.skill_level}
+                                        onChange={handleInputChange}
+                                        className="form-input"
+                                    >
+                                        <option value="">Select a level</option>
+                                        <option value="Beginner">Beginner</option>
+                                        <option value="Intermediate">Intermediate</option>
+                                        <option value="Advanced">Advanced</option>
+                                    </select>
+                                </div>
                             </div>
 
-                            <div className="form-actions">
+                            <div className="input-group">
+                                <label htmlFor="password">New Password</label>
+                                <div className="input-with-icon">
+                                    <span className="input-icon">P</span>
+                                    <input
+                                        type="password"
+                                        id="password"
+                                        name="password"
+                                        value={formData.password}
+                                        onChange={handleInputChange}
+                                        className="form-input"
+                                        placeholder="Leave blank to keep current"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="profile-actions">
                                 <button
                                     className="btn outline"
+                                    type="button"
                                     onClick={() => {
                                         setIsEditing(false);
                                         setFormData({
@@ -202,7 +226,8 @@ const Profile = () => {
                                             email: profile?.email || '',
                                             country: profile?.country || '',
                                             date_of_birth: profile?.date_of_birth ? profile.date_of_birth.split('T')[0] : '',
-                                            skill_level: profile?.skill_level || ''
+                                            skill_level: profile?.skill_level || '',
+                                            password: ''
                                         });
                                     }}
                                     disabled={isSaving}
@@ -211,15 +236,47 @@ const Profile = () => {
                                 </button>
                                 <button
                                     className="btn primary"
+                                    type="button"
                                     onClick={handleSave}
                                     disabled={isSaving}
                                 >
                                     {isSaving ? 'Saving...' : 'Save Changes'}
                                 </button>
                             </div>
+                        </form>
+                    ) : (
+                        <div className="profile-details">
+                            <div className="detail-card">
+                                <span className="detail-icon">@</span>
+                                <div>
+                                    <p className="detail-label">Email Address</p>
+                                    <p className="detail-value">{profile?.email}</p>
+                                </div>
+                            </div>
+                            <div className="detail-card">
+                                <span className="detail-icon">G</span>
+                                <div>
+                                    <p className="detail-label">Country</p>
+                                    <p className="detail-value">{profile?.country || 'Not set'}</p>
+                                </div>
+                            </div>
+                            <div className="detail-card">
+                                <span className="detail-icon">D</span>
+                                <div>
+                                    <p className="detail-label">Date of Birth</p>
+                                    <p className="detail-value">{profile?.date_of_birth ? new Date(profile.date_of_birth).toLocaleDateString() : 'Not set'}</p>
+                                </div>
+                            </div>
+                            <div className="detail-card">
+                                <span className="detail-icon">S</span>
+                                <div>
+                                    <p className="detail-label">Skill Level</p>
+                                    <p className="detail-value">{profile?.skill_level || 'Not set'}</p>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                )}
+                    )}
+                </div>
             </div>
         </>
     );

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const queries = require('../db/queries');
 const { verifyToken } = require('../middleware/authMiddleware');
+const bcrypt = require('bcryptjs');
 const { checkRole } = require('../middleware/roleMiddleware');
 
 // GET /api/student/dashboard - Get student's dashboard data
@@ -112,9 +113,9 @@ router.get('/profile', verifyToken, checkRole(['Student']), async (req, res) => 
 // PUT /api/student/profile - Update student profile (name, country, date_of_birth, skill_level)
 router.put('/profile', verifyToken, checkRole(['Student']), async (req, res) => {
     try {
-        const { name, country, date_of_birth, skill_level } = req.body;
+        const { name, email, country, date_of_birth, skill_level, password } = req.body;
 
-        if (!name && !country && !date_of_birth && !skill_level) {
+        if (!name && !email && !country && !date_of_birth && !skill_level && !password) {
             return res.status(400).json({ error: 'No fields provided to update' });
         }
 
@@ -124,12 +125,18 @@ router.put('/profile', verifyToken, checkRole(['Student']), async (req, res) => 
             return res.status(404).json({ error: 'Student profile not found' });
         }
 
-        // Update user table (name, country) - use existing values if not provided
+        // Update user table (name, country, email) - use existing values if not provided
         const updateUserData = {
             name: name !== undefined ? name : currentProfile.name,
-            country: country !== undefined ? country : currentProfile.country
+            country: country !== undefined ? country : currentProfile.country,
+            email: email !== undefined ? email : currentProfile.email
         };
-        await queries.updateUser(req.user.user_id, updateUserData);
+        await queries.updateUserProfile(req.user.user_id, updateUserData);
+
+        if (password) {
+            const hashed = await bcrypt.hash(password, 10);
+            await queries.updateUserPassword(req.user.user_id, hashed);
+        }
 
         // Update student-specific fields
         const updatedProfile = await queries.updateStudentProfile(req.user.user_id, { date_of_birth, skill_level });
