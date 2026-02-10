@@ -30,6 +30,7 @@ app.use(cors({
 
 // Routes
 app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/public', require('./routes/publicRoutes'));
 app.use('/api/courses', require('./routes/courseRoutes'));
 app.use('/api/student', require('./routes/studentRoutes'));
 app.use('/api/instructor', require('./routes/instructorRoutes'));
