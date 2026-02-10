@@ -1,2 +1,2 @@
 # Online-Course-Management-Platform
-### Gate is very lawda person
+### Gate is very good person
