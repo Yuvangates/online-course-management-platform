@@ -14,6 +14,7 @@ router.get('/dashboard', adminController.getDashboard);
 // Course management
 router.post('/courses', adminController.createCourse);
 router.put('/courses/:courseId', adminController.updateCourse);
+router.delete('/courses/:courseId', adminController.deleteCourse);
 router.get('/courses', adminController.getAllCourses);
 router.get('/courses/:courseId', adminController.getCourseDetails);
 

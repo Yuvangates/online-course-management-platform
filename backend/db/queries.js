@@ -254,6 +254,38 @@ const updateCourse = async (courseId, { name, description, duration, university_
     return result.rows[0];
 };
 
+const deleteCourse = async (courseId) => {
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+
+        // 1. Delete all enrollments for this course
+        await client.query(
+            'DELETE FROM enrollment WHERE course_id = $1',
+            [courseId]
+        );
+
+        // 2. Delete all course-instructor associations for this course
+        await client.query(
+            'DELETE FROM course_instructor WHERE course_id = $1',
+            [courseId]
+        );
+
+        // 3. Delete the course itself (cascading will handle modules, content, and progress)
+        const result = await client.query(
+            'DELETE FROM course WHERE course_id = $1 RETURNING *',
+            [courseId]
+        );
+
+        await client.query('COMMIT');
+        return result.rows[0];
+    } catch (e) {
+        await client.query('ROLLBACK');
+        throw e;
+    } finally {
+        client.release();
+    }
+};
 
 const searchCourses = async (query) => {
     const searchQuery = `%${query}%`;
@@ -465,6 +497,22 @@ const deleteUniversity = async (universityId) => {
         [universityId]
     );
     return result.rows[0];
+};
+
+const getCoursesUsingUniversity = async (universityId) => {
+    const result = await pool.query(
+        'SELECT * FROM course WHERE university_id = $1',
+        [universityId]
+    );
+    return result.rows;
+};
+
+const getCoursesUsingTextbook = async (isbn) => {
+    const result = await pool.query(
+        'SELECT * FROM course WHERE textbook_isbn = $1',
+        [isbn]
+    );
+    return result.rows;
 };
 
 const updateUserPassword = async (userId, password_hash) => {
@@ -1241,6 +1289,7 @@ module.exports = {
     getAllCourses,
     createCourse,
     updateCourse,
+    deleteCourse,
     searchCourses,
 
     // Enrollment queries
@@ -1269,6 +1318,7 @@ module.exports = {
     createUniversity,
     updateUniversity,
     deleteUniversity,
+    getCoursesUsingUniversity,
 
     // Textbook queries
     getAllTextbooks,
@@ -1277,6 +1327,7 @@ module.exports = {
     createTextbook,
     updateTextbook,
     deleteTextbook,
+    getCoursesUsingTextbook,
 
     // Module & Content queries
     getModulesByCourse,
