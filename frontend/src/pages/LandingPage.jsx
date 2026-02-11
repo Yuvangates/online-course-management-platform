@@ -64,6 +64,36 @@ const LandingPage = () => {
       setLoading(false);
     }
   };
+  const handleSignInClick = () => {
+    if (user) {
+      switch (user.role) {
+        case 'Student':
+          navigate('/student/dashboard');
+          break;
+        case 'Instructor':
+          navigate('/instructor/dashboard');
+          break;
+        case 'Admin':
+          navigate('/admin/dashboard');
+          break;
+        case 'Analyst':
+          navigate('/analyst/dashboard');
+          break;
+        default:
+          navigate('/login');
+      }
+    } else {
+      navigate('/login');
+    }
+  };
+
+  const handleRegisterClick = () => {
+    if (user) {
+      handleSignInClick();
+      return;
+    }
+    navigate('/register');
+  };
 
   const handleSignInClick = () => {
     if (user) {
@@ -112,9 +142,15 @@ const LandingPage = () => {
         <div className="hero-image">
           <div className="placeholder-image">
             <img src={sphereImage} alt="Learning Hub Sphere" className="sphere-image" />
+    <div className="landing-page">
+      <div className="landing-shell">
+        <nav className="landing-nav">
+          <div className="brand">LearnSphere</div>
+          <div className="nav-actions">
+            <button className="nav-ghost" onClick={handleSignInClick}>Sign In</button>
+            <button className="nav-solid" onClick={handleRegisterClick}>Join Free</button>
           </div>
-        </div>
-      </section>
+        </nav>
 
       {/* Top Universities Section */}
       <section className="universities-section">
@@ -183,7 +219,31 @@ const LandingPage = () => {
             </p>
             <p className="disclaimer-text">
               For more information, please read our <button className="terms-link" onClick={() => setSelectedModal('student')}>terms and conditions</button>
+        <header className="hero">
+          <div className="hero-left">
+            <h1>Learn with structure. Finish with confidence.</h1>
+            <p className="hero-lede">
+              LearnSphere is built for students: clear modules, honest progress, and grading that makes
+              sense. Start today and keep your semester on track.
             </p>
+            <div className="hero-actions">
+              <button className="cta-primary" onClick={handleRegisterClick}>Start Learning</button>
+              <button className="cta-secondary" onClick={handleSignInClick}>I have an account</button>
+            </div>
+            <div className="hero-metrics">
+              <div>
+                <strong>120+</strong>
+                <span>Student-ready courses</span>
+              </div>
+              <div>
+                <strong>24/7</strong>
+                <span>Access anywhere</span>
+              </div>
+              <div>
+                <strong>90%</strong>
+                <span>Completion focus</span>
+              </div>
+            </div>
           </div>
 
           <div className="feature-card">
@@ -195,7 +255,25 @@ const LandingPage = () => {
             <p className="disclaimer-text">
               For Contributing as Instructor, please read our <button className="terms-link" onClick={() => setSelectedModal('instructor')}>terms and conditions</button>
             </p>
+          <div className="hero-right">
+            <div className="hero-card">
+              <h3>Weekly Learning Plan</h3>
+              <p>Small lessons, clear goals, and visible progress.</p>
+              <div className="hero-progress">
+                <span>Progress</span>
+                <div className="hero-bar">
+                  <div className="hero-bar-fill"></div>
+                </div>
+                <strong>68%</strong>
+              </div>
+              <div className="hero-list">
+                <div>✔ Track progress once</div>
+                <div>✔ Clear module flow</div>
+                <div>✔ Grades you can trust</div>
+              </div>
+            </div>
           </div>
+        </header>
 
           <div className="feature-card">
             <div className="feature-icon">🏫</div>
@@ -217,45 +295,58 @@ const LandingPage = () => {
             <p className="disclaimer-text">
               For Contributing as Analyst, please read our <button className="terms-link" onClick={() => setSelectedModal('analyst')}>terms and conditions</button>
             </p>
+        <section className="value-section">
+          <div className="section-head">
+            <h2>Built for student success</h2>
+            <p>Everything you need to stay consistent and finish strong.</p>
           </div>
-        </div>
-      </section>
+          <div className="value-grid">
+            <div className="value-card">
+              <h3>Structured modules</h3>
+              <p>Know exactly what to study next with clear weekly steps.</p>
+            </div>
+            <div className="value-card">
+              <h3>Progress that updates</h3>
+              <p>Complete content once and watch your progress move forward.</p>
+            </div>
+            <div className="value-card">
+              <h3>Feedback that helps</h3>
+              <p>Grades and reviews that show how to improve.</p>
+            </div>
+          </div>
+        </section>
 
-      {/* Statistics Section */}
-      <section className="stats-section">
-        <div className="stats-container">
-          <div className="stat-item">
-            <h3 className="stat-number">5000+</h3>
-            <p className="stat-label">Active Students</p>
+        <section className="steps-section">
+          <div className="section-head">
+            <h2>Start in three steps</h2>
           </div>
-          <div className="stat-item">
-            <h3 className="stat-number">500+</h3>
-            <p className="stat-label">Expert Courses</p>
+          <div className="steps-grid">
+            <div className="step-card">
+              <span>01</span>
+              <h4>Create your account</h4>
+              <p>Join in seconds and personalize your path.</p>
+            </div>
+            <div className="step-card">
+              <span>02</span>
+              <h4>Choose a course</h4>
+              <p>Browse or search to find the right fit.</p>
+            </div>
+            <div className="step-card">
+              <span>03</span>
+              <h4>Track your progress</h4>
+              <p>Finish modules and stay on schedule.</p>
+            </div>
           </div>
-          <div className="stat-item">
-            <h3 className="stat-number">50+</h3>
-            <p className="stat-label">Partner Universities</p>
-          </div>
-          <div className="stat-item">
-            <h3 className="stat-number">95%</h3>
-            <p className="stat-label">Completion Rate</p>
-          </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Course Categories */}
-      <section className="categories-section">
-        <h2 className="section-title">Popular Course Categories</h2>
-        <div className="categories-grid">
-          <div className="category-card">
-            <div className="category-icon">💻</div>
-            <h4>Technology</h4>
-            <p>Web Development, AI, Cloud Computing</p>
-          </div>
-          <div className="category-card">
-            <div className="category-icon">📊</div>
-            <h4>Data Science</h4>
-            <p>Machine Learning, Analytics, Big Data</p>
+        <section className="cta-section">
+          <div className="cta-card">
+            <h2>Ready to begin?</h2>
+            <p>Join students who are studying smarter with LearnSphere.</p>
+            <div className="cta-actions">
+              <button className="cta-primary" onClick={handleRegisterClick}>Join Free</button>
+              <button className="cta-secondary" onClick={handleSignInClick}>Sign In</button>
+            </div>
           </div>
           <div className="category-card">
             <div className="category-icon">🎨</div>
@@ -501,6 +592,8 @@ const LandingPage = () => {
           </div>
         </div>
       )}
+        </section>
+      </div>
     </div>
   );
 };

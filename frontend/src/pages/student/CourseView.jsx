@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import Navbar from '../../components/Navbar';
+import Navbar from '../../components/Sidebar';
 import courseService from '../../api/courseService';
 import '../../styles/student/course-view.css';
 
@@ -161,19 +161,9 @@ export const CourseView = () => {
         if (isContentCompleted(moduleNumber, contentId)) return;
         try {
             await courseService.markContentComplete(courseId, moduleNumber, contentId);
-            const completed = [...completedContent, { course_id: courseId, module_number: moduleNumber, content_id: contentId }];
-            setCompletedContent(completed);
-
-            let totalContent = 0;
-            modules.forEach(mod => {
-                const contents = moduleContents[mod.module_number];
-                if (contents && Array.isArray(contents)) {
-                    totalContent += contents.length;
-                }
-            });
-
-            const newProgress = totalContent > 0 ? Math.min((completed.length / totalContent) * 100, 100) : 0;
-            setStudentProgress(newProgress);
+            const progressRes = await courseService.getStudentProgress(courseId);
+            setStudentProgress(progressRes.progress || 0);
+            setCompletedContent(progressRes.completedContent || []);
         } catch (err) {
             console.error('Error marking content complete:', err);
         }
@@ -340,16 +330,25 @@ export const CourseView = () => {
                 {isEnrolled && (
                     <div className="progress-section">
                         <h3>Your Progress</h3>
-                        <div className="progress-row">
-                            <div className="progress-bar-container">
-                                <div className="progress-bar">
-                                    <div
-                                        className="progress-fill"
-                                        style={{ width: `${Math.min(studentProgress, 100)}%` }}
-                                    />
-                                </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%' }}>
+                            <div style={{ flex: 1, height: '6px', background: '#eee', borderRadius: '3px', overflow: 'hidden' }}>
+                                <div
+                                    style={{
+                                        width: `${Math.min(studentProgress, 100)}%`,
+                                        height: '100%',
+                                        background: isProgressComplete ? '#28a745' : '#ffc107'
+                                    }}
+                                ></div>
                             </div>
-                            <div className="progress-percent">{Math.round(studentProgress)}%</div>
+                            <span
+                                style={{
+                                    fontSize: '0.85em',
+                                    color: isProgressComplete ? '#666' : '#ff9800',
+                                    fontWeight: isProgressComplete ? 'normal' : '600'
+                                }}
+                            >
+                                {Math.round(studentProgress)}%
+                            </span>
                         </div>
                     </div>
                 )}
@@ -549,6 +548,7 @@ export const CourseView = () => {
                                     const ratingPercent = Math.min(Math.max((ratingValue / 5) * 100, 0), 100);
                                     const reviewerName = review.student_name || 'Student';
                                     const reviewerInitial = reviewerName.trim().charAt(0).toUpperCase();
+                                    const reviewTextValue = review.review || review.Review || '';
 
                                     return (
                                         <div key={idx} className="review-card">
@@ -560,7 +560,7 @@ export const CourseView = () => {
                                                         <span className="review-stars-fill" style={{ width: `${ratingPercent}%` }}></span>
                                                     </div>
                                                 </div>
-                                                <p className="review-text">{review.Review}</p>
+                                                <p className="review-text">{reviewTextValue || 'No review text provided.'}</p>
                                             </div>
                                         </div>
                                     );

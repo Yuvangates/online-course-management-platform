@@ -370,6 +370,58 @@ const createAnalyst = async (req, res) => {
     }
 };
 
+// Get available analysts (existing users not assigned yet)
+const getAvailableAnalysts = async (req, res) => {
+    try {
+        const analysts = await queries.getAvailableAnalysts();
+        res.status(200).json(analysts);
+    } catch (error) {
+        console.error('Get available analysts error:', error);
+        res.status(500).json({ error: error.message });
+    }
+};
+
+// Assign an existing analyst to the system
+const assignExistingAnalyst = async (req, res) => {
+    try {
+        const { analyst_id } = req.body;
+
+        if (!analyst_id) {
+            return res.status(400).json({ error: 'Analyst ID is required' });
+        }
+
+        const existingAnalyst = await queries.getAnalyst();
+        if (existingAnalyst) {
+            return res.status(400).json({ error: 'An analyst already exists in the system' });
+        }
+
+        const user = await queries.getUserById(analyst_id);
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        if (user.role !== 'Analyst') {
+            return res.status(400).json({ error: 'User is not an analyst' });
+        }
+
+        const assignment = await queries.assignAnalystToSystem(analyst_id);
+        if (!assignment) {
+            return res.status(409).json({ error: 'Analyst already assigned' });
+        }
+
+        res.status(201).json({
+            user_id: user.user_id,
+            email: user.email,
+            name: user.name,
+            role: user.role,
+            country: user.country,
+        });
+    } catch (error) {
+        console.error('Assign analyst error:', error);
+        res.status(500).json({ error: error.message });
+    }
+};
+
 // Get analyst
 const getAnalyst = async (req, res) => {
     try {
@@ -619,6 +671,8 @@ module.exports = {
     searchStudents,
     removeStudentFromCourse,
     createAnalyst,
+    getAvailableAnalysts,
+    assignExistingAnalyst,
     getAnalyst,
     getAllUniversities,
     createUniversity,

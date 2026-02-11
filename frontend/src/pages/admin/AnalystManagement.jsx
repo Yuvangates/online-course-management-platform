@@ -6,6 +6,10 @@ const AnalystManagement = () => {
     const [analyst, setAnalyst] = useState(null);
     const [error, setError] = useState('');
     const [showForm, setShowForm] = useState(false);
+    const [showAssignForm, setShowAssignForm] = useState(false);
+    const [availableAnalysts, setAvailableAnalysts] = useState([]);
+    const [assigning, setAssigning] = useState(false);
+    const [selectedAnalystId, setSelectedAnalystId] = useState('');
 
     const [formData, setFormData] = useState({
         email: '',
@@ -32,6 +36,25 @@ const AnalystManagement = () => {
     useEffect(() => {
         fetchAnalyst();
     }, []);
+
+    useEffect(() => {
+        if (showAssignForm) {
+            fetchAvailableAnalysts();
+        }
+    }, [showAssignForm]);
+
+    const fetchAvailableAnalysts = async () => {
+        try {
+            setAssigning(true);
+            const data = await adminService.getAvailableAnalysts();
+            setAvailableAnalysts(data || []);
+        } catch (err) {
+            console.error(err);
+            setError(err.response?.data?.error || 'Failed to load analysts');
+        } finally {
+            setAssigning(false);
+        }
+    };
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -102,17 +125,56 @@ const AnalystManagement = () => {
         }
     };
 
+    const handleAssignAnalyst = async (e) => {
+        e.preventDefault();
+        try {
+            setError('');
+            if (!selectedAnalystId) {
+                setError('Please select an analyst');
+                return;
+            }
+
+            setAssigning(true);
+            await adminService.assignExistingAnalyst({
+                analyst_id: Number(selectedAnalystId),
+            });
+
+            setSelectedAnalystId('');
+            setShowAssignForm(false);
+            await fetchAnalyst();
+        } catch (err) {
+            console.error(err);
+            setError(err.response?.data?.error || 'Failed to assign analyst');
+        } finally {
+            setAssigning(false);
+        }
+    };
+
     return (
         <div className="admin-section">
             <div className="section-header">
                 <h2>Analyst Management</h2>
                 {!analyst && (
-                    <button
-                        className="btn-primary"
-                        onClick={() => setShowForm(!showForm)}
-                    >
-                        {showForm ? 'Cancel' : 'Create Analyst'}
-                    </button>
+                    <div className="header-actions">
+                        <button
+                            className="btn-secondary"
+                            onClick={() => {
+                                setShowAssignForm(!showAssignForm);
+                                setShowForm(false);
+                            }}
+                        >
+                            {showAssignForm ? 'Cancel Assign' : 'Assign Existing'}
+                        </button>
+                        <button
+                            className="btn-primary"
+                            onClick={() => {
+                                setShowForm(!showForm);
+                                setShowAssignForm(false);
+                            }}
+                        >
+                            {showForm ? 'Cancel' : 'Create Analyst'}
+                        </button>
+                    </div>
                 )}
             </div>
 
@@ -146,7 +208,35 @@ const AnalystManagement = () => {
                 </div>
             ) : (
                 <>
-                    {showForm ? (
+                    {showAssignForm ? (
+                        <form className="form-container" onSubmit={handleAssignAnalyst}>
+                            <h3>Assign Existing Analyst</h3>
+                            <div className="form-group">
+                                <label>Select Analyst *</label>
+                                <select
+                                    value={selectedAnalystId}
+                                    onChange={(e) => setSelectedAnalystId(e.target.value)}
+                                    disabled={assigning}
+                                    required
+                                >
+                                    <option value="">Select an analyst</option>
+                                    {availableAnalysts.map((user) => (
+                                        <option key={user.user_id} value={user.user_id}>
+                                            {user.name} ({user.email})
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {!assigning && availableAnalysts.length === 0 && (
+                                <div className="empty-state">No available analysts to assign</div>
+                            )}
+
+                            <button type="submit" className="btn-primary" disabled={assigning}>
+                                {assigning ? 'Assigning...' : 'Assign Analyst'}
+                            </button>
+                        </form>
+                    ) : showForm ? (
                         <form className="form-container" onSubmit={handleCreateAnalyst}>
                             <h3>Create Data Analyst</h3>
 

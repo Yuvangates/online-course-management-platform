@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import Navbar from '../../components/Navbar';
+import { useSearchParams } from 'react-router-dom';
+import Navbar from '../../components/Sidebar';
 import adminService from '../../api/adminService';
 import CourseManagement from './CourseManagement';
 import InstructorManagement from './InstructorManagement';
@@ -10,7 +11,8 @@ import TextBookManagement from './TextBookManagement';
 import '../../styles/admin/admin.css';
 
 const AdminDashboard = () => {
-    const [activeTab, setActiveTab] = useState('dashboard');
+    const [searchParams, setSearchParams] = useSearchParams();
+    const activeTab = searchParams.get('tab') || 'dashboard';
     const [stats, setStats] = useState({
         totalCourses: 0,
         totalStudents: 0,
@@ -42,54 +44,6 @@ const AdminDashboard = () => {
         <>
             <Navbar role="Admin" />
             <div className="admin-container">
-                <div className="admin-sidebar">
-                    <nav className="admin-nav">
-                        <h3>Admin Panel</h3>
-                        <button
-                            className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
-                            onClick={() => setActiveTab('dashboard')}
-                        >
-                            Dashboard
-                        </button>
-                        <button
-                            className={`nav-item ${activeTab === 'courses' ? 'active' : ''}`}
-                            onClick={() => setActiveTab('courses')}
-                        >
-                            Courses
-                        </button>
-                        <button
-                            className={`nav-item ${activeTab === 'instructors' ? 'active' : ''}`}
-                            onClick={() => setActiveTab('instructors')}
-                        >
-                            Instructors
-                        </button>
-                        <button
-                            className={`nav-item ${activeTab === 'students' ? 'active' : ''}`}
-                            onClick={() => setActiveTab('students')}
-                        >
-                            Students
-                        </button>
-                        <button
-                            className={`nav-item ${activeTab === 'analyst' ? 'active' : ''}`}
-                            onClick={() => setActiveTab('analyst')}
-                        >
-                            Analyst
-                        </button>
-                        <button
-                            className={`nav-item ${activeTab === 'universities' ? 'active' : ''}`}
-                            onClick={() => setActiveTab('universities')}
-                        >
-                            Universities
-                        </button>
-                        <button
-                            className={`nav-item ${activeTab === 'textbooks' ? 'active' : ''}`}
-                            onClick={() => setActiveTab('textbooks')}
-                        >
-                            TextBooks
-                        </button>
-                    </nav>
-                </div>
-
                 <div className="admin-content">
                     {activeTab === 'dashboard' && (
                         <div className="dashboard-view">
@@ -141,32 +95,32 @@ const AdminDashboard = () => {
                                         <div className="action-buttons">
                                             <button
                                                 className="action-btn"
-                                                onClick={() => setActiveTab('courses')}
+                                                onClick={() => setSearchParams({ tab: 'courses' })}
                                             >
                                                 📚 Create Course
                                             </button>
                                             <button
                                                 className="action-btn"
-                                                onClick={() => setActiveTab('instructors')}
+                                                onClick={() => setSearchParams({ tab: 'instructors' })}
                                             >
                                                 👨‍🏫 Add Instructor
                                             </button>
                                             <button
                                                 className="action-btn"
-                                                onClick={() => setActiveTab('universities')}
+                                                onClick={() => setSearchParams({ tab: 'universities' })}
                                             >
                                                 🏫 Add University
                                             </button>
                                             <button
                                                 className="action-btn"
-                                                onClick={() => setActiveTab('textbooks')}
+                                                onClick={() => setSearchParams({ tab: 'textbooks' })}
                                             >
                                                 📖 Add TextBook
                                             </button>
                                             {!stats.hasAnalyst && (
                                                 <button
                                                     className="action-btn"
-                                                    onClick={() => setActiveTab('analyst')}
+                                                    onClick={() => setSearchParams({ tab: 'analyst' })}
                                                 >
                                                     📊 Create Analyst
                                                 </button>

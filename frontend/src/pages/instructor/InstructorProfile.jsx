@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import Navbar from '../../components/Navbar';
+import Navbar from '../../components/Sidebar';
 import instructorService from '../../api/instructorService';
 import '../../styles/instructor/instructor-profile.css';
 
@@ -143,7 +143,6 @@ const InstructorProfile = () => {
                 </div>
                 <div className="profile-actions">
                   <button type="submit" className="btn-instructor primary">Save Profile</button>
-                  <button type="button" className="btn-instructor danger" onClick={handleCancel}>Cancel</button>
                 </div>
               </form>
             ) : (
@@ -171,11 +170,11 @@ const InstructorProfile = () => {
                   {passwordMessage && <div className="alert success">{passwordMessage}</div>}
                   <div className="input-group">
                     <label className="input-label">Current Password</label>
-                    <input type="password" name="currentPassword" className="input-field" value={passwordData.currentPassword} onChange={handleInputChange} required />
+                    <input type="password" name="currentPassword" className="input-field" placeholder="Required to change password" value={passwordData.currentPassword} onChange={handleInputChange} required />
                   </div>
                   <div className="input-group">
                     <label className="input-label">New Password</label>
-                    <input type="password" name="newPassword" className="input-field" value={passwordData.newPassword} onChange={handleInputChange} required />
+                    <input type="password" name="newPassword" className="input-field" placeholder="Leave blank to keep current" alue={passwordData.newPassword} onChange={handleInputChange} required />
                   </div>
                   <div className="input-group">
                     <label className="input-label">Confirm New Password</label>

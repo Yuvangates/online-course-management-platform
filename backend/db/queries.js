@@ -1131,6 +1131,27 @@ const getAnalyst = async () => {
     `);
     return result.rows[0];
 };
+
+const getAvailableAnalysts = async () => {
+    const result = await pool.query(`
+        SELECT u.user_id, u.name, u.email, u.country
+        FROM user_ u
+        WHERE u.role = 'Analyst'
+          AND NOT EXISTS (
+              SELECT 1 FROM analyst a WHERE a.analyst_id = u.user_id
+          )
+        ORDER BY u.name ASC
+    `);
+    return result.rows;
+};
+
+const assignAnalystToSystem = async (analystId) => {
+    const result = await pool.query(
+        'INSERT INTO analyst (analyst_id) VALUES ($1) RETURNING *',
+        [analystId]
+    );
+    return result.rows[0];
+};
 const getCourseReviewsDetailed = async (courseId) => {
     const result = await pool.query(
         `SELECT e.Review, e.rating, u.name as student_name, e.enrollment_date 
@@ -1274,6 +1295,8 @@ module.exports = {
 
     // Analyst queries
     getAnalyst,
+    getAvailableAnalysts,
+    assignAnalystToSystem,
     getAnalystDashboardKPIs,
     getTotalRevenue,
     getRevenueByUniversity,

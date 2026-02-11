@@ -33,6 +33,8 @@ router.delete('/enrollments/:enrollmentId', adminController.removeStudentFromCou
 
 // Analyst management
 router.post('/analyst', adminController.createAnalyst);
+router.get('/analysts/available', adminController.getAvailableAnalysts);
+router.post('/analyst/assign', adminController.assignExistingAnalyst);
 router.get('/analyst', adminController.getAnalyst);
 
 // Universities

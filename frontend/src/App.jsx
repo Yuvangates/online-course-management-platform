@@ -30,6 +30,11 @@ import './styles/main.css';
 
 const AppContent = () => {
   const location = useLocation();
+  const hideFooter =
+    location.pathname.startsWith('/student') ||
+    location.pathname.startsWith('/admin') ||
+    location.pathname.startsWith('/analyst') ||
+    location.pathname.startsWith('/instructor');
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -167,7 +172,7 @@ const AppContent = () => {
         />
       </Routes>
 
-      <Footer />
+      {!hideFooter && <Footer />}
     </div>
   );
 };

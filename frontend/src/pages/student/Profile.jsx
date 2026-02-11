@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import authService from '../../api/authService';
-import Navbar from '../../components/Navbar';
+import Navbar from '../../components/Sidebar';
 import '../../styles/student/student-profile.css';
 
 const Profile = () => {

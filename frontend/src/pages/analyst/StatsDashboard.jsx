@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import Navbar from '../../components/Navbar';
+import Navbar from '../../components/Sidebar';
 import analystService from '../../api/analystService';
 import { LineChart, BarChart, PieChart, DoughnutChart, lineChartOptions, barChartOptions, pieChartOptions, doughnutChartOptions } from '../../components/Charts';
 import { generateAnalyticsReport } from '../../utils/exportReport';
@@ -327,42 +327,6 @@ const AnalystDashboard = () => {
         <>
             <Navbar role="Analyst" />
             <div className="analyst-container">
-                <div className="analyst-sidebar">
-                    <nav className="analyst-nav">
-                        <h3>Analytics</h3>
-                        <button
-                            className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
-                            onClick={() => setSearchParams({ tab: 'dashboard' })}
-                        >
-                            Dashboard
-                        </button>
-                        <button
-                            className={`nav-item ${activeTab === 'revenue' ? 'active' : ''}`}
-                            onClick={() => setSearchParams({ tab: 'revenue' })}
-                        >
-                            Revenue
-                        </button>
-                        <button
-                            className={`nav-item ${activeTab === 'engagement' ? 'active' : ''}`}
-                            onClick={() => setSearchParams({ tab: 'engagement' })}
-                        >
-                            Engagement
-                        </button>
-                        <button
-                            className={`nav-item ${activeTab === 'performance' ? 'active' : ''}`}
-                            onClick={() => setSearchParams({ tab: 'performance' })}
-                        >
-                            Performance
-                        </button>
-                        <button
-                            className={`nav-item ${activeTab === 'instructors' ? 'active' : ''}`}
-                            onClick={() => setSearchParams({ tab: 'instructors' })}
-                        >
-                            Instructors
-                        </button>
-                    </nav>
-                </div>
-
                 <div className="analyst-content">
                     {error && <div className="alert error">{error}</div>}
 
