@@ -55,4 +55,10 @@ router.get('/users', adminController.getAllUsers);
 router.get('/users/search', adminController.searchUsers);
 router.delete('/users/:userId', adminController.deleteUser);
 
+// Student deletion (removes enrollments)
+router.delete('/students/:studentId', adminController.deleteStudent);
+
+// Instructor deletion (removes course assignments)
+router.delete('/instructors/:instructorId', adminController.deleteInstructor);
+
 module.exports = router;

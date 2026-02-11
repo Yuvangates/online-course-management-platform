@@ -694,6 +694,76 @@ const deleteUser = async (req, res) => {
     }
 };
 
+// Delete a student (removes enrollments and progress records)
+const deleteStudent = async (req, res) => {
+    try {
+        const { studentId } = req.params;
+
+        if (!studentId) {
+            return res.status(400).json({ error: 'Student ID is required' });
+        }
+
+        // Prevent deleting yourself if you're an admin
+        if (parseInt(studentId) === req.user.user_id) {
+            return res.status(400).json({ error: 'Cannot delete your own account' });
+        }
+
+        const user = await queries.getUserById(parseInt(studentId));
+        if (!user) {
+            return res.status(404).json({ error: 'Student not found' });
+        }
+
+        if (user.role !== 'Student') {
+            return res.status(400).json({ error: 'User is not a student' });
+        }
+
+        const deletedUser = await queries.deleteStudent(parseInt(studentId));
+
+        res.status(200).json({ 
+            message: 'Student and associated enrollments deleted successfully',
+            user: deletedUser
+        });
+    } catch (error) {
+        console.error('Delete student error:', error);
+        res.status(500).json({ error: error.message });
+    }
+};
+
+// Delete an instructor (removes from courses)
+const deleteInstructor = async (req, res) => {
+    try {
+        const { instructorId } = req.params;
+
+        if (!instructorId) {
+            return res.status(400).json({ error: 'Instructor ID is required' });
+        }
+
+        // Prevent deleting yourself if you're an admin
+        if (parseInt(instructorId) === req.user.user_id) {
+            return res.status(400).json({ error: 'Cannot delete your own account' });
+        }
+
+        const user = await queries.getUserById(parseInt(instructorId));
+        if (!user) {
+            return res.status(404).json({ error: 'Instructor not found' });
+        }
+
+        if (user.role !== 'Instructor') {
+            return res.status(400).json({ error: 'User is not an instructor' });
+        }
+
+        const deletedUser = await queries.deleteInstructor(parseInt(instructorId));
+
+        res.status(200).json({ 
+            message: 'Instructor and course associations removed successfully',
+            user: deletedUser
+        });
+    } catch (error) {
+        console.error('Delete instructor error:', error);
+        res.status(500).json({ error: error.message });
+    }
+};
+
 module.exports = {
     getDashboard,
     createCourse,
@@ -724,4 +794,6 @@ module.exports = {
     getAllUsers,
     searchUsers,
     deleteUser,
+    deleteStudent,
+    deleteInstructor,
 };
