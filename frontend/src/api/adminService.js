@@ -196,6 +196,20 @@ const adminService = {
         return response.data;
     },
 
+    deleteStudent: async (studentId) => {
+        const response = await axios.delete(`${API_URL}/students/${studentId}`, {
+            headers: getAuthHeader()
+        });
+        return response.data;
+    },
+
+    deleteInstructor: async (instructorId) => {
+        const response = await axios.delete(`${API_URL}/instructors/${instructorId}`, {
+            headers: getAuthHeader()
+        });
+        return response.data;
+    },
+
     // ==========================================
     // UNIVERSITY MANAGEMENT
     // ==========================================

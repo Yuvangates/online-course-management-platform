@@ -106,6 +106,80 @@ const deleteUser = async (userId) => {
     return result.rows[0];
 };
 
+// Delete student with proper cascading
+const deleteStudent = async (studentId) => {
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+
+        // 1. Delete all enrollments for this student
+        await client.query(
+            'DELETE FROM enrollment WHERE student_id = $1',
+            [studentId]
+        );
+
+        // 2. Delete all student progress records
+        await client.query(
+            'DELETE FROM student_progress WHERE student_id = $1',
+            [studentId]
+        );
+
+        // 3. Delete the student record
+        await client.query(
+            'DELETE FROM student WHERE student_id = $1',
+            [studentId]
+        );
+
+        // 4. Delete the user record (cascade will handle anything else)
+        const result = await client.query(
+            'DELETE FROM user_ WHERE user_id = $1 RETURNING *',
+            [studentId]
+        );
+
+        await client.query('COMMIT');
+        return result.rows[0];
+    } catch (e) {
+        await client.query('ROLLBACK');
+        throw e;
+    } finally {
+        client.release();
+    }
+};
+
+// Delete instructor with proper cascading
+const deleteInstructor = async (instructorId) => {
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+
+        // 1. Delete all course-instructor associations
+        await client.query(
+            'DELETE FROM course_instructor WHERE instructor_id = $1',
+            [instructorId]
+        );
+
+        // 2. Delete the instructor record
+        await client.query(
+            'DELETE FROM instructor WHERE instructor_id = $1',
+            [instructorId]
+        );
+
+        // 3. Delete the user record
+        const result = await client.query(
+            'DELETE FROM user_ WHERE user_id = $1 RETURNING *',
+            [instructorId]
+        );
+
+        await client.query('COMMIT');
+        return result.rows[0];
+    } catch (e) {
+        await client.query('ROLLBACK');
+        throw e;
+    } finally {
+        client.release();
+    }
+};
+
 
 const updateStudentProfile = async (userId, { date_of_birth, skill_level }) => {
     const client = await pool.connect();
@@ -1271,6 +1345,8 @@ module.exports = {
     getAllUsers,
     searchUsersByName,
     deleteUser,
+    deleteStudent,
+    deleteInstructor,
    
     // Student queries
     getStudentById,

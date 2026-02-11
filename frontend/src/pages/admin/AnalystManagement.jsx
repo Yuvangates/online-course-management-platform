@@ -65,7 +65,7 @@ const AnalystManagement = () => {
     };
 
     const handleDeleteAnalyst = async () => {
-        if (!analyst || !analyst.analyst_id) {
+        if (!analyst || !analyst.user_id) {
             setError('Cannot find analyst to delete');
             return;
         }
@@ -75,9 +75,9 @@ const AnalystManagement = () => {
         }
 
         try {
-            await adminService.deleteUser(analyst.analyst_id);
-            setAnalyst(null);
             setError('');
+            await adminService.deleteUser(analyst.user_id);
+            setAnalyst(null);
         } catch (err) {
             setError(err.response?.data?.error || 'Failed to remove analyst');
         }
