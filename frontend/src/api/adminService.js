@@ -47,6 +47,13 @@ const adminService = {
         return response.data;
     },
 
+    deleteCourse: async (courseId) => {
+        const response = await axios.delete(`${API_URL}/courses/${courseId}`, {
+            headers: getAuthHeader()
+        });
+        return response.data;
+    },
+
     // ==========================================
     // INSTRUCTOR MANAGEMENT
     // ==========================================

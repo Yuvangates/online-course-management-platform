@@ -91,6 +91,28 @@ const updateCourse = async (req, res) => {
     }
 };
 
+// Delete a course
+const deleteCourse = async (req, res) => {
+    try {
+        const { courseId } = req.params;
+
+        const course = await queries.getCourseById(courseId);
+        if (!course) {
+            return res.status(404).json({ error: 'Course not found' });
+        }
+
+        const deletedCourse = await queries.deleteCourse(courseId);
+
+        res.status(200).json({ 
+            message: 'Course and associated data deleted successfully',
+            course: deletedCourse
+        });
+    } catch (error) {
+        console.error('Delete course error:', error);
+        res.status(500).json({ error: error.message });
+    }
+};
+
 // Get all courses
 const getAllCourses = async (req, res) => {
     try {
@@ -511,6 +533,14 @@ const deleteUniversity = async (req, res) => {
             return res.status(404).json({ error: 'University not found' });
         }
 
+        // Check if university is used in any courses
+        const coursesUsingUniversity = await queries.getCoursesUsingUniversity(universityId);
+        if (coursesUsingUniversity.length > 0) {
+            return res.status(400).json({ 
+                error: 'Courses has been offered by the university cannot be removed' 
+            });
+        }
+
         await queries.deleteUniversity(universityId);
         res.status(200).json({ message: 'University deleted successfully' });
     } catch (error) {
@@ -587,6 +617,14 @@ const deleteTextbook = async (req, res) => {
             return res.status(404).json({ error: 'Textbook not found' });
         }
 
+        // Check if textbook is used in any courses
+        const coursesUsingTextbook = await queries.getCoursesUsingTextbook(isbn);
+        if (coursesUsingTextbook.length > 0) {
+            return res.status(400).json({ 
+                error: 'Used by Courses cannot be removed' 
+            });
+        }
+
         await queries.deleteTextbook(isbn);
         res.status(200).json({ message: 'Textbook deleted successfully' });
     } catch (error) {
@@ -660,6 +698,7 @@ module.exports = {
     getDashboard,
     createCourse,
     updateCourse,
+    deleteCourse,
     getAllCourses,
     getCourseDetails,
     createInstructor,

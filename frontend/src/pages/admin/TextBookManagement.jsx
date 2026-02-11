@@ -103,6 +103,7 @@ const TextBookManagement = () => {
         }
 
         try {
+            setError('');
             await adminService.deleteTextbook(isbn);
             await fetchTextbooks();
         } catch (err) {
