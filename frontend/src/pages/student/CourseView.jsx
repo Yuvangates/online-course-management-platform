@@ -67,6 +67,11 @@ export const CourseView = () => {
                 const studentEnrollment = enrolledRes.enrollments?.find(e => Number(e.course_id) === courseId);
                 const hasReview = studentEnrollment?.Review ? true : false;
                 setHasExistingReview(hasReview);
+                if (hasReview) {
+                    setReviewText(studentEnrollment.Review || '');
+                    const existingRating = Number(studentEnrollment.rating ?? studentEnrollment.Rating ?? 0);
+                    setReviewRating(existingRating > 0 ? existingRating : 5);
+                }
 
                 // If enrolled, fetch progress and module details
                 if (enrolledIds.includes(courseId)) {
@@ -489,15 +494,18 @@ export const CourseView = () => {
                             </div>
                         )}
 
-                        {hasExistingReview && isProgressComplete && (
+                        {hasExistingReview && isProgressComplete && !showReviewForm && (
                             <div className="review-submitted-message">
-                                <p>✓ Thank you for your review! Your feedback has been submitted.</p>
+                                <p>✓ Thank you for your review! You can update it anytime.</p>
+                                <button className="btn outline" onClick={() => setShowReviewForm(true)}>
+                                    Edit Review
+                                </button>
                             </div>
                         )}
 
                         {showReviewForm && (
                             <div className="review-form">
-                                <h4>Share Your Review</h4>
+                                <h4>{hasExistingReview ? 'Update Your Review' : 'Share Your Review'}</h4>
                                 <div className="form-group">
                                     <label>Rating</label>
                                     <select
@@ -528,7 +536,6 @@ export const CourseView = () => {
                                             await courseService.submitReview(courseId, { review: reviewText, rating: reviewRating });
                                             setHasExistingReview(true);
                                             setShowReviewForm(false);
-                                            setReviewText('');
                                             // Refresh reviews
                                             const reviewsRes = await courseService.getCourseReviews(courseId);
                                             setReviews(reviewsRes.reviews || []);
@@ -536,7 +543,7 @@ export const CourseView = () => {
                                             console.error('Error submitting review:', err);
                                             setError('Failed to submit review');
                                         }
-                                    }}>Submit Review</button>
+                                    }}>{hasExistingReview ? 'Update Review' : 'Submit Review'}</button>
                                     <button className="btn outline" onClick={() => setShowReviewForm(false)}>Cancel</button>
                                 </div>
                             </div>
