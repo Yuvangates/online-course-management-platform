@@ -11,6 +11,7 @@ import CourseSearch from './pages/student/CourseSearch';
 import { CourseView } from './pages/student/CourseView';
 import EnrolledCourses from './pages/student/EnrolledCourses';
 import Profile from './pages/student/Profile';
+import CourseGrades from './pages/student/CourseGrades';
 import InstructorDashboard from './pages/instructor/InstructorDashboard';
 import InstructorProfile from './pages/instructor/InstructorProfile';
 import AssignedCourses from './pages/instructor/AssignedCourses';
@@ -29,6 +30,11 @@ import './styles/main.css';
 
 const AppContent = () => {
   const location = useLocation();
+  const hideFooter =
+    location.pathname.startsWith('/student') ||
+    location.pathname.startsWith('/admin') ||
+    location.pathname.startsWith('/analyst') ||
+    location.pathname.startsWith('/instructor');
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -76,6 +82,14 @@ const AppContent = () => {
           element={
             <ProtectedRoute allowedRoles={['Student']}>
               <Profile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/student/grades"
+          element={
+            <ProtectedRoute allowedRoles={['Student']}>
+              <CourseGrades />
             </ProtectedRoute>
           }
         />
@@ -158,7 +172,7 @@ const AppContent = () => {
         />
       </Routes>
 
-      <Footer />
+      {!hideFooter && <Footer />}
     </div>
   );
 };

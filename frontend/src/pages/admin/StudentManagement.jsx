@@ -46,12 +46,13 @@ const StudentManagement = () => {
   };
 
   const handleDeleteStudent = async (studentId, studentName) => {
-    if (!window.confirm(`Are you sure you want to remove ${studentName}?`)) {
+    if (!window.confirm(`Are you sure you want to remove ${studentName}? This will delete all their enrollments and progress records.`)) {
       return;
     }
 
     try {
-      await adminService.deleteUser(studentId);
+      setError('');
+      await adminService.deleteStudent(studentId);
       await fetchStudents();
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to remove student');

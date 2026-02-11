@@ -5,52 +5,44 @@
 @import './student-common.css';
 
 /* ======================================
-   DASHBOARD HERO SECTION
+   HERO SEARCH
    ====================================== */
 
-.dashboard-hero {
-  background: linear-gradient(135deg, white 0%, var(--bg-lighter) 100%);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  padding: var(--space-3xl) var(--space-2xl);
-  margin-bottom: var(--space-2xl);
-  box-shadow: var(--shadow-md);
-}
-
-.hero-text h1 {
-  margin: 0 0 var(--space-sm) 0;
-  color: var(--text-primary);
-}
-
-.hero-text p {
-  color: var(--text-secondary);
-  font-size: var(--font-size-lg);
-  margin: 0;
-}
-
-.hero-search {
+.student-hero-search {
   display: flex;
   gap: var(--space-lg);
   margin-top: var(--space-2xl);
   width: 100%;
   justify-content: center;
+  align-items: stretch;
 }
 
 .search-input-wrapper {
   position: relative;
   flex: 1;
-  max-width: 500px;
+  max-width: 760px;
 }
 
 .search-input {
   width: 100%;
-  padding: var(--space-md) var(--space-lg);
+  padding: 0 var(--space-lg);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   font-size: var(--font-size-base);
   background: white;
   box-shadow: var(--shadow-sm);
   transition: all var(--transition-base);
+  height: 48px;
+}
+
+.student-hero-search .search-action-btn {
+  min-width: 160px;
+  height: 48px;
+  box-shadow: var(--shadow-sm);
+}
+
+.student-hero-search .search-action-btn:hover {
+  box-shadow: var(--shadow-md);
 }
 
 .search-input:focus {
@@ -74,7 +66,7 @@
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-lg);
-  z-index: var(--z-dropdown);
+  z-index: 1000;
   max-height: 400px;
   overflow-y: auto;
   list-style: none;
@@ -116,40 +108,40 @@
    DASHBOARD STATS
    ====================================== */
 
-.dashboard-stats {
+.student-stats {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: var(--space-lg);
   margin-bottom: var(--space-3xl);
 }
 
-.stat-card {
-  background: linear-gradient(135deg, white 0%, var(--bg-lighter) 100%);
+.student-stat-card {
+  background: var(--bg-white);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   padding: var(--space-xl);
   box-shadow: var(--shadow-sm);
-  transition: all var(--transition-base);
-  border-left: 5px solid var(--primary-color);
+  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  border-left: 4px solid var(--primary-color);
   display: flex;
   flex-direction: column;
 }
 
-.stat-card:hover {
+.student-stat-card:hover {
   transform: translateY(-4px);
   box-shadow: var(--shadow-md);
   border-left-color: var(--primary-dark);
 }
 
-.stat-card h3 {
+.student-stat-card .value {
   font-size: var(--font-size-4xl);
   font-weight: var(--font-weight-extrabold);
   color: var(--primary-color);
-  margin: 0 0 var(--space-sm) 0;
+  margin: 0 0 var(--space-xs) 0;
   line-height: 1;
 }
 
-.stat-card p {
+.student-stat-card .label {
   color: var(--text-secondary);
   font-size: var(--font-size-base);
   margin: 0;
@@ -157,102 +149,23 @@
 }
 
 /* ======================================
-   COURSES GRID
-   ====================================== */
-
-.courses-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: var(--space-2xl);
-  margin-bottom: var(--space-2xl);
-  width: 100%;
-}
-
-/* ======================================
-   COURSE CARDS
-   ====================================== */
-
-.course-card {
-  background: white;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  padding: var(--space-2xl);
-  box-shadow: var(--shadow-sm);
-  transition: all var(--transition-base);
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  overflow: hidden;
-}
-
-.course-card:hover {
-  transform: translateY(-6px);
-  box-shadow: var(--shadow-lg);
-  border-color: var(--primary-color);
-}
-
-.course-card h4 {
-  margin: 0 0 var(--space-md) 0;
-  line-height: 1.3;
-  min-height: 2.4em;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  color: var(--text-dark);
-}
-
-.course-card .muted {
-  display: block;
-  margin-bottom: var(--space-md);
-  font-size: var(--font-size-sm);
-}
-
-.course-card p {
-  color: var(--text-secondary);
-  line-height: 1.5;
-  flex-grow: 0;
-  margin: var(--space-sm) 0;
-  font-size: var(--font-size-base);
-}
-
-.course-card > *:not(.course-actions):not(h4) {
-  flex-grow: 0;
-}
-
-.course-actions {
-  margin-top: auto;
-  display: flex;
-  gap: var(--space-md);
-  padding-top: var(--space-lg);
-  border-top: 1px solid var(--border-light);
-}
-
-.course-actions .btn {
-  flex: 1;
-  justify-content: center;
-  padding: var(--space-md) var(--space-lg);
-  font-size: var(--font-size-sm);
-}
-
-/* ======================================
    RESPONSIVE
    ====================================== */
 
 @media (max-width: 1024px) {
-  .courses-grid {
+  .student-courses-grid {
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: var(--space-xl);
   }
 }
 
 @media (max-width: 768px) {
-  .dashboard-hero {
+  .student-hero {
     padding: var(--space-2xl) var(--space-lg);
     margin-bottom: var(--space-2xl);
   }
 
-  .hero-search {
+  .student-hero-search {
     flex-direction: column;
     gap: var(--space-md);
   }
@@ -261,51 +174,51 @@
     max-width: 100%;
   }
 
-  .dashboard-stats {
+  .student-stats {
     grid-template-columns: 1fr;
     gap: var(--space-md);
   }
 
-  .stat-card {
+  .student-stat-card {
     padding: var(--space-lg);
   }
 
-  .stat-card h3 {
+  .student-stat-card .value {
     font-size: var(--font-size-2xl);
   }
 
-  .courses-grid {
+  .student-courses-grid {
     grid-template-columns: 1fr;
     gap: var(--space-lg);
   }
 
-  .course-card {
+  .student-course-card {
     padding: var(--space-lg);
   }
 
-  .course-actions {
+  .student-course-card .card-actions {
     flex-direction: column;
   }
 
-  .course-actions .btn {
+  .student-course-card .card-actions .btn {
     width: 100%;
   }
 }
 
 @media (max-width: 480px) {
-  .dashboard-hero {
+  .student-hero {
     padding: var(--space-lg);
   }
 
-  .hero-text h1 {
+  .student-hero h1 {
     font-size: var(--font-size-2xl);
   }
 
-  .hero-text p {
+  .student-hero .muted {
     font-size: var(--font-size-base);
   }
 
-  .stat-card h3 {
+  .student-stat-card .value {
     font-size: var(--font-size-xl);
   }
 }

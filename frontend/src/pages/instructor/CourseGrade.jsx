@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import Navbar from '../../components/Navbar';
+import Navbar from '../../components/Sidebar';
 import instructorService from '../../api/instructorService';
 import courseService from '../../api/courseService';
 import '../../styles/student/student-common.css';
@@ -46,9 +46,16 @@ const CourseGrade = () => {
     setGrades((g) => ({ ...g, [enrollmentId]: num }));
   };
 
-  const handleSave = async (enrollmentId) => {
+  const handleSave = async (enrollmentId, progressPercentage) => {
     const score = grades[enrollmentId];
     if (score == null) return;
+    
+    if (progressPercentage < 100) {
+      setError('Cannot grade student. Student must complete 100% of the course before grading.');
+      setTimeout(() => setError(''), 4000);
+      return;
+    }
+    
     try {
       await instructorService.updateGrade(enrollmentId, score);
       setStudents((prev) => prev.map((e) => (e.enrollment_id === enrollmentId ? { ...e, evaluation_score: score } : e)));
@@ -56,7 +63,7 @@ const CourseGrade = () => {
       setTimeout(() => setMessage(null), 3000);
     } catch (err) {
       console.error('Error saving grade:', err);
-      setError('Could not save the grade. Please try again.');
+      setError(err.response?.data?.error || 'Could not save the grade. Please try again.');
       setTimeout(() => setError(''), 4000);
     }
   };
@@ -130,16 +137,18 @@ const CourseGrade = () => {
                 {filteredStudents.length === 0 ? (
                   <tr><td colSpan="6" style={{ textAlign: 'center', padding: '2rem' }} className="muted">No students found matching "{searchQuery}"</td></tr>
                 ) : (
-                  filteredStudents.map((s) => (
-                    <tr key={s.enrollment_id}>
+                  filteredStudents.map((s) => {
+                    const canGrade = Math.round(s.progress_percentage || 0) >= 100;
+                    return (
+                    <tr key={s.enrollment_id} style={{ opacity: canGrade ? 1 : 0.6 }}>
                       <td>{s.student_name}</td>
                       <td>{s.email}</td>
                       <td>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <div style={{ width: '60px', height: '6px', background: '#eee', borderRadius: '3px', overflow: 'hidden' }}>
-                            <div style={{ width: `${s.progress_percentage || 0}%`, height: '100%', background: '#28a745' }}></div>
+                            <div style={{ width: `${s.progress_percentage || 0}%`, height: '100%', background: canGrade ? '#28a745' : '#ffc107' }}></div>
                           </div>
-                          <span style={{ fontSize: '0.85em', color: '#666' }}>{Math.round(s.progress_percentage || 0)}%</span>
+                          <span style={{ fontSize: '0.85em', color: canGrade ? '#666' : '#ff9800', fontWeight: canGrade ? 'normal' : '600' }}>{Math.round(s.progress_percentage || 0)}%</span>
                         </div>
                       </td>
                       <td>
@@ -157,15 +166,28 @@ const CourseGrade = () => {
                           style={{ width: '100px' }}
                           value={grades[s.enrollment_id] ?? ''}
                           onChange={(e) => handleGradeChange(s.enrollment_id, e.target.value)}
+                          disabled={!canGrade}
+                          title={!canGrade ? 'Student must complete 100% of the course to be graded' : ''}
                         />
                       </td>
                       <td>
-                        <button type="button" className="btn primary small" onClick={() => handleSave(s.enrollment_id)}>
+                        <button 
+                          type="button" 
+                          className="btn primary small" 
+                          onClick={() => handleSave(s.enrollment_id, s.progress_percentage)}
+                          disabled={!canGrade}
+                          title={!canGrade ? 'Student must complete 100% of the course to be graded' : ''}
+                          style={{ opacity: canGrade ? 1 : 0.5, cursor: canGrade ? 'pointer' : 'not-allowed' }}
+                        >
                           Save
                         </button>
+                        {!canGrade && (
+                          <div style={{ fontSize: '0.75em', color: '#ff9800', marginTop: '4px' }}>Course is incomplete</div>
+                        )}
                       </td>
                     </tr>
-                  ))
+                    );
+                  })
                 )}
               </tbody>
             </table>

@@ -106,6 +106,80 @@ const deleteUser = async (userId) => {
     return result.rows[0];
 };
 
+// Delete student with proper cascading
+const deleteStudent = async (studentId) => {
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+
+        // 1. Delete all enrollments for this student
+        await client.query(
+            'DELETE FROM enrollment WHERE student_id = $1',
+            [studentId]
+        );
+
+        // 2. Delete all student progress records
+        await client.query(
+            'DELETE FROM student_progress WHERE student_id = $1',
+            [studentId]
+        );
+
+        // 3. Delete the student record
+        await client.query(
+            'DELETE FROM student WHERE student_id = $1',
+            [studentId]
+        );
+
+        // 4. Delete the user record (cascade will handle anything else)
+        const result = await client.query(
+            'DELETE FROM user_ WHERE user_id = $1 RETURNING *',
+            [studentId]
+        );
+
+        await client.query('COMMIT');
+        return result.rows[0];
+    } catch (e) {
+        await client.query('ROLLBACK');
+        throw e;
+    } finally {
+        client.release();
+    }
+};
+
+// Delete instructor with proper cascading
+const deleteInstructor = async (instructorId) => {
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+
+        // 1. Delete all course-instructor associations
+        await client.query(
+            'DELETE FROM course_instructor WHERE instructor_id = $1',
+            [instructorId]
+        );
+
+        // 2. Delete the instructor record
+        await client.query(
+            'DELETE FROM instructor WHERE instructor_id = $1',
+            [instructorId]
+        );
+
+        // 3. Delete the user record
+        const result = await client.query(
+            'DELETE FROM user_ WHERE user_id = $1 RETURNING *',
+            [instructorId]
+        );
+
+        await client.query('COMMIT');
+        return result.rows[0];
+    } catch (e) {
+        await client.query('ROLLBACK');
+        throw e;
+    } finally {
+        client.release();
+    }
+};
+
 
 const updateStudentProfile = async (userId, { date_of_birth, skill_level }) => {
     const client = await pool.connect();
@@ -254,6 +328,38 @@ const updateCourse = async (courseId, { name, description, duration, university_
     return result.rows[0];
 };
 
+const deleteCourse = async (courseId) => {
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+
+        // 1. Delete all enrollments for this course
+        await client.query(
+            'DELETE FROM enrollment WHERE course_id = $1',
+            [courseId]
+        );
+
+        // 2. Delete all course-instructor associations for this course
+        await client.query(
+            'DELETE FROM course_instructor WHERE course_id = $1',
+            [courseId]
+        );
+
+        // 3. Delete the course itself (cascading will handle modules, content, and progress)
+        const result = await client.query(
+            'DELETE FROM course WHERE course_id = $1 RETURNING *',
+            [courseId]
+        );
+
+        await client.query('COMMIT');
+        return result.rows[0];
+    } catch (e) {
+        await client.query('ROLLBACK');
+        throw e;
+    } finally {
+        client.release();
+    }
+};
 
 const searchCourses = async (query) => {
     const searchQuery = `%${query}%`;
@@ -301,6 +407,14 @@ const getEnrollmentsByCourse = async (courseId) => {
         ORDER BY e.enrollment_date DESC
     `, [courseId]);
     return result.rows;
+};
+
+const getEnrollmentById = async (enrollmentId) => {
+    const result = await pool.query(
+        'SELECT * FROM enrollment WHERE enrollment_id = $1',
+        [enrollmentId]
+    );
+    return result.rows[0];
 };
 
 
@@ -457,6 +571,22 @@ const deleteUniversity = async (universityId) => {
         [universityId]
     );
     return result.rows[0];
+};
+
+const getCoursesUsingUniversity = async (universityId) => {
+    const result = await pool.query(
+        'SELECT * FROM course WHERE university_id = $1',
+        [universityId]
+    );
+    return result.rows;
+};
+
+const getCoursesUsingTextbook = async (isbn) => {
+    const result = await pool.query(
+        'SELECT * FROM course WHERE textbook_isbn = $1',
+        [isbn]
+    );
+    return result.rows;
 };
 
 const updateUserPassword = async (userId, password_hash) => {
@@ -1123,6 +1253,27 @@ const getAnalyst = async () => {
     `);
     return result.rows[0];
 };
+
+const getAvailableAnalysts = async () => {
+    const result = await pool.query(`
+        SELECT u.user_id, u.name, u.email, u.country
+        FROM user_ u
+        WHERE u.role = 'Analyst'
+          AND NOT EXISTS (
+              SELECT 1 FROM analyst a WHERE a.analyst_id = u.user_id
+          )
+        ORDER BY u.name ASC
+    `);
+    return result.rows;
+};
+
+const assignAnalystToSystem = async (analystId) => {
+    const result = await pool.query(
+        'INSERT INTO analyst (analyst_id) VALUES ($1) RETURNING *',
+        [analystId]
+    );
+    return result.rows[0];
+};
 const getCourseReviewsDetailed = async (courseId) => {
     const result = await pool.query(
         `SELECT e.Review, e.rating, u.name as student_name, e.enrollment_date 
@@ -1132,6 +1283,52 @@ const getCourseReviewsDetailed = async (courseId) => {
          ORDER BY e.enrollment_date DESC`,
         [courseId]
     );
+    return result.rows;
+};
+
+// ==========================================
+// LANDING PAGE QUERIES (PUBLIC)
+// ==========================================
+
+// Get top rated courses
+const getTopCoursesByRating = async (limit = 3) => {
+    const result = await pool.query(`
+        SELECT 
+            c.course_id,
+            c.name as course_name,
+            c.description,
+            c.image_url,
+            u.name as university_name,
+            ROUND(AVG(e.rating)::NUMERIC, 1) as rating,
+            COUNT(e.enrollment_id) as total_enrollments
+        FROM course c
+        LEFT JOIN university u ON c.university_id = u.university_id
+        LEFT JOIN enrollment e ON c.course_id = e.course_id AND e.rating IS NOT NULL
+        GROUP BY c.course_id, c.name, c.description, c.image_url, u.name
+        ORDER BY rating DESC NULLS LAST, total_enrollments DESC
+        LIMIT $1
+    `, [limit]);
+    return result.rows;
+};
+
+// Get top universities by course count
+const getTopUniversitiesByCoursesCount = async (limit = 3) => {
+    const result = await pool.query(`
+        SELECT 
+            u.university_id,
+            u.name as university_name,
+            u.country,
+            COUNT(c.course_id) as course_count,
+            COUNT(DISTINCT e.student_id) as total_students,
+            ROUND(AVG(e.rating)::NUMERIC, 1) as avg_rating
+        FROM university u
+        LEFT JOIN course c ON u.university_id = c.university_id
+        LEFT JOIN enrollment e ON c.course_id = e.course_id AND e.rating IS NOT NULL
+        GROUP BY u.university_id, u.name, u.country
+        HAVING COUNT(c.course_id) > 0
+        ORDER BY course_count DESC, avg_rating DESC NULLS LAST
+        LIMIT $1
+    `, [limit]);
     return result.rows;
 };
 
@@ -1148,6 +1345,8 @@ module.exports = {
     getAllUsers,
     searchUsersByName,
     deleteUser,
+    deleteStudent,
+    deleteInstructor,
    
     // Student queries
     getStudentById,
@@ -1166,11 +1365,13 @@ module.exports = {
     getAllCourses,
     createCourse,
     updateCourse,
+    deleteCourse,
     searchCourses,
 
     // Enrollment queries
     getEnrollmentsByStudent,
     getEnrollmentsByCourse,
+    getEnrollmentById,
     enrollStudent,
     updateEnrollmentScore,
     checkEnrollment,
@@ -1193,6 +1394,7 @@ module.exports = {
     createUniversity,
     updateUniversity,
     deleteUniversity,
+    getCoursesUsingUniversity,
 
     // Textbook queries
     getAllTextbooks,
@@ -1201,6 +1403,7 @@ module.exports = {
     createTextbook,
     updateTextbook,
     deleteTextbook,
+    getCoursesUsingTextbook,
 
     // Module & Content queries
     getModulesByCourse,
@@ -1219,6 +1422,8 @@ module.exports = {
 
     // Analyst queries
     getAnalyst,
+    getAvailableAnalysts,
+    assignAnalystToSystem,
     getAnalystDashboardKPIs,
     getTotalRevenue,
     getRevenueByUniversity,
@@ -1240,4 +1445,8 @@ module.exports = {
     updateStudentProfile, // This is for students, we'll add a new one for general profile
     updateUserProfile,
     updateUserPassword,
+
+    // Landing page queries (public)
+    getTopCoursesByRating,
+    getTopUniversitiesByCoursesCount,
 };

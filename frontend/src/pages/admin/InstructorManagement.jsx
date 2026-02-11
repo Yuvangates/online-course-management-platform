@@ -54,12 +54,13 @@ const InstructorManagement = () => {
     }, [searchQuery, instructors]);
 
     const handleDeleteInstructor = async (instructorId, instructorName) => {
-        if (!window.confirm(`Are you sure you want to remove ${instructorName}?`)) {
+        if (!window.confirm(`Are you sure you want to remove ${instructorName}? This will remove them from all assigned courses.`)) {
             return;
         }
 
         try {
-            await adminService.deleteUser(instructorId);
+            setError('');
+            await adminService.deleteInstructor(instructorId);
             await fetchInstructors();
         } catch (err) {
             setError(err.response?.data?.error || 'Failed to remove instructor');
@@ -296,7 +297,7 @@ const InstructorManagement = () => {
                             <div className="card-actions">
                                 <button
                                     className="btn-danger"
-                                    onClick={() => handleDeleteInstructor(instructor.instructor_id, instructor.name)}
+                                    onClick={() => handleDeleteInstructor(instructor.user_id, instructor.name)}
                                 >
                                     Remove Account
                                 </button>

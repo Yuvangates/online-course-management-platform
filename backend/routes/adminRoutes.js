@@ -14,6 +14,7 @@ router.get('/dashboard', adminController.getDashboard);
 // Course management
 router.post('/courses', adminController.createCourse);
 router.put('/courses/:courseId', adminController.updateCourse);
+router.delete('/courses/:courseId', adminController.deleteCourse);
 router.get('/courses', adminController.getAllCourses);
 router.get('/courses/:courseId', adminController.getCourseDetails);
 
@@ -33,6 +34,8 @@ router.delete('/enrollments/:enrollmentId', adminController.removeStudentFromCou
 
 // Analyst management
 router.post('/analyst', adminController.createAnalyst);
+router.get('/analysts/available', adminController.getAvailableAnalysts);
+router.post('/analyst/assign', adminController.assignExistingAnalyst);
 router.get('/analyst', adminController.getAnalyst);
 
 // Universities
@@ -51,5 +54,11 @@ router.delete('/textbooks/:isbn', adminController.deleteTextbook);
 router.get('/users', adminController.getAllUsers);
 router.get('/users/search', adminController.searchUsers);
 router.delete('/users/:userId', adminController.deleteUser);
+
+// Student deletion (removes enrollments)
+router.delete('/students/:studentId', adminController.deleteStudent);
+
+// Instructor deletion (removes course assignments)
+router.delete('/instructors/:instructorId', adminController.deleteInstructor);
 
 module.exports = router;

@@ -91,6 +91,28 @@ const updateCourse = async (req, res) => {
     }
 };
 
+// Delete a course
+const deleteCourse = async (req, res) => {
+    try {
+        const { courseId } = req.params;
+
+        const course = await queries.getCourseById(courseId);
+        if (!course) {
+            return res.status(404).json({ error: 'Course not found' });
+        }
+
+        const deletedCourse = await queries.deleteCourse(courseId);
+
+        res.status(200).json({ 
+            message: 'Course and associated data deleted successfully',
+            course: deletedCourse
+        });
+    } catch (error) {
+        console.error('Delete course error:', error);
+        res.status(500).json({ error: error.message });
+    }
+};
+
 // Get all courses
 const getAllCourses = async (req, res) => {
     try {
@@ -370,6 +392,58 @@ const createAnalyst = async (req, res) => {
     }
 };
 
+// Get available analysts (existing users not assigned yet)
+const getAvailableAnalysts = async (req, res) => {
+    try {
+        const analysts = await queries.getAvailableAnalysts();
+        res.status(200).json(analysts);
+    } catch (error) {
+        console.error('Get available analysts error:', error);
+        res.status(500).json({ error: error.message });
+    }
+};
+
+// Assign an existing analyst to the system
+const assignExistingAnalyst = async (req, res) => {
+    try {
+        const { analyst_id } = req.body;
+
+        if (!analyst_id) {
+            return res.status(400).json({ error: 'Analyst ID is required' });
+        }
+
+        const existingAnalyst = await queries.getAnalyst();
+        if (existingAnalyst) {
+            return res.status(400).json({ error: 'An analyst already exists in the system' });
+        }
+
+        const user = await queries.getUserById(analyst_id);
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        if (user.role !== 'Analyst') {
+            return res.status(400).json({ error: 'User is not an analyst' });
+        }
+
+        const assignment = await queries.assignAnalystToSystem(analyst_id);
+        if (!assignment) {
+            return res.status(409).json({ error: 'Analyst already assigned' });
+        }
+
+        res.status(201).json({
+            user_id: user.user_id,
+            email: user.email,
+            name: user.name,
+            role: user.role,
+            country: user.country,
+        });
+    } catch (error) {
+        console.error('Assign analyst error:', error);
+        res.status(500).json({ error: error.message });
+    }
+};
+
 // Get analyst
 const getAnalyst = async (req, res) => {
     try {
@@ -459,6 +533,14 @@ const deleteUniversity = async (req, res) => {
             return res.status(404).json({ error: 'University not found' });
         }
 
+        // Check if university is used in any courses
+        const coursesUsingUniversity = await queries.getCoursesUsingUniversity(universityId);
+        if (coursesUsingUniversity.length > 0) {
+            return res.status(400).json({ 
+                error: 'Courses has been offered by the university cannot be removed' 
+            });
+        }
+
         await queries.deleteUniversity(universityId);
         res.status(200).json({ message: 'University deleted successfully' });
     } catch (error) {
@@ -535,6 +617,14 @@ const deleteTextbook = async (req, res) => {
             return res.status(404).json({ error: 'Textbook not found' });
         }
 
+        // Check if textbook is used in any courses
+        const coursesUsingTextbook = await queries.getCoursesUsingTextbook(isbn);
+        if (coursesUsingTextbook.length > 0) {
+            return res.status(400).json({ 
+                error: 'Used by Courses cannot be removed' 
+            });
+        }
+
         await queries.deleteTextbook(isbn);
         res.status(200).json({ message: 'Textbook deleted successfully' });
     } catch (error) {
@@ -604,10 +694,81 @@ const deleteUser = async (req, res) => {
     }
 };
 
+// Delete a student (removes enrollments and progress records)
+const deleteStudent = async (req, res) => {
+    try {
+        const { studentId } = req.params;
+
+        if (!studentId) {
+            return res.status(400).json({ error: 'Student ID is required' });
+        }
+
+        // Prevent deleting yourself if you're an admin
+        if (parseInt(studentId) === req.user.user_id) {
+            return res.status(400).json({ error: 'Cannot delete your own account' });
+        }
+
+        const user = await queries.getUserById(parseInt(studentId));
+        if (!user) {
+            return res.status(404).json({ error: 'Student not found' });
+        }
+
+        if (user.role !== 'Student') {
+            return res.status(400).json({ error: 'User is not a student' });
+        }
+
+        const deletedUser = await queries.deleteStudent(parseInt(studentId));
+
+        res.status(200).json({ 
+            message: 'Student and associated enrollments deleted successfully',
+            user: deletedUser
+        });
+    } catch (error) {
+        console.error('Delete student error:', error);
+        res.status(500).json({ error: error.message });
+    }
+};
+
+// Delete an instructor (removes from courses)
+const deleteInstructor = async (req, res) => {
+    try {
+        const { instructorId } = req.params;
+
+        if (!instructorId) {
+            return res.status(400).json({ error: 'Instructor ID is required' });
+        }
+
+        // Prevent deleting yourself if you're an admin
+        if (parseInt(instructorId) === req.user.user_id) {
+            return res.status(400).json({ error: 'Cannot delete your own account' });
+        }
+
+        const user = await queries.getUserById(parseInt(instructorId));
+        if (!user) {
+            return res.status(404).json({ error: 'Instructor not found' });
+        }
+
+        if (user.role !== 'Instructor') {
+            return res.status(400).json({ error: 'User is not an instructor' });
+        }
+
+        const deletedUser = await queries.deleteInstructor(parseInt(instructorId));
+
+        res.status(200).json({ 
+            message: 'Instructor and course associations removed successfully',
+            user: deletedUser
+        });
+    } catch (error) {
+        console.error('Delete instructor error:', error);
+        res.status(500).json({ error: error.message });
+    }
+};
+
 module.exports = {
     getDashboard,
     createCourse,
     updateCourse,
+    deleteCourse,
     getAllCourses,
     getCourseDetails,
     createInstructor,
@@ -619,6 +780,8 @@ module.exports = {
     searchStudents,
     removeStudentFromCourse,
     createAnalyst,
+    getAvailableAnalysts,
+    assignExistingAnalyst,
     getAnalyst,
     getAllUniversities,
     createUniversity,
@@ -631,4 +794,6 @@ module.exports = {
     getAllUsers,
     searchUsers,
     deleteUser,
+    deleteStudent,
+    deleteInstructor,
 };

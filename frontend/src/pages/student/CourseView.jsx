@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import Navbar from '../../components/Navbar';
+import Navbar from '../../components/Sidebar';
 import courseService from '../../api/courseService';
 import '../../styles/student/course-view.css';
 
@@ -29,6 +29,13 @@ export const CourseView = () => {
     const [hasExistingReview, setHasExistingReview] = useState(false);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
 
+    const isEnrolled = enrolledIds.includes(courseId);
+    const isProgressComplete = studentProgress >= 100;
+    const textbook = course?.textbook || course?.textbook_title || course?.textbook_name || course?.TextBook || '';
+    const textbookAuthor = course?.textbook_author || course?.textbookAuthor || '';
+    const textbookIsbn = course?.textbook_isbn || course?.textbookIsbn || '';
+    const studentCount = course?.student_count || course?.studentCount || course?.enrolled_count || course?.enrollment_count || 0;
+
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -41,7 +48,7 @@ export const CourseView = () => {
                 setCourse(detailsRes.course);
                 setModules(detailsRes.modules || []);
                 setInstructors(detailsRes.instructors || []);
-                const enrolledIds = (enrolledRes.enrollments || []).map(e => e.course_id);
+                const enrolledIds = (enrolledRes.enrollments || []).map(e => Number(e.course_id));
                 setEnrolledIds(enrolledIds);
 
                 // Fetch universities and rating
@@ -57,9 +64,14 @@ export const CourseView = () => {
                 setReviews(reviewsList);
 
                 // Check if current student has already reviewed by checking their enrollment record
-                const studentEnrollment = enrolledRes.enrollments?.find(e => e.course_id === courseId);
+                const studentEnrollment = enrolledRes.enrollments?.find(e => Number(e.course_id) === courseId);
                 const hasReview = studentEnrollment?.Review ? true : false;
                 setHasExistingReview(hasReview);
+                if (hasReview) {
+                    setReviewText(studentEnrollment.Review || '');
+                    const existingRating = Number(studentEnrollment.rating ?? studentEnrollment.Rating ?? 0);
+                    setReviewRating(existingRating > 0 ? existingRating : 5);
+                }
 
                 // If enrolled, fetch progress and module details
                 if (enrolledIds.includes(courseId)) {
@@ -86,9 +98,6 @@ export const CourseView = () => {
         fetchData();
     }, [courseId]);
 
-    const isEnrolled = course && enrolledIds.includes(course.course_id);
-    const isProgressComplete = studentProgress >= 100;
-
     const handleEnroll = async () => {
         if (!course) return;
         setShowPaymentModal(true);
@@ -98,7 +107,7 @@ export const CourseView = () => {
         try {
             setEnrolling(true);
             await courseService.enrollCourse(course.course_id);
-            setEnrolledIds([...enrolledIds, course.course_id]);
+            setEnrolledIds([...enrolledIds, Number(course.course_id)]);
             setShowPaymentModal(false);
             // Reset progress after enrollment
             setStudentProgress(0);
@@ -126,13 +135,20 @@ export const CourseView = () => {
                     [moduleNumber]: true
                 }));
                 const contentRes = await courseService.getModuleContent(courseId, moduleNumber);
-                const content = contentRes.content || (Array.isArray(contentRes) ? contentRes : []);
+                console.debug('Module content API response for', courseId, moduleNumber, contentRes);
+                const content = (contentRes && contentRes.content) || (Array.isArray(contentRes) ? contentRes : []);
                 setModuleContents(prev => ({
                     ...prev,
                     [moduleNumber]: content
                 }));
             } catch (err) {
                 console.error('Error loading module content:', err);
+                if (err.response) {
+                    console.error('Response data:', err.response.data);
+                    setError(err.response.data?.error || 'Failed to load module content');
+                } else {
+                    setError(err.message || 'Failed to load module content');
+                }
                 setModuleContents(prev => ({
                     ...prev,
                     [moduleNumber]: []
@@ -147,30 +163,19 @@ export const CourseView = () => {
     };
 
     const handleMarkComplete = async (moduleNumber, contentId) => {
+        if (isContentCompleted(moduleNumber, contentId)) return;
         try {
             await courseService.markContentComplete(courseId, moduleNumber, contentId);
-            // Update completed content list
-            const completed = [...completedContent, { course_id: courseId, module_number: moduleNumber, content_id: contentId }];
-            setCompletedContent(completed);
-
-            // Recalculate progress - get total content ONLY for enrolled courses
-            let totalContent = 0;
-            modules.forEach(mod => {
-                const contents = moduleContents[mod.module_number];
-                if (contents && Array.isArray(contents)) {
-                    totalContent += contents.length;
-                }
-            });
-
-            // Calculate progress as (completed / total) * 100, capped at 100%
-            const newProgress = totalContent > 0 ? Math.min((completed.length / totalContent) * 100, 100) : 0;
-            setStudentProgress(newProgress);
+            const progressRes = await courseService.getStudentProgress(courseId);
+            setStudentProgress(progressRes.progress || 0);
+            setCompletedContent(progressRes.completedContent || []);
         } catch (err) {
             console.error('Error marking content complete:', err);
         }
     };
 
     const isContentCompleted = (moduleNumber, contentId) => {
+        if (!completedContent || !Array.isArray(completedContent)) return false;
         return completedContent.some(c => c.module_number === moduleNumber && c.content_id === contentId);
     };
 
@@ -203,77 +208,56 @@ export const CourseView = () => {
         <>
             <Navbar role="Student" />
             <div className="student-container">
-                {/* COURSE HEADER WITH IMAGE */}
-                <div className="course-header-wrapper">
-                    {course.image_url && (
-                        <div className="course-image-container">
-                            <img
-                                src={course.image_url}
-                                alt={course.name}
-                                className="course-image"
-                                onError={(e) => {
-                                    e.target.src = 'https://via.placeholder.com/800x400?text=Course+Image';
-                                }}
-                            />
-                        </div>
-                    )}
-                    <div className="course-header">
+                {/* COURSE TITLE CARD */}
+                <div className="course-title-card">
+                    <div
+                        className="course-header"
+                        style={course.image_url ? { backgroundImage: `url(${course.image_url})` } : {}}
+                    >
                         <div className="course-header-content">
+                            {universities.length > 0 && (
+                                <div className="university-name">
+                                    <span>🏛️</span> {universities[0].name}
+                                </div>
+                            )}
                             <h1>{course.name}</h1>
+                            <div className="course-meta-row">
+                                <span className="course-meta-item">⏱ {course.duration} weeks</span>
+                                {modules.length > 0 && (
+                                    <span className="course-meta-item">📚 {modules.length} modules</span>
+                                )}
+                                {ratingData && ratingData.average_rating && (
+                                    <span className="course-meta-item">
+                                        ⭐ {parseFloat(ratingData.average_rating).toFixed(1)} ({ratingData.total_ratings})
+                                    </span>
+                                )}
+                            </div>
                             {instructors.length > 0 && (
-                                <p className="course-instructor" style={{ color: 'rgba(255, 255, 255, 0.9)' }}>
+                                <p className="course-instructor">
                                     Instructor(s): {instructors.map(i => i.name).join(', ')}
                                 </p>
                             )}
-                        </div>
-                    </div>
-                </div>
-
-                {/* COURSE INFO GRID */}
-                <div className="course-info-grid">
-                    <div className="info-card">
-                        <span className="info-label">Duration</span>
-                        <span className="info-value">{course.duration} weeks</span>
-                    </div>
-                    <div className="info-card">
-                        <span className="info-label">Fee</span>
-                        <span className="info-value">${course.Fees || course.fees || 'Free'}</span>
-                    </div>
-                    {universities.length > 0 && (
-                        <div className="info-card">
-                            <span className="info-label">University</span>
-                            <span className="info-value">{universities[0].name}</span>
-                        </div>
-                    )}
-                    {ratingData && ratingData.average_rating && !isEnrolled && (
-                        <div className="info-card">
-                            <span className="info-label">Rating</span>
-                            <span className="info-value">⭐ {parseFloat(ratingData.average_rating).toFixed(1)}/5</span>
-                            <span className="info-subtext">({ratingData.total_ratings} ratings)</span>
-                        </div>
-                    )}
-                </div>
-
-                {/* COURSE DESCRIPTION */}
-                <div className="course-description">
-                    <h3>About This Course</h3>
-                    <p>{course.description}</p>
-                </div>
-
-                {/* UNIVERSITIES OFFERING THIS COURSE - ONLY IF NOT ENROLLED */}
-                {!isEnrolled && universities.length > 0 && (
-                    <div className="universities-section">
-                        <h3>Universities Offering This Course</h3>
-                        <div className="universities-list">
-                            {universities.map((uni) => (
-                                <div key={uni.university_id} className="university-badge">
-                                    <span className="uni-name">{uni.name}</span>
-                                    <span className="uni-country">{uni.country}</span>
+                            {isEnrolled && textbook && (
+                                <div className="course-textbook">
+                                    <strong>Textbook:</strong> {textbook}
+                                    {textbookAuthor ? ` by ${textbookAuthor}` : ''}
+                                    {textbookIsbn ? ` (ISBN: ${textbookIsbn})` : ''}
                                 </div>
-                            ))}
+                            )}
                         </div>
+                        {!isEnrolled && (
+                            <div className="course-header-fee">
+                                <span className="fee-label">Course fee</span>
+                                <span className="fee-value">₹{course.Fees || course.fees || 'Free'}</span>
+                                <span className="fee-subtext">One-time enrollment</span>
+                            </div>
+                        )}
                     </div>
-                )}
+                    <div className="course-about-card">
+                        <h3>About This Course</h3>
+                        <p>{course.description}</p>
+                    </div>
+                </div>
 
                 {/* COURSE ACTIONS */}
                 {!isEnrolled && (
@@ -351,15 +335,25 @@ export const CourseView = () => {
                 {isEnrolled && (
                     <div className="progress-section">
                         <h3>Your Progress</h3>
-                        <div className="progress-bar-container">
-                            <div className="progress-bar">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%' }}>
+                            <div style={{ flex: 1, height: '6px', background: '#eee', borderRadius: '3px', overflow: 'hidden' }}>
                                 <div
-                                    className="progress-fill"
-                                    style={{ width: `${Math.min(studentProgress, 100)}%` }}
-                                >
-                                    <span className="progress-text">{Math.round(studentProgress)}%</span>
-                                </div>
+                                    style={{
+                                        width: `${Math.min(studentProgress, 100)}%`,
+                                        height: '100%',
+                                        background: isProgressComplete ? '#28a745' : '#ffc107'
+                                    }}
+                                ></div>
                             </div>
+                            <span
+                                style={{
+                                    fontSize: '0.85em',
+                                    color: isProgressComplete ? '#666' : '#ff9800',
+                                    fontWeight: isProgressComplete ? 'normal' : '600'
+                                }}
+                            >
+                                {Math.round(studentProgress)}%
+                            </span>
                         </div>
                     </div>
                 )}
@@ -398,9 +392,9 @@ export const CourseView = () => {
                                         </div>
                                     </div>
 
-                                    {/* MODULE CONTENT - EXPANDABLE */}
-                                    {expandedModules[module.module_number] && (
-                                        <div className="module-content">
+                                    {/* MODULE CONTENT - EXPANDABLE - FIXED className */}
+                                    <div className={`module-content ${expandedModules[module.module_number] ? 'expanded' : ''}`}>
+                                        <div className="module-content-inner">
                                             {!isEnrolled ? (
                                                 <div className="enrollment-required">
                                                     <p>🔒 Enroll to access the course content</p>
@@ -411,52 +405,44 @@ export const CourseView = () => {
                                                     <p>Loading content...</p>
                                                 </div>
                                             ) : moduleContents[module.module_number] && moduleContents[module.module_number].length > 0 ? (
-                                                <div className="content-table-wrapper">
-                                                    <table className="content-table">
+                                                <div className="table-responsive">
+                                                    <table className="student-module-table">
                                                         <thead>
                                                             <tr>
                                                                 <th>Name</th>
                                                                 <th>Type</th>
-                                                                <th>Duration</th>
-                                                                <th>Link</th>
-                                                                <th className="completed-col">Completed</th>
+                                                                <th>URL</th>
+                                                                <th>Mark Complete</th>
                                                             </tr>
                                                         </thead>
                                                         <tbody>
-                                                            {moduleContents[module.module_number].map((content, idx) => {
-                                                                const isCompleted = isContentCompleted(module.module_number, content.content_id);
-                                                                return (
-                                                                    <tr key={idx} className={isCompleted ? 'completed-row' : ''}>
-                                                                        <td className="content-name">{content.title}</td>
-                                                                        <td className="content-type">
-                                                                            <span className="type-badge" style={{ textTransform: 'capitalize' }}>
-                                                                                {content.content_type || content.type}
-                                                                            </span>
-                                                                        </td>
-                                                                        <td className="content-duration">
-                                                                            {moduleDetails[module.module_number]?.duration_weeks ?
-                                                                                `${moduleDetails[module.module_number].duration_weeks} weeks` :
-                                                                                '-'
-                                                                            }
-                                                                        </td>
-                                                                        <td className="content-link">
-                                                                            {content.url && (
-                                                                                <a href={content.url} target="_blank" rel="noopener noreferrer" className="btn outline btn-small">
-                                                                                    Open
-                                                                                </a>
-                                                                            )}
-                                                                        </td>
-                                                                        <td className="completed-col">
-                                                                            <input
-                                                                                type="checkbox"
-                                                                                checked={isCompleted}
-                                                                                onChange={() => handleMarkComplete(module.module_number, content.content_id)}
-                                                                                className="completion-checkbox"
-                                                                            />
-                                                                        </td>
-                                                                    </tr>
-                                                                );
-                                                            })}
+                                                    {(moduleContents[module.module_number] || []).map((content) => {
+                                                        const isCompleted = isContentCompleted(module.module_number, content.content_id);
+                                                        return (
+                                                            <tr key={content.content_id} className={isCompleted ? 'completed-row' : ''}>
+                                                                <td><strong>{content.title}</strong></td>
+                                                                <td><span className="badge">{content.content_type || content.type}</span></td>
+                                                                <td>
+                                                                    {content.url ? (
+                                                                        <a href={content.url} target="_blank" rel="noopener noreferrer" className="btn outline small">
+                                                                            Open
+                                                                        </a>
+                                                                    ) : <span className="muted">-</span>}
+                                                                </td>
+                                                                <td>
+                                                                    <div className="checkbox-wrapper">
+                                                                        <input
+                                                                            type="checkbox"
+                                                                            checked={isCompleted}
+                                                                            onChange={() => handleMarkComplete(module.module_number, content.content_id)}
+                                                                            className="completion-checkbox"
+                                                                            title="Mark as complete"
+                                                                        />
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        );
+                                                    })}
                                                         </tbody>
                                                     </table>
                                                 </div>
@@ -466,7 +452,7 @@ export const CourseView = () => {
                                                 </div>
                                             )}
                                         </div>
-                                    )}
+                                    </div>
 
                                 </div>
                             ))}
@@ -484,6 +470,20 @@ export const CourseView = () => {
                     <div className="reviews-section">
                         <h3>Course Reviews</h3>
 
+                        {ratingData && ratingData.average_rating && (
+                            <div className="rating-summary">
+                                <div className="rating-score">
+                                    {parseFloat(ratingData.average_rating).toFixed(1)}
+                                </div>
+                                <div className="rating-details">
+                                    <div className="rating-stars">
+                                        {'★'.repeat(Math.round(parseFloat(ratingData.average_rating)))}
+                                    </div>
+                                    <div className="rating-count">{ratingData.total_ratings} ratings</div>
+                                </div>
+                            </div>
+                        )}
+
                         {/* REVIEW FORM - ONLY IF PROGRESS IS 100% AND NO EXISTING REVIEW */}
                         {isProgressComplete && !hasExistingReview && !showReviewForm && (
                             <div className="write-review-prompt">
@@ -494,15 +494,18 @@ export const CourseView = () => {
                             </div>
                         )}
 
-                        {hasExistingReview && isProgressComplete && (
+                        {hasExistingReview && isProgressComplete && !showReviewForm && (
                             <div className="review-submitted-message">
-                                <p>✓ Thank you for your review! Your feedback has been submitted.</p>
+                                <p>✓ Thank you for your review! You can update it anytime.</p>
+                                <button className="btn outline" onClick={() => setShowReviewForm(true)}>
+                                    Edit Review
+                                </button>
                             </div>
                         )}
 
                         {showReviewForm && (
                             <div className="review-form">
-                                <h4>Share Your Review</h4>
+                                <h4>{hasExistingReview ? 'Update Your Review' : 'Share Your Review'}</h4>
                                 <div className="form-group">
                                     <label>Rating</label>
                                     <select
@@ -533,7 +536,6 @@ export const CourseView = () => {
                                             await courseService.submitReview(courseId, { review: reviewText, rating: reviewRating });
                                             setHasExistingReview(true);
                                             setShowReviewForm(false);
-                                            setReviewText('');
                                             // Refresh reviews
                                             const reviewsRes = await courseService.getCourseReviews(courseId);
                                             setReviews(reviewsRes.reviews || []);
@@ -541,7 +543,7 @@ export const CourseView = () => {
                                             console.error('Error submitting review:', err);
                                             setError('Failed to submit review');
                                         }
-                                    }}>Submit Review</button>
+                                    }}>{hasExistingReview ? 'Update Review' : 'Submit Review'}</button>
                                     <button className="btn outline" onClick={() => setShowReviewForm(false)}>Cancel</button>
                                 </div>
                             </div>
@@ -551,21 +553,32 @@ export const CourseView = () => {
                         {reviews.length > 0 && (
                             <div className="reviews-list">
                                 <h4>Student Reviews ({reviews.length})</h4>
-                                {reviews.map((review, idx) => (
-                                    <div key={idx} className="review-card">
-                                        <div className="review-header">
-                                            <span className="reviewer-name">{review.student_name}</span>
-                                            <span className="review-rating">{'⭐'.repeat(review.rating)}</span>
+                                {reviews.map((review, idx) => {
+                                    const ratingValue = Number(review.rating || 0);
+                                    const ratingPercent = Math.min(Math.max((ratingValue / 5) * 100, 0), 100);
+                                    const reviewerName = review.student_name || 'Student';
+                                    const reviewerInitial = reviewerName.trim().charAt(0).toUpperCase();
+                                    const reviewTextValue = review.review || review.Review || '';
+
+                                    return (
+                                        <div key={idx} className="review-card">
+                                            <div className="review-avatar">{reviewerInitial}</div>
+                                            <div className="review-body">
+                                                <div className="review-header">
+                                                    <span className="reviewer-name">{reviewerName}</span>
+                                                    <div className="review-stars" aria-label={`Rating: ${ratingValue} out of 5`}>
+                                                        <span className="review-stars-fill" style={{ width: `${ratingPercent}%` }}></span>
+                                                    </div>
+                                                </div>
+                                                <p className="review-text">{reviewTextValue || 'No review text provided.'}</p>
+                                            </div>
                                         </div>
-                                        <p className="review-text">{review.Review}</p>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         )}
                     </div>
                 )}
-
-
 
                 {error && (
                     <div className="alert error">
@@ -576,5 +589,3 @@ export const CourseView = () => {
         </>
     );
 };
-
-// export default CourseView;

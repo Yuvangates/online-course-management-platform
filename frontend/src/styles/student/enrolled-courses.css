@@ -34,21 +34,21 @@
 
 .enrolled-courses-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: var(--space-2xl);
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  gap: var(--space-xl);
   margin-bottom: var(--space-3xl);
 }
 
 .enrolled-course-card {
   background: white;
   border-radius: var(--radius-lg);
-  padding: var(--space-2xl);
-  border: 2px solid var(--border-color);
+  padding: var(--space-xl);
+  border: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
   gap: var(--space-lg);
   box-shadow: var(--shadow-sm);
-  transition: all var(--transition-base);
+  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
   position: relative;
   overflow: hidden;
 }
@@ -59,12 +59,12 @@
   top: 0;
   left: 0;
   right: 0;
-  height: 5px;
+  height: 4px;
   background: linear-gradient(90deg, var(--primary-color), var(--primary-dark));
 }
 
 .enrolled-course-card:hover {
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-md);
   transform: translateY(-4px);
   border-color: var(--primary-color);
 }

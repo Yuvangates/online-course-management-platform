@@ -1,17 +1,40 @@
-# React + Vite
+# Frontend - Online Course Management Platform
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React application built with Vite for the student, instructor, admin, and analyst dashboards.
 
-Currently, two official plugins are available:
+## Prerequisites
+- Node.js 18+ and npm.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Setup
+```bash
+npm install
+```
 
-## React Compiler
+Create a `.env` file in [frontend/.env](frontend/.env):
+```dotenv
+VITE_API_URL=http://localhost:5000/api
+```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Run
+```bash
+npm run dev
+```
 
-## Expanding the ESLint configuration
+The app runs on `http://localhost:5173` by default.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
-       
+## Build and Preview
+```bash
+npm run build
+npm run preview
+```
+
+## Available Scripts
+- `npm run dev` starts the Vite dev server.
+- `npm run build` builds the production bundle.
+- `npm run preview` serves the build locally.
+- `npm run lint` runs ESLint.
+
+## Structure
+- [src/pages](src/pages): role-based pages and dashboards.
+- [src/api](src/api): API services for backend endpoints.
+- [src/styles](src/styles): global and role-specific styles.

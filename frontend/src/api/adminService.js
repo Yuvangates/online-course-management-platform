@@ -47,6 +47,13 @@ const adminService = {
         return response.data;
     },
 
+    deleteCourse: async (courseId) => {
+        const response = await axios.delete(`${API_URL}/courses/${courseId}`, {
+            headers: getAuthHeader()
+        });
+        return response.data;
+    },
+
     // ==========================================
     // INSTRUCTOR MANAGEMENT
     // ==========================================
@@ -138,6 +145,20 @@ const adminService = {
         return response.data;
     },
 
+    getAvailableAnalysts: async () => {
+        const response = await axios.get(`${API_URL}/analysts/available`, {
+            headers: getAuthHeader()
+        });
+        return response.data;
+    },
+
+    assignExistingAnalyst: async (payload) => {
+        const response = await axios.post(`${API_URL}/analyst/assign`, payload, {
+            headers: getAuthHeader()
+        });
+        return response.data;
+    },
+
     // ==========================================
     // UNIVERSITIES
     // ==========================================
@@ -170,6 +191,20 @@ const adminService = {
 
     deleteUser: async (userId) => {
         const response = await axios.delete(`${API_URL}/users/${userId}`, {
+            headers: getAuthHeader()
+        });
+        return response.data;
+    },
+
+    deleteStudent: async (studentId) => {
+        const response = await axios.delete(`${API_URL}/students/${studentId}`, {
+            headers: getAuthHeader()
+        });
+        return response.data;
+    },
+
+    deleteInstructor: async (instructorId) => {
+        const response = await axios.delete(`${API_URL}/instructors/${instructorId}`, {
             headers: getAuthHeader()
         });
         return response.data;

@@ -114,6 +114,21 @@ const CourseManagement = () => {
         setActiveTab('course-detail');
     };
 
+    const handleDeleteCourse = async (courseId, courseName) => {
+        if (!window.confirm(`Are you sure you want to delete the course "${courseName}"? This will also delete all enrollments and course-instructor associations.`)) {
+            return;
+        }
+
+        try {
+            setError('');
+            await adminService.deleteCourse(courseId);
+            await fetchCourses();
+        } catch (err) {
+            console.error(err);
+            setError(err.response?.data?.error || 'Failed to delete course');
+        }
+    };
+
     const handleBackToCourses = () => {
         setSelectedCourse(null);
         setActiveTab('courses');
@@ -262,12 +277,21 @@ const CourseManagement = () => {
                                             <td>{getUniversityName(course.university_id)}</td>
                                             <td>{course.duration} weeks</td>
                                             <td>
-                                                <button
-                                                    className="btn-link"
-                                                    onClick={() => viewCourseDetails(course)}
-                                                >
-                                                    Manage
-                                                </button>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                    <button
+                                                        className="btn-link"
+                                                        onClick={() => viewCourseDetails(course)}
+                                                    >
+                                                        Manage
+                                                    </button>
+                                                    <button
+                                                        className="btn-danger"
+                                                        onClick={() => handleDeleteCourse(course.course_id, course.name)}
+                                                        style={{ marginLeft: 'auto', marginRight: '10px' }}
+                                                    >
+                                                        Delete
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                     ))}

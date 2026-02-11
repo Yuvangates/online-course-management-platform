@@ -97,6 +97,7 @@ const UniversityManagement = () => {
         }
 
         try {
+            setError('');
             await adminService.deleteUniversity(universityId);
             await fetchUniversities();
         } catch (err) {
