@@ -1164,6 +1164,52 @@ const getCourseReviewsDetailed = async (courseId) => {
     return result.rows;
 };
 
+// ==========================================
+// LANDING PAGE QUERIES (PUBLIC)
+// ==========================================
+
+// Get top rated courses
+const getTopCoursesByRating = async (limit = 3) => {
+    const result = await pool.query(`
+        SELECT 
+            c.course_id,
+            c.name as course_name,
+            c.description,
+            c.image_url,
+            u.name as university_name,
+            ROUND(AVG(e.rating)::NUMERIC, 1) as rating,
+            COUNT(e.enrollment_id) as total_enrollments
+        FROM course c
+        LEFT JOIN university u ON c.university_id = u.university_id
+        LEFT JOIN enrollment e ON c.course_id = e.course_id AND e.rating IS NOT NULL
+        GROUP BY c.course_id, c.name, c.description, c.image_url, u.name
+        ORDER BY rating DESC NULLS LAST, total_enrollments DESC
+        LIMIT $1
+    `, [limit]);
+    return result.rows;
+};
+
+// Get top universities by course count
+const getTopUniversitiesByCoursesCount = async (limit = 3) => {
+    const result = await pool.query(`
+        SELECT 
+            u.university_id,
+            u.name as university_name,
+            u.country,
+            COUNT(c.course_id) as course_count,
+            COUNT(DISTINCT e.student_id) as total_students,
+            ROUND(AVG(e.rating)::NUMERIC, 1) as avg_rating
+        FROM university u
+        LEFT JOIN course c ON u.university_id = c.university_id
+        LEFT JOIN enrollment e ON c.course_id = e.course_id AND e.rating IS NOT NULL
+        GROUP BY u.university_id, u.name, u.country
+        HAVING COUNT(c.course_id) > 0
+        ORDER BY course_count DESC, avg_rating DESC NULLS LAST
+        LIMIT $1
+    `, [limit]);
+    return result.rows;
+};
+
 
 module.exports = {
     // User queries
@@ -1272,4 +1318,8 @@ module.exports = {
     updateStudentProfile, // This is for students, we'll add a new one for general profile
     updateUserProfile,
     updateUserPassword,
+
+    // Landing page queries (public)
+    getTopCoursesByRating,
+    getTopUniversitiesByCoursesCount,
 };
