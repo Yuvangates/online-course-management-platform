@@ -79,7 +79,9 @@ const StudentDashboard = () => {
 
     const coursesEnrolled = enrolledCourses.length;
     const courseLookup = new Map(allCourses.map(course => [Number(course.course_id), course]));
+    const enrolledCourseIds = new Set(enrolledCourses.map(e => Number(e.course_id)));
     const popularCourses = [...allCourses]
+        .filter(course => !enrolledCourseIds.has(Number(course.course_id)))
         .filter(course => course.average_rating)
         .sort((a, b) => Number(b.average_rating) - Number(a.average_rating))
         .slice(0, 6);
