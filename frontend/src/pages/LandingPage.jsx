@@ -31,9 +31,9 @@ const LandingPage = () => {
       } else {
         // Fallback placeholder data
         setTopCourses([
-          { course_id: 1, course_name: 'Advanced Web Development', rating: 4.9, university_name: 'Tech University' },
-          { course_id: 2, course_name: 'Data Science Fundamentals', rating: 4.8, university_name: 'Data Institute' },
-          { course_id: 3, course_name: 'Cloud Computing AWS', rating: 4.7, university_name: 'Cloud Academy' }
+          { course_id: 1, course_name: 'Advanced Web Development', rating: 4.9, university_name: 'Tech University', image_url: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=500&h=300&fit=crop' },
+          { course_id: 2, course_name: 'Data Science Fundamentals', rating: 4.8, university_name: 'Data Institute', image_url: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=500&h=300&fit=crop' },
+          { course_id: 3, course_name: 'Cloud Computing AWS', rating: 4.7, university_name: 'Cloud Academy', image_url: 'https://images.unsplash.com/photo-1516534775068-bb57e39c2d0b?w=500&h=300&fit=crop' }
         ]);
       }
 
@@ -51,9 +51,9 @@ const LandingPage = () => {
       console.error('Error fetching data:', error);
       // Use fallback placeholder data
       setTopCourses([
-        { course_id: 1, course_name: 'Advanced Web Development', rating: 4.9, university_name: 'Tech University' },
-        { course_id: 2, course_name: 'Data Science Fundamentals', rating: 4.8, university_name: 'Data Institute' },
-        { course_id: 3, course_name: 'Cloud Computing AWS', rating: 4.7, university_name: 'Cloud Academy' }
+        { course_id: 1, course_name: 'Advanced Web Development', rating: 4.9, university_name: 'Tech University', image_url: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=500&h=300&fit=crop' },
+        { course_id: 2, course_name: 'Data Science Fundamentals', rating: 4.8, university_name: 'Data Institute', image_url: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=500&h=300&fit=crop' },
+        { course_id: 3, course_name: 'Cloud Computing AWS', rating: 4.7, university_name: 'Cloud Academy', image_url: 'https://images.unsplash.com/photo-1516534775068-bb57e39c2d0b?w=500&h=300&fit=crop' }
       ]);
       setTopUniversities([
         { university_id: 1, university_name: 'Tech University', course_count: 45 },
@@ -63,36 +63,6 @@ const LandingPage = () => {
     } finally {
       setLoading(false);
     }
-  };
-  const handleSignInClick = () => {
-    if (user) {
-      switch (user.role) {
-        case 'Student':
-          navigate('/student/dashboard');
-          break;
-        case 'Instructor':
-          navigate('/instructor/dashboard');
-          break;
-        case 'Admin':
-          navigate('/admin/dashboard');
-          break;
-        case 'Analyst':
-          navigate('/analyst/dashboard');
-          break;
-        default:
-          navigate('/login');
-      }
-    } else {
-      navigate('/login');
-    }
-  };
-
-  const handleRegisterClick = () => {
-    if (user) {
-      handleSignInClick();
-      return;
-    }
-    navigate('/register');
   };
 
   const handleSignInClick = () => {
@@ -142,15 +112,9 @@ const LandingPage = () => {
         <div className="hero-image">
           <div className="placeholder-image">
             <img src={sphereImage} alt="Learning Hub Sphere" className="sphere-image" />
-    <div className="landing-page">
-      <div className="landing-shell">
-        <nav className="landing-nav">
-          <div className="brand">LearnSphere</div>
-          <div className="nav-actions">
-            <button className="nav-ghost" onClick={handleSignInClick}>Sign In</button>
-            <button className="nav-solid" onClick={handleRegisterClick}>Join Free</button>
           </div>
-        </nav>
+        </div>
+      </section>
 
       {/* Top Universities Section */}
       <section className="universities-section">
@@ -188,14 +152,23 @@ const LandingPage = () => {
           <div className="courses-grid">
             {topCourses.length > 0 ? (
               topCourses.map((course) => (
-                <div key={course.course_id} className="course-card">
-                  <div className="course-header">
-                    <div className="course-icon">📚</div>
-                    <div className="rating-badge">⭐ {course.rating || 4.5}</div>
-                  </div>
-                  <h4>{course.course_name}</h4>
-                  <p className="course-university">{course.university_name || 'LearnSphere'}</p>
-                  <button onClick={handleSignInClick} className="course-btn">
+                <div key={course.course_id} className="course-card" style={{ transition: 'transform 0.5s cubic-bezier(0.25, 0.1, 0.25, 1)' }}>
+                  {course.image_url ? (
+                    <div className="course-image-container" style={{ position: 'relative', height: '180px', marginBottom: '0', borderRadius: '8px', overflow: 'hidden' }}>
+                      <img 
+                        src={course.image_url} 
+                        alt={course.course_name} 
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                      />
+                    </div>
+                  ) : (
+                    <div className="course-header" style={{ marginBottom: '0' }}>
+                      <div className="course-icon">📚</div>
+                    </div>
+                  )}
+                  <h4 style={{ margin: '0' }}>{course.course_name}</h4>
+                  <p className="course-university" style={{ margin: '0' }}>{course.university_name || 'LearnSphere'}</p>
+                  <button onClick={handleSignInClick} className="course-btn" style={{ marginTop: '0' }}>
                     View Course
                   </button>
                 </div>
@@ -219,31 +192,7 @@ const LandingPage = () => {
             </p>
             <p className="disclaimer-text">
               For more information, please read our <button className="terms-link" onClick={() => setSelectedModal('student')}>terms and conditions</button>
-        <header className="hero">
-          <div className="hero-left">
-            <h1>Learn with structure. Finish with confidence.</h1>
-            <p className="hero-lede">
-              LearnSphere is built for students: clear modules, honest progress, and grading that makes
-              sense. Start today and keep your semester on track.
             </p>
-            <div className="hero-actions">
-              <button className="cta-primary" onClick={handleRegisterClick}>Start Learning</button>
-              <button className="cta-secondary" onClick={handleSignInClick}>I have an account</button>
-            </div>
-            <div className="hero-metrics">
-              <div>
-                <strong>120+</strong>
-                <span>Student-ready courses</span>
-              </div>
-              <div>
-                <strong>24/7</strong>
-                <span>Access anywhere</span>
-              </div>
-              <div>
-                <strong>90%</strong>
-                <span>Completion focus</span>
-              </div>
-            </div>
           </div>
 
           <div className="feature-card">
@@ -255,25 +204,7 @@ const LandingPage = () => {
             <p className="disclaimer-text">
               For Contributing as Instructor, please read our <button className="terms-link" onClick={() => setSelectedModal('instructor')}>terms and conditions</button>
             </p>
-          <div className="hero-right">
-            <div className="hero-card">
-              <h3>Weekly Learning Plan</h3>
-              <p>Small lessons, clear goals, and visible progress.</p>
-              <div className="hero-progress">
-                <span>Progress</span>
-                <div className="hero-bar">
-                  <div className="hero-bar-fill"></div>
-                </div>
-                <strong>68%</strong>
-              </div>
-              <div className="hero-list">
-                <div>✔ Track progress once</div>
-                <div>✔ Clear module flow</div>
-                <div>✔ Grades you can trust</div>
-              </div>
-            </div>
           </div>
-        </header>
 
           <div className="feature-card">
             <div className="feature-icon">🏫</div>
@@ -295,58 +226,45 @@ const LandingPage = () => {
             <p className="disclaimer-text">
               For Contributing as Analyst, please read our <button className="terms-link" onClick={() => setSelectedModal('analyst')}>terms and conditions</button>
             </p>
-        <section className="value-section">
-          <div className="section-head">
-            <h2>Built for student success</h2>
-            <p>Everything you need to stay consistent and finish strong.</p>
           </div>
-          <div className="value-grid">
-            <div className="value-card">
-              <h3>Structured modules</h3>
-              <p>Know exactly what to study next with clear weekly steps.</p>
-            </div>
-            <div className="value-card">
-              <h3>Progress that updates</h3>
-              <p>Complete content once and watch your progress move forward.</p>
-            </div>
-            <div className="value-card">
-              <h3>Feedback that helps</h3>
-              <p>Grades and reviews that show how to improve.</p>
-            </div>
-          </div>
-        </section>
+        </div>
+      </section>
 
-        <section className="steps-section">
-          <div className="section-head">
-            <h2>Start in three steps</h2>
+      {/* Statistics Section */}
+      <section className="stats-section">
+        <div className="stats-container">
+          <div className="stat-item">
+            <h3 className="stat-number">5000+</h3>
+            <p className="stat-label">Active Students</p>
           </div>
-          <div className="steps-grid">
-            <div className="step-card">
-              <span>01</span>
-              <h4>Create your account</h4>
-              <p>Join in seconds and personalize your path.</p>
-            </div>
-            <div className="step-card">
-              <span>02</span>
-              <h4>Choose a course</h4>
-              <p>Browse or search to find the right fit.</p>
-            </div>
-            <div className="step-card">
-              <span>03</span>
-              <h4>Track your progress</h4>
-              <p>Finish modules and stay on schedule.</p>
-            </div>
+          <div className="stat-item">
+            <h3 className="stat-number">500+</h3>
+            <p className="stat-label">Expert Courses</p>
           </div>
-        </section>
+          <div className="stat-item">
+            <h3 className="stat-number">50+</h3>
+            <p className="stat-label">Partner Universities</p>
+          </div>
+          <div className="stat-item">
+            <h3 className="stat-number">95%</h3>
+            <p className="stat-label">Completion Rate</p>
+          </div>
+        </div>
+      </section>
 
-        <section className="cta-section">
-          <div className="cta-card">
-            <h2>Ready to begin?</h2>
-            <p>Join students who are studying smarter with LearnSphere.</p>
-            <div className="cta-actions">
-              <button className="cta-primary" onClick={handleRegisterClick}>Join Free</button>
-              <button className="cta-secondary" onClick={handleSignInClick}>Sign In</button>
-            </div>
+      {/* Course Categories */}
+      <section className="categories-section">
+        <h2 className="section-title">Popular Course Categories</h2>
+        <div className="categories-grid">
+          <div className="category-card">
+            <div className="category-icon">💻</div>
+            <h4>Technology</h4>
+            <p>Web Development, AI, Cloud Computing</p>
+          </div>
+          <div className="category-card">
+            <div className="category-icon">📊</div>
+            <h4>Data Science</h4>
+            <p>Machine Learning, Analytics, Big Data</p>
           </div>
           <div className="category-card">
             <div className="category-icon">🎨</div>
@@ -592,8 +510,6 @@ const LandingPage = () => {
           </div>
         </div>
       )}
-        </section>
-      </div>
     </div>
   );
 };
