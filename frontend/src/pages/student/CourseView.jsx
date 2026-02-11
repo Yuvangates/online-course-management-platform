@@ -243,7 +243,7 @@ export const CourseView = () => {
                         {!isEnrolled && (
                             <div className="course-header-fee">
                                 <span className="fee-label">Course fee</span>
-                                <span className="fee-value">${course.Fees || course.fees || 'Free'}</span>
+                                <span className="fee-value">₹{course.Fees || course.fees || 'Free'}</span>
                                 <span className="fee-subtext">One-time enrollment</span>
                             </div>
                         )}
@@ -400,43 +400,46 @@ export const CourseView = () => {
                                                     <p>Loading content...</p>
                                                 </div>
                                             ) : moduleContents[module.module_number] && moduleContents[module.module_number].length > 0 ? (
-                                                <div className="content-list">
+                                                <div className="table-responsive">
+                                                    <table className="student-module-table">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Name</th>
+                                                                <th>Type</th>
+                                                                <th>URL</th>
+                                                                <th>Mark Complete</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
                                                     {(moduleContents[module.module_number] || []).map((content) => {
                                                         const isCompleted = isContentCompleted(module.module_number, content.content_id);
                                                         return (
-                                                            <div key={content.content_id} className={`content-item ${isCompleted ? 'completed-row' : ''}`}>
-                                                                <div className="content-item-main">
-                                                                    <div className="content-item-title">
-                                                                        <strong>{content.title}</strong>
-                                                                        <span className="badge" style={{ textTransform: 'capitalize' }}>
-                                                                            {content.content_type || content.type}
-                                                                        </span>
+                                                            <tr key={content.content_id} className={isCompleted ? 'completed-row' : ''}>
+                                                                <td><strong>{content.title}</strong></td>
+                                                                <td><span className="badge">{content.content_type || content.type}</span></td>
+                                                                <td>
+                                                                    {content.url ? (
+                                                                        <a href={content.url} target="_blank" rel="noopener noreferrer" className="btn outline small">
+                                                                            Open
+                                                                        </a>
+                                                                    ) : <span className="muted">-</span>}
+                                                                </td>
+                                                                <td>
+                                                                    <div className="checkbox-wrapper">
+                                                                        <input
+                                                                            type="checkbox"
+                                                                            checked={isCompleted}
+                                                                            onChange={() => handleMarkComplete(module.module_number, content.content_id)}
+                                                                            className="completion-checkbox"
+                                                                            title="Mark as complete"
+                                                                        />
                                                                     </div>
-                                                                    <div className="content-item-meta">
-                                                                        <span className="meta-pill">
-                                                                            ⏱ {moduleDetails[module.module_number]?.duration_weeks ?
-                                                                                `${moduleDetails[module.module_number].duration_weeks} weeks` :
-                                                                                'Duration TBA'
-                                                                            }
-                                                                        </span>
-                                                                        {content.url && (
-                                                                            <a href={content.url} target="_blank" rel="noopener noreferrer" className="btn outline btn-small">
-                                                                                Open
-                                                                            </a>
-                                                                        )}
-                                                                    </div>
-                                                                </div>
-                                                                <div className="content-item-check">
-                                                                    <input
-                                                                        type="checkbox"
-                                                                        checked={isCompleted}
-                                                                        onChange={() => handleMarkComplete(module.module_number, content.content_id)}
-                                                                        className="completion-checkbox"
-                                                                    />
-                                                                </div>
-                                                            </div>
+                                                                </td>
+                                                            </tr>
                                                         );
                                                     })}
+                                                        </tbody>
+                                                    </table>
                                                 </div>
                                             ) : (
                                                 <div className="empty-content">

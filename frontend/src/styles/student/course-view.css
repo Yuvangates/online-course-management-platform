@@ -1754,3 +1754,22 @@
   margin: 0;
   font-weight: var(--font-weight-medium);
 }
+
+.student-module-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: var(--space-lg) 0;
+}
+
+.student-module-table th,
+.student-module-table td {
+    padding: var(--space-md);
+    text-align: left;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.student-module-table th {
+    background-color: var(--bg-lighter);
+    font-weight: var(--font-weight-bold);
+    color: var(--text-primary);
+}

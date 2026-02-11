@@ -24,7 +24,11 @@ const getDashboard = async (req, res) => {
 const getAllCourses = async (req, res) => {
     try {
         const courses = await queries.getAllCourses();
-        res.status(200).json(courses);
+        // Filter out courses the student is already enrolled in
+        const enrollments = await queries.getEnrollmentsByStudent(req.user.user_id);
+        const enrolledIds = new Set(enrollments.map(e => e.course_id));
+        const availableCourses = courses.filter(c => !enrolledIds.has(c.course_id));
+        res.status(200).json(availableCourses);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
